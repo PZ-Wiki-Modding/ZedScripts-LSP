@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 # setup the logger
-log_file = Path.home().parent / "server.log"
+log_file = Path.home() / "server.log"
 log_file.write_text("") # clear logger
 
 logging.basicConfig(

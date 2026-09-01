@@ -12,3 +12,8 @@ authors = [
 dependencies = [
     "pygls",
 ]
+
+[dependency-groups]
+build = [
+  "pyinstaller"
+]
