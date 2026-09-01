@@ -1,0 +1,37 @@
+2026-09-01 02:41:47,867 INFO Registered builtin feature exit
+2026-09-01 02:41:47,868 INFO Registered builtin feature initialize
+2026-09-01 02:41:47,868 INFO Registered builtin feature initialized
+2026-09-01 02:41:47,868 INFO Registered builtin feature notebookDocument/didChange
+2026-09-01 02:41:47,868 INFO Registered builtin feature notebookDocument/didClose
+2026-09-01 02:41:47,868 INFO Registered builtin feature notebookDocument/didOpen
+2026-09-01 02:41:47,868 INFO Registered builtin feature $/setTrace
+2026-09-01 02:41:47,868 INFO Registered builtin feature shutdown
+2026-09-01 02:41:47,868 INFO Registered builtin feature textDocument/didChange
+2026-09-01 02:41:47,868 INFO Registered builtin feature textDocument/didClose
+2026-09-01 02:41:47,868 INFO Registered builtin feature textDocument/didOpen
+2026-09-01 02:41:47,868 INFO Registered builtin feature window/workDoneProgress/cancel
+2026-09-01 02:41:47,868 INFO Registered builtin feature workspace/didChangeWorkspaceFolders
+2026-09-01 02:41:47,868 INFO Registered builtin feature workspace/executeCommand
+2026-09-01 02:41:47,868 INFO Registered "textDocument/didOpen" with options "None"
+2026-09-01 02:41:47,868 INFO Registered "textDocument/didChange" with options "None"
+2026-09-01 02:41:47,868 INFO Starting async IO server
+2026-09-01 02:41:47,868 DEBUG Using selector: EpollSelector
+2026-09-01 02:43:49,345 INFO Shutting down the server
+2026-09-01 02:44:17,712 INFO Registered builtin feature exit
+2026-09-01 02:44:17,712 INFO Registered builtin feature initialize
+2026-09-01 02:44:17,712 INFO Registered builtin feature initialized
+2026-09-01 02:44:17,712 INFO Registered builtin feature notebookDocument/didChange
+2026-09-01 02:44:17,712 INFO Registered builtin feature notebookDocument/didClose
+2026-09-01 02:44:17,712 INFO Registered builtin feature notebookDocument/didOpen
+2026-09-01 02:44:17,712 INFO Registered builtin feature $/setTrace
+2026-09-01 02:44:17,712 INFO Registered builtin feature shutdown
+2026-09-01 02:44:17,712 INFO Registered builtin feature textDocument/didChange
+2026-09-01 02:44:17,712 INFO Registered builtin feature textDocument/didClose
+2026-09-01 02:44:17,712 INFO Registered builtin feature textDocument/didOpen
+2026-09-01 02:44:17,713 INFO Registered builtin feature window/workDoneProgress/cancel
+2026-09-01 02:44:17,713 INFO Registered builtin feature workspace/didChangeWorkspaceFolders
+2026-09-01 02:44:17,713 INFO Registered builtin feature workspace/executeCommand
+2026-09-01 02:44:17,713 INFO Registered "textDocument/didOpen" with options "None"
+2026-09-01 02:44:17,713 INFO Registered "textDocument/didChange" with options "None"
+2026-09-01 02:44:17,713 DEBUG Document changed: example.zed
+hello
