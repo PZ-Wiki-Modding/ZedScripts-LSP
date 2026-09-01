@@ -1,7 +1,7 @@
 [project]
 name = "ZedScripts"
 description = ""
-# readme = { file = "README.md", content-type = "text/markdown" }
+readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.12.3"
 version = "2.4.7"
 # license = "MIT"
