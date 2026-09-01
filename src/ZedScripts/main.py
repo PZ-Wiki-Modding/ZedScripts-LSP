@@ -1,20 +1,10 @@
-import sys, logging
-
+import logging
 from pathlib import Path
 
 from lsprotocol import types
 from pygls.lsp.server import LanguageServer
 
 from ZedScripts.__about__ import __version__
-
-
-logging.basicConfig(
-    filename=Path(__file__).parent / "server.log",
-    level=logging.DEBUG,
-    format="%(asctime)s %(levelname)s %(message)s",
-)
-
-
 
 def uri_to_path(uri: str) -> Path:
     return Path(uri.replace("%3A", ":"))
