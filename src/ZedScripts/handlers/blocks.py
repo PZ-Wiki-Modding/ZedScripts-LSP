@@ -9,15 +9,18 @@ if typing.TYPE_CHECKING:
     from .ast import Node, BlockBody, ValueNode
 
 
-class Element:
+NodeT = typing.TypeVar("NodeT")
+
+
+class Element(typing.Generic[NodeT]):
     def __init__(self) -> None:
         super().__init__()
         self.comment: str = ""
-        self.node: Node | None = None
+        self.node: NodeT | None = None
         """AST node of the element. None if the block was not created from AST."""
 
 
-class Value(Element):
+class Value(Element["ValueNode"]):
     def __init__(self, string: str) -> None:
         super().__init__()
         self.string: str = string
@@ -25,7 +28,6 @@ class Value(Element):
         Includes any whitespace preceding the value, including before any preceding comments.
         This sucks, but it's how the game parses them, so potentially needed for 1:1 behaviour.
         """
-        self.node: ValueNode | None = None
 
     def is_key_value(self) -> bool:
         return "=" in self.string
@@ -53,7 +55,7 @@ class Value(Element):
         return self.string
 
 
-class Block(Element):
+class Block(Element["BlockBody"]):
     def __init__(self, type: str) -> None:
         super().__init__()
         self.type: str = type
@@ -68,7 +70,6 @@ class Block(Element):
         Blocks are not required to have an ID: this is represented by the empty string.
         """
         self.elements: list[Element] = []
-        self.node: BlockBody | None = None
 
     def get_value(self, key: str) -> str | None:
         for value in self.values():
