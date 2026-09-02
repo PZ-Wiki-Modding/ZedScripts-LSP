@@ -21,6 +21,12 @@ def uri_to_path(uri: str) -> Path:
         raise ValueError(f"Cannot convert URI to file path: {uri}")
     return Path(fs_path)
 
+def path_to_uri(path: Path) -> str:
+    uri = from_fs_path(str(path))
+    if uri is None:
+        raise ValueError(f"Cannot convert file path to URI: {path}")
+    return uri
+
 class ZedServer(LanguageServer):
     def __init__(self):
         super().__init__("zedserver", __version__)
@@ -81,8 +87,7 @@ class ZedServer(LanguageServer):
                 )
             )
 
-        uri = from_fs_path(str(path))
-        assert uri is not None
+        uri = path_to_uri(path)
         self.text_document_publish_diagnostics(
             types.PublishDiagnosticsParams(
                 uri=uri,
