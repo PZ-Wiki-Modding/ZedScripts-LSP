@@ -1,0 +1,24 @@
+module Base
+{
+    item PanFriedVegetablesForged
+    {
+        DisplayCategory = Food,
+        ItemType = base:food,
+        Weight = 1.0,
+        EatType = Plate,
+        Icon = FryingPan_Forged_Stirfry,
+        CookingSound = FryingFood,
+        ConditionMax = 10,
+        ReplaceOnUse = Base.PanForged,
+        DaysFresh = 3,
+        DaysTotallyRotten = 5,
+        Calories = 516.0,
+        Carbohydrates = 36.0,
+        Lipids = 41.5,
+        Proteins = 4.8,
+        StaticModel = PanFriedVegetablesForged,
+        WorldStaticModel = PanFriedVegetablesForged,
+        Tags = base:hasmetal,
+        HungerChange = -10.0,
+    }
+}

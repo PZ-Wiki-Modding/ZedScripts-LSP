@@ -5,6 +5,7 @@ from lsprotocol import types
 from pygls.lsp.server import LanguageServer
 
 from ZedScripts.__about__ import __version__
+from .handlers.lexer import Lexer
 
 def uri_to_path(uri: str) -> Path:
     return Path(uri.replace("%3A", ":"))
@@ -15,6 +16,12 @@ class ZedServer(LanguageServer):
 
     def document_changed(self, path: Path, text: str) -> None:
         logging.debug("Document changed: %s\n%s", path, text)
+
+        # only handle file named "test.txt" for now
+        if path.name != "test.txt":
+            return
+
+        tokens = Lexer.tokenize(text)
 
 server = ZedServer()
 
