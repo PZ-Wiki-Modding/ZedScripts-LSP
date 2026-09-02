@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from ..handlers.blocks import Block
-    from ..handlers.lexer import TokenCollection
+    from ..structure.blocks import Block
+    from ..structure.lexer import TokenCollection
     from .diagnostics import Diagnostic
     from .semantic_tokens import SemanticToken
 

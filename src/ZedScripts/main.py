@@ -5,7 +5,7 @@ from lsprotocol import types
 from pygls.lsp.server import LanguageServer
 
 from ZedScripts.__about__ import __version__
-from .handlers.lexer import Lexer
+from .structure.lexer import Lexer
 
 def uri_to_path(uri: str) -> Path:
     return Path(uri.replace("%3A", ":"))
