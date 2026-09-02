@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import typing
 
-from .lexer import TextPosition, TextRange, TokenType, TokenCollection
-
 if typing.TYPE_CHECKING:
     from .lexer import Token
     from .ast import Node, BlockBody, ValueNode

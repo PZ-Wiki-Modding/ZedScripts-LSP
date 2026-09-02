@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import ClassVar, Self
+from typing import ClassVar, Self, Any
 
-from zedscript import Block
-from zedscript.schema import SchemaComparator, SchemaOperand
+from ..structure.blocks import Block
+from . import SchemaComparator, SchemaOperand
 
 
 class SchemaComparatorEquals(SchemaComparator, identifier="=="):
@@ -14,7 +14,7 @@ class SchemaComparatorEquals(SchemaComparator, identifier="=="):
             cls._instance = super().__new__(cls, *args, **kwargs)
         return cls._instance
 
-    def compare(self, a: any, b: any) -> bool:
+    def compare(self, a: Any, b: Any) -> bool:
         return a == b
 
 
@@ -33,9 +33,9 @@ class SchemaOperandParameter(SchemaOperand, identifier="parameter"):
 
 
 class SchemaOperandConst(SchemaOperand, identifier="const"):
-    def __init__(self, /, value: any, **kwargs) -> None:
+    def __init__(self, /, value: Any, **kwargs) -> None:
         super().__init__(**kwargs)
-        self._value: any = value
+        self._value: Any = value
 
-    def value(self, block: Block) -> any:
+    def value(self, block: Block) -> Any:
         return self._value

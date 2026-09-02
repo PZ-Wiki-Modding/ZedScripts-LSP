@@ -1,8 +1,8 @@
 import enum
 import re
 
-from .blocks import Block, Value, TextPosition
-from .lexer import Lexer, TokenType, Token, TokenCollection, TextRange
+from .blocks import Block, Value
+from .lexer import Lexer, TokenType, Token, TokenCollection, TextRange, TextPosition
 from .ast import Node, Chunk, BlockNode, ValueNode
 
 

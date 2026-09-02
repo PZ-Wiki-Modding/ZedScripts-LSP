@@ -3,7 +3,7 @@ from __future__ import annotations
 import enum
 from dataclasses import dataclass
 
-from zedscript.schema import SchemaType
+from . import SchemaType
 
 
 @dataclass

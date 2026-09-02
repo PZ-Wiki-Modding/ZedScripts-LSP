@@ -3,9 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 import abc
 import enum
-from typing import ClassVar
+from typing import ClassVar, Any
 
-from zedscript import Block
+from ..structure.blocks import Block
 
 
 class IDType(enum.Enum):
@@ -26,7 +26,7 @@ class SchemaOperand(abc.ABC):
     def __init__(self, **kwargs) -> None: ...
 
     @abc.abstractmethod
-    def value(self, block: Block) -> any:
+    def value(self, block: Block) -> Any:
         """
         Returns the value of the operand.
         :param block: The block the condition is executing in.
@@ -45,7 +45,7 @@ class SchemaComparator(abc.ABC):
         setattr(cls, "identifier", identifier)
 
     @abc.abstractmethod
-    def compare(self, a: any, b: any) -> bool:
+    def compare(self, a: Any, b: Any) -> bool:
         """
         Compares a against b.
         Comparators are not required to be commutative.

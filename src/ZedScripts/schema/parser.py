@@ -4,10 +4,10 @@ import json
 import logging
 from typing import TypeVar, Any
 
-from zedscript.schema import SchemaFile, SchemaBlockBody, SchemaBlock, SchemaParameter, SchemaValue, \
+from . import SchemaFile, SchemaBlockBody, SchemaBlock, SchemaParameter, SchemaValue, \
     SchemaConditional, IDType, SchemaType, SchemaCondition, SchemaOperand, SchemaComparator
-from zedscript.schema.conditions import SchemaOperandParameter, SchemaOperandConst
-from zedscript.schema.types import SchemaTypeString, SchemaTypeFloat, SchemaTypeInteger, SchemaTypeEnum, \
+from .conditions import SchemaOperandParameter, SchemaOperandConst
+from .types import SchemaTypeString, SchemaTypeFloat, SchemaTypeInteger, SchemaTypeEnum, \
     SchemaTypeList, SchemaTypeSequence, SchemaTypeReference, ShortReferenceType, SchemaTypeConst
 
 # FIXME: this isn't robust at all lol, the slightest error in the schema crashes

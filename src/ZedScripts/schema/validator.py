@@ -8,12 +8,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable
 
-from zedscript import Block
-from zedscript.lexer import Token, TokenCollection
-from zedscript.schema import SchemaFile, SchemaBlockBody, SchemaBlock, SchemaType, IDType
-from zedscript.schema.types import SchemaTypeFloat, SchemaTypeInteger, SchemaTypeBoolean, SchemaTypeString, \
+from ..structure.blocks import Block
+from ..structure.lexer import Token, TokenCollection
+from ..structure.ast import BlockNode
+from . import SchemaFile, SchemaBlockBody, SchemaBlock, SchemaType, IDType
+from .types import SchemaTypeFloat, SchemaTypeInteger, SchemaTypeBoolean, SchemaTypeString, \
     SchemaTypeList, SchemaTypeEnum, SchemaTypeSequence, SchemaTypeReference, SchemaTypeConst
-from zedscript.ast import BlockNode
 
 PATTERN_FLOAT = re.compile("-?\\d+(?:\\.\\d+)?")
 PATTERN_INTEGER = re.compile("-?\\d+")
