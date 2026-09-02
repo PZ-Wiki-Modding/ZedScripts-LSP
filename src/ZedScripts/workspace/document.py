@@ -1,11 +1,12 @@
 from pathlib import Path
 
+from ..structure.lexer import TokenCollection
+
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
     from ..structure.blocks import Block
-    from ..structure.lexer import TokenCollection
     from ..providers.diagnostics import Diagnostic
     from ..providers.semantic_tokens import SemanticToken
 
