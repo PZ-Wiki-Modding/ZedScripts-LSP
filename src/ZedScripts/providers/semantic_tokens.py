@@ -6,16 +6,15 @@ from operator import attrgetter
 
 from lsprotocol.types import SemanticTokens
 
-from zedscript import TextPosition, TextRange
-from zedscript.lexer import TokenType, chars_in_range, Token, TokenCollection
+from ..structure.lexer import TokenType, chars_in_range, Token, TokenCollection, TextPosition, TextRange
 
 from typing import TYPE_CHECKING
 
-from zedscript.schema import SchemaType, SchemaBlock
-from zedscript.schema.validator import SchemaError, ResultVisitor
+from ..schema import SchemaType, SchemaBlock
+from ..schema.validator import SchemaError, ResultVisitor
 
 if TYPE_CHECKING:
-    from .server import Document
+    from ..workspace.document import Document
 
 PATTERN_FLOAT = re.compile("-?\\d+(?:\\.\\d+)?")
 

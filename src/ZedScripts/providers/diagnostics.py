@@ -11,13 +11,12 @@ from dataclasses import dataclass
 
 from lsprotocol import types
 
-from zedscript.parser import SyntaxErrorType
-from zedscript.lexer import Token, TokenCollection
-from zedscript import TextRange
-from zedscript.schema import SchemaType, SchemaBlock
-from zedscript.schema.types import SchemaTypeInteger, SchemaTypeFloat, SchemaTypeEnum, SchemaTypeString, SchemaTypeConst
-from zedscript.schema.validator import ResultVisitor, SchemaError
-from zedserver import Document
+from ..structure.parser import SyntaxErrorType
+from ..structure.lexer import Token, TokenCollection, TextRange
+from ..schema import SchemaType, SchemaBlock
+from ..schema.types import SchemaTypeInteger, SchemaTypeFloat, SchemaTypeEnum, SchemaTypeString, SchemaTypeConst
+from ..schema.validator import ResultVisitor, SchemaError
+from ..workspace.document import Document
 
 
 class DiagnosticType(enum.Enum):
