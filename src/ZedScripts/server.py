@@ -4,12 +4,15 @@ from pathlib import Path
 from lsprotocol import types
 from pygls.lsp.server import LanguageServer
 
-from ZedScripts.__about__ import __version__
+from .__about__ import __version__
+from .utils import range_to_lsp
 from .workspace.document import Document
 from .structure.lexer import Lexer
 from .structure.parser import parse_tokens, chunk_to_block
-from .providers.diagnostics import Diagnostic, DiagnosticType
+from .providers.diagnostics import Diagnostic, DiagnosticType, DiagnosticDefinition, DiagnosticsVisitor
 from .providers.semantic_tokens import build_syntactic_tokens, SemanticTokensVisitor
+from .providers.locale import Localiser
+from .schema.validator import validate_file, visit_block
 
 def uri_to_path(uri: str) -> Path:
     return Path(uri.replace("%3A", ":"))
@@ -18,6 +21,9 @@ class ZedServer(LanguageServer):
     def __init__(self):
         super().__init__("zedserver", __version__)
         self.documents: dict[Path, Document] = {}
+        self.localiser: Localiser = Localiser()
+        # self.localiser.load_locale_file(Path("D:/PycharmProjects/zedserver2/locale/en.json"))
+        self.localiser.default_locale = "en"
 
     def document_changed(self, path: Path, text: str) -> None:
         logging.debug("Document changed: %s\n%s", path, text)
@@ -47,11 +53,11 @@ class ZedServer(LanguageServer):
         document.body = chunk_to_block(result.chunk)
         document.semantic_tokens = build_syntactic_tokens(document)
 
-        schema_result = validate_file(document.path, document.body, self.schemas)
-        visit_block(
-            schema_result,
-            DiagnosticsVisitor(document, SemanticTokensVisitor(document))
-        )
+        # schema_result = validate_file(document.path, document.body, self.schemas)
+        # visit_block(
+        #     schema_result,
+        #     DiagnosticsVisitor(document, SemanticTokensVisitor(document))
+        # )
 
         diagnostics: list[types.Diagnostic] = []
         for diagnostic in document.diagnostics:
@@ -88,8 +94,3 @@ def did_open(server: ZedServer, params: types.DidOpenTextDocumentParams) -> None
 def did_change(server: ZedServer, params: types.DidChangeTextDocumentParams) -> None:
     document = server.workspace.get_text_document(params.text_document.uri)
     server.document_changed(uri_to_path(document.uri), str.join("", document.lines))
-
-
-if __name__ == "__main__":
-    server.start_io()
-
