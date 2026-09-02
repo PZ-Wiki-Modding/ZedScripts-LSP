@@ -6,8 +6,8 @@ if TYPE_CHECKING:
 
     from ..structure.blocks import Block
     from ..structure.lexer import TokenCollection
-    from .diagnostics import Diagnostic
-    from .semantic_tokens import SemanticToken
+    from ..providers.diagnostics import Diagnostic
+    from ..providers.semantic_tokens import SemanticToken
 
 
 class Document:
