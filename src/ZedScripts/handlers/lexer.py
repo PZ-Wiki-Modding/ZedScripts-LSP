@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import enum
 import string
+from typing import Any
 from collections import UserList
 # from warnings import deprecated
 
@@ -52,27 +53,27 @@ class TextPosition:
             offset -= other.offset
         return TextPosition(line, offset)
 
-    def __gt__(self, other: any) -> bool:
+    def __gt__(self, other: Any) -> bool:
         if not isinstance(other, TextPosition):
             return NotImplemented
         return self.line > other.line or self.line == other.line and self.offset > other.offset
 
-    def __ge__(self, other: any) -> bool:
+    def __ge__(self, other: Any) -> bool:
         if not isinstance(other, TextPosition):
             return NotImplemented
         return self.line > other.line or self.line == other.line and self.offset >= other.offset
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: Any) -> bool:
         if not isinstance(other, TextPosition):
             return NotImplemented
         return not other >= self
 
-    def __le__(self, other) -> bool:
+    def __le__(self, other: Any) -> bool:
         if not isinstance(other, TextPosition):
             return NotImplemented
         return not other > self
 
-    def __eq__(self, other: any) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, TextPosition):
             return False
         return self.line == other.line and self.offset == other.offset
