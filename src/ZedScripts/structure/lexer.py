@@ -131,7 +131,7 @@ class TokenType(enum.Enum):
     COMMENT = enum.auto()
 
 
-PUNCTUATORS: set[str] = {"{", "}", ",", "="}
+PUNCTUATORS: set[str] = {"{", "}", ","}
 
 
 class ZedscriptSource:
