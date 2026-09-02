@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import typing
 from functools import singledispatchmethod
 
@@ -171,7 +172,7 @@ class DiagnosticsVisitor(ResultVisitor):
                     }
                 )
             else:
-                print(f"Unexpected block error in DiagnosticsVisitor.visit_block: {error.name}")
+                logging.warning("Unexpected block error in DiagnosticsVisitor.visit_block: %s", error.name)
 
         super().visit_block(schema, block_type, block_id, open_bracket, close_bracket, errors)
 
@@ -195,7 +196,7 @@ class DiagnosticsVisitor(ResultVisitor):
                     }
                 )
             else:
-                print(f"Unexpected schema error type in DiagnosticVisitor: {error.name}")
+                logging.warning("Unexpected schema error type in DiagnosticVisitor: %s", error.name)
 
         super().visit_pair(schema, key, equals, value, errors)
 
@@ -231,7 +232,7 @@ class DiagnosticsVisitor(ResultVisitor):
                     }
                 )
             else:
-                print(f"Unexpected schema error type in DiagnosticVisitor (float): {error.name}")
+                logging.warning("Unexpected schema error type in DiagnosticVisitor (float): %s", error.name)
         super().visit_type(schema, tokens, start, length, errors)
 
     @visit_type.register
@@ -249,7 +250,7 @@ class DiagnosticsVisitor(ResultVisitor):
                     }
                 )
             else:
-                print(f"Unexpected schema error type in DiagnosticVisitor (integer): {error.name}")
+                logging.warning("Unexpected schema error type in DiagnosticVisitor (integer): %s", error.name)
         super().visit_type(schema, tokens, start, length, errors)
 
     @visit_type.register
@@ -266,7 +267,7 @@ class DiagnosticsVisitor(ResultVisitor):
                     }
                 )
             else:
-                print(f"Unexpected schema error type in DiagnosticVisitor (enum): {error.name}")
+                logging.warning("Unexpected schema error type in DiagnosticVisitor (enum): %s", error.name)
         super().visit_type(schema, tokens, start, length, errors)
 
     @visit_type.register
@@ -283,7 +284,7 @@ class DiagnosticsVisitor(ResultVisitor):
                     }
                 )
             else:
-                print(f"Unexpected schema error type in DiagnosticVisitor (string): {error.name}")
+                logging.warning("Unexpected schema error type in DiagnosticVisitor (string): %s", error.name)
         super().visit_type(schema, tokens, start, length, errors)
 
     @visit_type.register
@@ -300,5 +301,5 @@ class DiagnosticsVisitor(ResultVisitor):
                     }
                 )
             else:
-                print(f"Unexpected schema error type in DiagnosticVisitor (const): {error.name}")
+                logging.warning("Unexpected schema error type in DiagnosticVisitor (const): %s", error.name)
         super().visit_type(schema, tokens, start, length, errors)

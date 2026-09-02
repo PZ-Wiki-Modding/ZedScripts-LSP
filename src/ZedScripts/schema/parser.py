@@ -1,6 +1,7 @@
 from pathlib import Path
 from collections.abc import Callable
 import json
+import logging
 from typing import TypeVar, Any
 
 from zedscript.schema import SchemaFile, SchemaBlockBody, SchemaBlock, SchemaParameter, SchemaValue, \
@@ -82,8 +83,8 @@ def parse_type(path: Path, raw: dict[str, Any]) -> SchemaType:
             if __debug__:
                 for element in raw["elements"][:len(raw["elements"]) - 1]:
                     if element["type"]["basic"] == "string" and raw.get("separator") is None:
-                        print("WARNING: Sequence with no separator has non-terminal string element."
-                              " This is impossible to parse.")
+                        logging.warning("Sequence with no separator has non-terminal string element."
+                                        " This is impossible to parse.")
             return SchemaTypeSequence(
                 elements=[
                     SchemaTypeSequence.Element(

@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -25,7 +26,7 @@ class Localiser:
 
         string = self.locales[locale].strings.get(identifier)
         if string is None:
-            print(f"Missing string: {identifier} ({locale}).")
+            logging.warning("Missing string: %s (%s).", identifier, locale)
             return identifier
 
         if args is not None:
@@ -40,7 +41,7 @@ class Localiser:
             raw = json.load(file)
 
         if raw.get("version") != "1.0":
-            print(f"Locale file {path} could not be read.")
+            logging.warning("Locale file %s could not be read.", path)
             return
 
         self.locales[raw["code"]] = Locale(raw["code"], raw["strings"])
