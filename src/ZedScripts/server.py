@@ -3,6 +3,7 @@ from pathlib import Path
 
 from lsprotocol import types
 from pygls.lsp.server import LanguageServer
+from pygls.uris import from_fs_path, to_fs_path
 
 from .__about__ import __version__
 from .utils import range_to_lsp
@@ -15,7 +16,10 @@ from .providers.locale import Localiser
 from .schema.validator import validate_file, visit_block
 
 def uri_to_path(uri: str) -> Path:
-    return Path(uri.replace("%3A", ":"))
+    fs_path = to_fs_path(uri)
+    if fs_path is None:
+        raise ValueError(f"Cannot convert URI to file path: {uri}")
+    return Path(fs_path)
 
 class ZedServer(LanguageServer):
     def __init__(self):
@@ -77,9 +81,11 @@ class ZedServer(LanguageServer):
                 )
             )
 
+        uri = from_fs_path(str(path))
+        assert uri is not None
         self.text_document_publish_diagnostics(
             types.PublishDiagnosticsParams(
-                uri=path.as_uri(),
+                uri=uri,
                 diagnostics=diagnostics
             )
         )
