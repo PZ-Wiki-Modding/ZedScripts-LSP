@@ -17,3 +17,13 @@ dependencies = [
 build = [
   "pyinstaller"
 ]
+
+# used to load locale JSON files
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-data]
+ZedScripts = [
+  "locale/*.json"
+]
