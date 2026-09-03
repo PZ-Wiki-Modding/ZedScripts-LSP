@@ -17,6 +17,9 @@ dependencies = [
 build = [
   "pyinstaller"
 ]
+debug = [
+  "debugpy"
+]
 
 # used to load locale JSON files
 [build-system]

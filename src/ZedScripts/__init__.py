@@ -7,7 +7,8 @@ log_file = Path.home() / "server.log"
 
 logging.basicConfig(
     filename=log_file,
-    level=logging.DEBUG,
+    level=logging.NOTSET,
     format="%(asctime)s %(levelname)s %(message)s",
-    filemode="w" # clear logger
+    filemode="w",
+    # force=True,
 )

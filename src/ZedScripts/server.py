@@ -15,6 +15,8 @@ from .providers.semantic_tokens import build_syntactic_tokens, SemanticTokensVis
 from .providers.locale import Localizer
 from .schema.validator import validate_file, visit_block
 
+logger = logging.getLogger(__name__)
+
 def uri_to_path(uri: str) -> Path:
     fs_path = to_fs_path(uri)
     if fs_path is None:
@@ -98,9 +100,17 @@ server = ZedServer()
 
 @server.feature(types.TEXT_DOCUMENT_DID_OPEN)
 def did_open(server: ZedServer, params: types.DidOpenTextDocumentParams) -> None:
+    # try:
     server.document_changed(uri_to_path(params.text_document.uri), params.text_document.text)
+    # except Exception:
+    #     logger.exception("Error handling textDocument/didOpen")
+    #     raise
     
 @server.feature(types.TEXT_DOCUMENT_DID_CHANGE)
 def did_change(server: ZedServer, params: types.DidChangeTextDocumentParams) -> None:
+    # try:
     document = server.workspace.get_text_document(params.text_document.uri)
     server.document_changed(uri_to_path(document.uri), str.join("", document.lines))
+    # except Exception:
+    #     logger.exception("Error handling textDocument/didChange")
+    #     raise
