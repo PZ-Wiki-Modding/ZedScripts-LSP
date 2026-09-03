@@ -13,7 +13,7 @@ dependencies = [
     "pygls",
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
 build = [
   "pyinstaller"
 ]
