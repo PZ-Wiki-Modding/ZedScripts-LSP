@@ -207,13 +207,17 @@ class TokenCollection(UserList[Token]):
         return token.pos_of(i - total_length)
 
     def strip(self) -> TokenCollection:
+        # early return
+        end = len(self.data)
+        if end == 0:
+            return TokenCollection(self.data)
+
         start: int = 0
         while start < len(self.data):
             if self.data[start].type is not TokenType.WHITESPACE:
                 break
             start += 1
 
-        end = len(self.data)
         while end >= start:
             if self.data[end - 1].type is not TokenType.WHITESPACE:
                 break
