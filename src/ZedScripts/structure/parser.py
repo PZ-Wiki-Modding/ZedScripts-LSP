@@ -185,7 +185,13 @@ def ast_to_value(node: ValueNode) -> Value:
         str(node.tokens).strip()
     )
     value.node = node
-    value.comment = ast_to_comment(node, node.tokens.strip()[0].pos)
+    tokens = node.tokens.strip()
+
+    if len(tokens) > 0:
+        value.comment = ast_to_comment(node, tokens[0].pos)
+    else:
+        value.comment = ""
+
     return value
 
 
