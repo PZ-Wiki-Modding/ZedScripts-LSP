@@ -4,7 +4,7 @@ from PyInstaller.utils.hooks import copy_metadata
 # pygls/lsprotocol read their own package metadata at runtime (importlib.metadata),
 # so it must be copied explicitly or entry points fail when frozen.
 datas = copy_metadata("pygls") + copy_metadata("lsprotocol") + [
-    ("src/ZedScripts/locale/*.json", "ZedScripts/locale"),
+    ("locale/*.json", "ZedScripts/locale"),
 ]
 
 a = Analysis(

@@ -2,6 +2,7 @@ import json
 import logging
 from pathlib import Path
 from typing import Any
+from importlib.resources import files
 
 
 class Locale:
@@ -12,17 +13,16 @@ class Locale:
         self.strings: dict[str, str] = strings
 
 
-class Localiser:
+class Localizer:
     def __init__(self) -> None:
         self.locales: dict[str, Locale] = {}
-        self.default_locale: str = ""
+        self.default_locale: str = "en"
+        self.current_locale: str = self.default_locale
 
-    def localise_string(self, identifier: str, locale: str | None = None, args: dict[str, Any] | None = None) -> str:
-        return identifier
-
+    def localize_string(self, identifier: str, locale: str | None = None, args: dict[str, Any] | None = None) -> str:
         if locale is None:
-            locale = self.default_locale
-        assert locale in self.locales
+            locale = self.current_locale
+        assert locale in self.locales, "Locale not loaded or invalid: {}".format(locale)
 
         string = self.locales[locale].strings.get(identifier)
         if string is None:
@@ -34,14 +34,19 @@ class Localiser:
 
         return string
 
-    def load_locale_file(self, path: Path) -> None:
-        assert path.exists() and path.is_file()
+    def load_locale_file(self) -> None:
+        for locale in files("ZedScripts.locale").iterdir():
+            # safeguards, probably not needed tbh
+            if not locale.is_file():
+                continue
+            if not locale.name.endswith(".json"):
+                continue
 
-        with path.open('r') as file:
-            raw = json.load(file)
+            # access the locale data
+            with locale.open('r') as file:
+                raw: dict[str, Any] = json.load(file)
 
-        if raw.get("version") != "1.0":
-            logging.warning("Locale file %s could not be read.", path)
-            return
+            assert "code" in raw, "Locale file missing 'code'"
+            assert "strings" in raw, "Locale file missing 'strings'"
 
-        self.locales[raw["code"]] = Locale(raw["code"], raw["strings"])
+            self.locales[raw["code"]] = Locale(raw["code"], raw["strings"])

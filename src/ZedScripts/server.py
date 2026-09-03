@@ -12,7 +12,7 @@ from .structure.lexer import Lexer
 from .structure.parser import parse_tokens, chunk_to_block
 from .providers.diagnostics import Diagnostic, DiagnosticType, DiagnosticDefinition, DiagnosticsVisitor
 from .providers.semantic_tokens import build_syntactic_tokens, SemanticTokensVisitor
-from .providers.locale import Localiser
+from .providers.locale import Localizer
 from .schema.validator import validate_file, visit_block
 
 def uri_to_path(uri: str) -> Path:
@@ -31,9 +31,8 @@ class ZedServer(LanguageServer):
     def __init__(self):
         super().__init__("zedserver", __version__)
         self.documents: dict[Path, Document] = {}
-        self.localiser: Localiser = Localiser()
-        # self.localiser.load_locale_file(Path("D:/PycharmProjects/zedserver2/locale/en.json"))
-        self.localiser.default_locale = "en"
+        self.localiser: Localizer = Localizer()
+        self.localiser.load_locale_file()
 
     def document_changed(self, path: Path, text: str) -> None:
         logging.debug("Document changed: %s\n%s", path, text)
@@ -81,7 +80,7 @@ class ZedServer(LanguageServer):
             diagnostics.append(
                 types.Diagnostic(
                     range=range_to_lsp(diagnostic.location),
-                    message=self.localiser.localise_string(definition.type.name,
+                    message=self.localiser.localize_string(definition.type.name,
                                                            args=diagnostic.args),
                     severity=definition.severity
                 )
