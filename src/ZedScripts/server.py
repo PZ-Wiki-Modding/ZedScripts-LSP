@@ -82,9 +82,12 @@ class ZedServer(LanguageServer):
             diagnostics.append(
                 types.Diagnostic(
                     range=range_to_lsp(diagnostic.location),
-                    message=self.localiser.localize_string(definition.type.name,
+                    message=self.localiser.localize_string(definition.type,
                                                            args=diagnostic.args),
-                    severity=definition.severity
+                    severity=definition.severity,
+                    source="ZedScripts",
+                    code=definition.type.name,
+                    tags=definition.tags,
                 )
             )
 

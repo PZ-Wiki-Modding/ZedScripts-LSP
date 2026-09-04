@@ -4,6 +4,8 @@ from pathlib import Path
 from typing import Any
 from importlib.resources import files
 
+from .diagnostics import DiagnosticType
+
 
 class Locale:
     def __init__(self, code: str, strings: dict[str, str] | None = None) -> None:
@@ -19,15 +21,15 @@ class Localizer:
         self.default_locale: str = "en"
         self.current_locale: str = self.default_locale
 
-    def localize_string(self, identifier: str, locale: str | None = None, args: dict[str, Any] | None = None) -> str:
+    def localize_string(self, identifier: DiagnosticType, locale: str | None = None, args: dict[str, Any] | None = None) -> str:
         if locale is None:
             locale = self.current_locale
         assert locale in self.locales, "Locale not loaded or invalid: {}".format(locale)
 
-        string = self.locales[locale].strings.get(identifier)
+        string = self.locales[locale].strings.get(identifier.name)
         if string is None:
-            logging.warning("Missing string: %s (%s).", identifier, locale)
-            return identifier
+            logging.warning("Missing string: %s (%s).", identifier.name, locale)
+            return identifier.name
 
         if args is not None:
             return string.format(**args)
