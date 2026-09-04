@@ -62,8 +62,7 @@ class Diagnostic:
 
 
 DiagnosticDefinition(DiagnosticType.PARSER_TOO_MANY_CLOSING_BRACKETS,
-                     DiagnosticSeverity.Error,
-                     tags=[DiagnosticTag.Unnecessary])
+                     DiagnosticSeverity.Error)
 
 DiagnosticDefinition(DiagnosticType.PARSER_BLOCK_MISSING_TYPE,
                      DiagnosticSeverity.Error)
