@@ -9,7 +9,7 @@ from pygls.uris import from_fs_path, to_fs_path
 import ZedScripts
 from .__about__ import __version__
 from .utils import range_to_lsp
-from .workspace.document import Document
+from .environment.document import Document
 from .structure.lexer import Lexer
 from .structure.parser import parse_tokens, chunk_to_block
 from .providers.diagnostics import Diagnostic, DiagnosticType, DiagnosticDefinition

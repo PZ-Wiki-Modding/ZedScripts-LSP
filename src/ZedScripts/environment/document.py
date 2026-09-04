@@ -19,3 +19,6 @@ class Document:
         self.body: Block | None = None
         self.semantic_tokens: list[SemanticToken] = []
         self.diagnostics: list[Diagnostic] = []
+
+
+
