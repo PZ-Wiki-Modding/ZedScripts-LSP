@@ -12,3 +12,6 @@ logging.basicConfig(
     filemode="w",
     # force=True,
 )
+
+IDENTIFIER = "ZedScripts"
+SOURCE = IDENTIFIER

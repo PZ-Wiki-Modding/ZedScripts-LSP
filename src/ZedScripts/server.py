@@ -6,6 +6,7 @@ from lsprotocol import types
 from pygls.lsp.server import LanguageServer
 from pygls.uris import from_fs_path, to_fs_path
 
+import ZedScripts
 from .__about__ import __version__
 from .utils import range_to_lsp
 from .workspace.document import Document
@@ -124,7 +125,7 @@ class ZedServer(LanguageServer):
                     message=self.localiser.localize_string(definition.type,
                                                            args=diagnostic.args),
                     severity=definition.severity,
-                    source="ZedScripts",
+                    source=ZedScripts.SOURCE,
                     code=definition.type.name,
                     tags=definition.tags,
                 )
@@ -139,6 +140,46 @@ class ZedServer(LanguageServer):
         )
 
 server = ZedServer()
+
+
+
+## EVENT HANDLERS
+
+@server.feature(types.INITIALIZE)
+def initialize(server: ZedServer, params: types.InitializeParams):
+    """
+    In here we handle the initialization of the server. For that we provide
+    a set of rules and capabilities that the server supports.
+
+    ### Diagnostics
+    Our diagnostics depend on other files so we prefer to diagnostic 
+    the whole workspace. They could take a while for large workspaces
+    (i.e. the game files) so we want to provide feedback when it takes
+    a while.
+
+
+    """
+    return types.InitializeResult(
+        capabilities=types.ServerCapabilities(
+            # our diagnostics depend on other files
+            # so we prefer to diagnostic the whole workspace
+            # diagnostics could take a while for large workspaces
+            # (i.e. the game files)
+            diagnostic_provider=types.DiagnosticOptions(
+                inter_file_dependencies=True,
+                workspace_diagnostics=True,
+                identifier=ZedScripts.IDENTIFIER,
+                work_done_progress=True,
+            ),
+
+
+
+            # text_document_sync=types.TextDocumentSyncKind.Full,
+            # hover_provider=True,
+            # semantic_tokens_provider=types.SemanticTokensOptions(...),
+        )
+    )
+
 
 @server.feature(types.TEXT_DOCUMENT_DID_OPEN)
 def did_open(server: ZedServer, params: types.DidOpenTextDocumentParams) -> None:
@@ -156,3 +197,18 @@ def did_change(server: ZedServer, params: types.DidChangeTextDocumentParams) -> 
     # except Exception:
     #     logger.exception("Error handling textDocument/didChange")
     #     raise
+
+
+
+
+## TODO
+
+@server.feature(types.TEXT_DOCUMENT_HOVER)
+def hover(server: ZedServer, params: types.HoverParams) -> types.Hover | None:
+    # return hover info
+    pass
+
+@server.feature(types.TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL)
+def semantic_tokens(server: ZedServer, params: types.SemanticTokensParams):
+    # return semantic tokens
+    pass
