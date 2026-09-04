@@ -1,3 +1,4 @@
+import os
 import logging
 from pathlib import Path
 
@@ -10,10 +11,9 @@ from .utils import range_to_lsp
 from .workspace.document import Document
 from .structure.lexer import Lexer
 from .structure.parser import parse_tokens, chunk_to_block
-from .providers.diagnostics import Diagnostic, DiagnosticType, DiagnosticDefinition, DiagnosticsVisitor
+from .providers.diagnostics import Diagnostic, DiagnosticType, DiagnosticDefinition
 from .providers.semantic_tokens import build_syntactic_tokens, SemanticTokensVisitor
 from .providers.locale import Localizer
-from .schema.validator import validate_file, visit_block
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,44 @@ class ZedServer(LanguageServer):
         self.documents: dict[Path, Document] = {}
         self.localiser: Localizer = Localizer()
         self.localiser.load_locale_file()
+
+    def wait_for_debug_client(self) -> None:
+        import time
+        from .providers.debug import wait_for_port_available, force_close_port
+        try:
+            import debugpy
+        except ImportError:
+            logging.error("debugpy is not installed. Debugging will not be available.")
+            return
+
+        debug_port = 5678
+        debug_host = "localhost"
+        
+        # ensure the debug port is available
+        if not wait_for_port_available(debug_port, debug_host):
+            logging.error(f"Debug port {debug_port} is still in use after waiting. Attempting to bind anyway...")
+
+            # probably a bad idea to do that
+            # but realistically, we should only be the ones using that port
+            force_close_port(debug_port)
+            time.sleep(0.2)
+
+
+        debugpy.listen((debug_host, debug_port))
+        logging.debug(f"Waiting for debug client to attach on {debug_host}:{debug_port}...")
+        debugpy.wait_for_client()  # blocks until the "Python: Attach" launch config connects
+        logging.debug("Debug client attached.")
+
+
+    def start_up(self) -> None:
+        logging.info("ZedServer starting up.")
+
+        if os.environ.get("ZEDSCRIPTS_DEBUG"):
+            self.wait_for_debug_client()
+
+        self.start_io()
+
+
 
     def document_changed(self, path: Path, text: str) -> None:
         logging.debug("Document changed: %s\n%s", path, text)
