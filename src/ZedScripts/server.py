@@ -64,7 +64,7 @@ class ZedServer(LanguageServer):
         logging.debug("Debug client attached.")
 
 
-    def start_up(self) -> None:
+    def startup(self) -> None:
         logging.info("ZedServer starting up.")
 
         if os.environ.get("ZEDSCRIPTS_DEBUG"):
