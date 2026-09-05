@@ -15,6 +15,7 @@ from .structure.parser import parse_tokens, chunk_to_block
 from .providers.diagnostics import DiagnosticInfo, DiagnosticType, DiagnosticDefinition
 from .providers.semantic_tokens import build_syntactic_tokens, SemanticTokensVisitor
 from .providers.locale import zedlocalizer
+from .providers import capabilities
 
 logger = logging.getLogger(__name__)
 
@@ -121,27 +122,16 @@ def initialize(server: ZedServer, params: types.InitializeParams):
     the whole workspace. They could take a while for large workspaces
     (i.e. the game files) so we want to provide feedback when it takes
     a while.
-
-
     """
+    # this will store what the server can currently do
+    capabilities.register_client_capabilities(params)
+
+    # from the above, we determine what the server capabilities should be
     return types.InitializeResult(
-        capabilities=types.ServerCapabilities(
-            # our diagnostics depend on other files
-            # so we prefer to diagnostic the whole workspace
-            # diagnostics could take a while for large workspaces
-            # (i.e. the game files)
-            diagnostic_provider=types.DiagnosticOptions(
-                inter_file_dependencies=True,
-                workspace_diagnostics=True,
-                identifier=ZedScripts.IDENTIFIER,
-                work_done_progress=True,
-            ),
-
-
-
-            # text_document_sync=types.TextDocumentSyncKind.Full,
-            # hover_provider=True,
-            # semantic_tokens_provider=types.SemanticTokensOptions(...),
+        capabilities=capabilities.get_server_capabilities(),
+        server_info=types.ServerInfo(
+            name="ZedScripts Language Server",
+            version=__version__,
         )
     )
 
