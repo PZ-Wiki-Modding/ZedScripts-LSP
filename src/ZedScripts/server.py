@@ -8,7 +8,7 @@ from pygls.uris import from_fs_path, to_fs_path
 
 import ZedScripts
 from .__about__ import __version__
-from .utils import range_to_lsp
+from .utils import uri_to_path
 from .environment.document import Document
 from .structure.lexer import Lexer
 from .structure.parser import parse_tokens, chunk_to_block
@@ -18,18 +18,6 @@ from .providers.locale import zedlocalizer
 from .providers import capabilities
 
 logger = logging.getLogger(__name__)
-
-def uri_to_path(uri: str) -> Path:
-    fs_path = to_fs_path(uri)
-    if fs_path is None:
-        raise ValueError(f"Cannot convert URI to file path: {uri}")
-    return Path(fs_path)
-
-def path_to_uri(path: Path) -> str:
-    uri = from_fs_path(str(path))
-    if uri is None:
-        raise ValueError(f"Cannot convert file path to URI: {path}")
-    return uri
 
 class ZedServer(LanguageServer):
     def __init__(self):

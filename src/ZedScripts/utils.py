@@ -2,6 +2,8 @@ from pathlib import Path
 from typing import Iterable
 
 from lsprotocol import types
+from pygls.uris import from_fs_path, to_fs_path
+
 from .structure.lexer import TextRange
 
 
@@ -10,6 +12,19 @@ def range_to_lsp(range: TextRange) -> types.Range:
         types.Position(range.start.line, range.start.offset),
         types.Position(range.end.line, range.end.offset)
     )
+
+def uri_to_path(uri: str) -> Path:
+    fs_path = to_fs_path(uri)
+    if fs_path is None:
+        raise ValueError(f"Cannot convert URI to file path: {uri}")
+    return Path(fs_path)
+
+def path_to_uri(path: Path) -> str:
+    uri = from_fs_path(str(path))
+    if uri is None:
+        raise ValueError(f"Cannot convert file path to URI: {path}")
+    return uri
+
 
 
 def sort_by_load_order(files: Iterable[Path]) -> Iterable[Path]:
