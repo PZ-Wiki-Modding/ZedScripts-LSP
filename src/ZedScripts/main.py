@@ -1,7 +1,7 @@
-from ZedScripts.server import server
+from ZedScripts.server import zedserver
 
 def main() -> None:
-    server.startup()
+    zedserver.startup()
 
 if __name__ == "__main__":
     main()

@@ -1,10 +1,11 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from importlib.resources import files
 
-from .diagnostics import DiagnosticType
+if TYPE_CHECKING:
+    from .diagnostics import DiagnosticType
 
 
 class Locale:
@@ -21,7 +22,7 @@ class Localizer:
         self.default_locale: str = "en"
         self.current_locale: str = self.default_locale
 
-    def localize_string(self, identifier: DiagnosticType, locale: str | None = None, args: dict[str, Any] | None = None) -> str:
+    def localize_string(self, identifier: 'DiagnosticType', locale: str | None = None, args: dict[str, Any] | None = None) -> str:
         if locale is None:
             locale = self.current_locale
         assert locale in self.locales, "Locale not loaded or invalid: {}".format(locale)
@@ -36,7 +37,7 @@ class Localizer:
 
         return string
 
-    def load_locale_file(self) -> None:
+    def load_locale_files(self) -> None:
         for locale in files("ZedScripts.locale").iterdir():
             # safeguards, probably not needed tbh
             if not locale.is_file():
@@ -52,3 +53,6 @@ class Localizer:
             assert "strings" in raw, "Locale file missing 'strings'"
 
             self.locales[raw["code"]] = Locale(raw["code"], raw["strings"])
+
+# initialize the localizer here to prevent circular imports
+zedlocalizer = Localizer()

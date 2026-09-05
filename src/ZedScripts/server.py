@@ -12,9 +12,9 @@ from .utils import range_to_lsp
 from .environment.document import Document
 from .structure.lexer import Lexer
 from .structure.parser import parse_tokens, chunk_to_block
-from .providers.diagnostics import Diagnostic, DiagnosticType, DiagnosticDefinition
+from .providers.diagnostics import DiagnosticInfo, DiagnosticType, DiagnosticDefinition
 from .providers.semantic_tokens import build_syntactic_tokens, SemanticTokensVisitor
-from .providers.locale import Localizer
+from .providers.locale import zedlocalizer
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +34,7 @@ class ZedServer(LanguageServer):
     def __init__(self):
         super().__init__("zedserver", __version__)
         self.documents: dict[Path, Document] = {}
-        self.localiser: Localizer = Localizer()
-        self.localiser.load_locale_file()
+        zedlocalizer.load_locale_files()
 
     def wait_for_debug_client(self) -> None:
         import time
@@ -83,18 +82,18 @@ class ZedServer(LanguageServer):
         if path.name != "test.txt":
             return
 
-        # existing documents should be fully reparsed
-        if self.documents.get(path) is not None:
-            self.documents.pop(path)
+        document = Document.make_or_find(path, text)
+        document.update_text(text)
 
-        document = Document(path, text)
-        self.documents[path] = document
+        if not document.was_changed():
+            logging.debug("Document was not changed, skipping revalidation.")
+            return
 
         document.lexical_tokens = Lexer.tokenize(text)
         result = parse_tokens(document.lexical_tokens)
         for error in result.errors:
             document.diagnostics.append(
-                Diagnostic(
+                DiagnosticInfo(
                     type=DiagnosticType(error.type),
                     location=error.location,
                     args={}
@@ -104,48 +103,14 @@ class ZedServer(LanguageServer):
         document.body = chunk_to_block(result.chunk)
         document.semantic_tokens = build_syntactic_tokens(document)
 
-        # schema_result = validate_file(document.path, document.body, self.schemas)
-        # visit_block(
-        #     schema_result,
-        #     DiagnosticsVisitor(document, SemanticTokensVisitor(document))
-        # )
 
-        diagnostics: list[types.Diagnostic] = []
-        for diagnostic in document.diagnostics:
-            definition = DiagnosticDefinition.by_type[diagnostic.type]
-
-            # ensure that the correct arguments are always passed
-            for name, arg_type in definition.args.items():
-                assert name in diagnostic.args
-                assert isinstance(diagnostic.args[name], arg_type)
-
-            diagnostics.append(
-                types.Diagnostic(
-                    range=range_to_lsp(diagnostic.location),
-                    message=self.localiser.localize_string(definition.type,
-                                                           args=diagnostic.args),
-                    severity=definition.severity,
-                    source=ZedScripts.SOURCE,
-                    code=definition.type.name,
-                    tags=definition.tags,
-                )
-            )
-
-        uri = path_to_uri(path)
-        self.text_document_publish_diagnostics(
-            types.PublishDiagnosticsParams(
-                uri=uri,
-                diagnostics=diagnostics
-            )
-        )
-
-server = ZedServer()
+zedserver = ZedServer()
 
 
 
 ## EVENT HANDLERS
 
-@server.feature(types.INITIALIZE)
+@zedserver.feature(types.INITIALIZE)
 def initialize(server: ZedServer, params: types.InitializeParams):
     """
     In here we handle the initialization of the server. For that we provide
@@ -181,34 +146,37 @@ def initialize(server: ZedServer, params: types.InitializeParams):
     )
 
 
-@server.feature(types.TEXT_DOCUMENT_DID_OPEN)
+@zedserver.feature(types.TEXT_DOCUMENT_DID_OPEN)
 def did_open(server: ZedServer, params: types.DidOpenTextDocumentParams) -> None:
-    # try:
     server.document_changed(uri_to_path(params.text_document.uri), params.text_document.text)
-    # except Exception:
-    #     logger.exception("Error handling textDocument/didOpen")
-    #     raise
     
-@server.feature(types.TEXT_DOCUMENT_DID_CHANGE)
+@zedserver.feature(types.TEXT_DOCUMENT_DID_CHANGE)
 def did_change(server: ZedServer, params: types.DidChangeTextDocumentParams) -> None:
-    # try:
     document = server.workspace.get_text_document(params.text_document.uri)
     server.document_changed(uri_to_path(document.uri), str.join("", document.lines))
-    # except Exception:
-    #     logger.exception("Error handling textDocument/didChange")
-    #     raise
+
+
+@zedserver.feature(types.TEXT_DOCUMENT_DIAGNOSTIC)
+def diagnostic(server: ZedServer, params: types.DocumentDiagnosticParams):
+    path = uri_to_path(params.text_document.uri)
+    document = Document.find(path)
+    if document is None:
+        return
+    return document.get_lsp_diagnostic(params)
+
+
 
 
 
 
 ## TODO
 
-@server.feature(types.TEXT_DOCUMENT_HOVER)
+@zedserver.feature(types.TEXT_DOCUMENT_HOVER)
 def hover(server: ZedServer, params: types.HoverParams) -> types.Hover | None:
     # return hover info
     pass
 
-@server.feature(types.TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL)
+@zedserver.feature(types.TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL)
 def semantic_tokens(server: ZedServer, params: types.SemanticTokensParams):
     # return semantic tokens
     pass

@@ -8,8 +8,18 @@ from dataclasses import dataclass
 
 from lsprotocol import types
 
+import ZedScripts
+from ..utils import range_to_lsp
 from ..structure.parser import SyntaxErrorType
 from ..structure.lexer import Token, TokenCollection, TextRange
+from ..providers.locale import zedlocalizer
+
+
+type DiagnosticReport = (
+      types.UnchangedDocumentDiagnosticReport
+    | types.FullDocumentDiagnosticReport
+)
+"""Defines diagnostic report types to send to the client"""
 
 
 class DiagnosticType(enum.Enum):
@@ -19,22 +29,22 @@ class DiagnosticType(enum.Enum):
             return cls["PARSER_" + value.name]
         return None
 
-    PARSER_TOO_MANY_CLOSING_BRACKETS =                          enum.auto()
-    PARSER_BLOCK_MISSING_TYPE =                                 enum.auto()
-    PARSER_BLOCK_NOT_CLOSED =                                   enum.auto()
+    PARSER_TOO_MANY_CLOSING_BRACKETS =               enum.auto()
+    PARSER_BLOCK_MISSING_TYPE =                      enum.auto()
+    PARSER_BLOCK_NOT_CLOSED =                        enum.auto()
 
-    SCHEMA_UNKNOWN_PARAMETER =                                  enum.auto()
-    SCHEMA_MISSING_REQUIRED_PARAMETER =                         enum.auto()
-    SCHEMA_UNEXPECTED_BLOCK =                                   enum.auto()
-    SCHEMA_INVALID_BLOCK_ID =                                   enum.auto()
-    SCHEMA_VALUE_WRONG_TYPE =                                   enum.auto()
-    SCHEMA_VALUE_OUT_OF_RANGE =                                 enum.auto()
-    SCHEMA_VALUE_PATTERN_MATCH_FAILURE =                        enum.auto()
-    SCHEMA_VALUE_INVALID_ENUM =                                 enum.auto()
-    SCHEMA_VALUE_INCORRECT_VALUE =                              enum.auto()
-    SCHEMA_VALUE_SEQUENCE_MISSING_REQUIRED_ELEMENT =            enum.auto()
-    SCHEMA_VALUE_SEQUENCE_EXTRA_ELEMENTS =                      enum.auto()
-    SCHEMA_UNEXPECTED_VALUE =                                   enum.auto()
+    SCHEMA_UNKNOWN_PARAMETER =                       enum.auto()
+    SCHEMA_MISSING_REQUIRED_PARAMETER =              enum.auto()
+    SCHEMA_UNEXPECTED_BLOCK =                        enum.auto()
+    SCHEMA_INVALID_BLOCK_ID =                        enum.auto()
+    SCHEMA_VALUE_WRONG_TYPE =                        enum.auto()
+    SCHEMA_VALUE_OUT_OF_RANGE =                      enum.auto()
+    SCHEMA_VALUE_PATTERN_MATCH_FAILURE =             enum.auto()
+    SCHEMA_VALUE_INVALID_ENUM =                      enum.auto()
+    SCHEMA_VALUE_INCORRECT_VALUE =                   enum.auto()
+    SCHEMA_VALUE_SEQUENCE_MISSING_REQUIRED_ELEMENT = enum.auto()
+    SCHEMA_VALUE_SEQUENCE_EXTRA_ELEMENTS =           enum.auto()
+    SCHEMA_UNEXPECTED_VALUE =                        enum.auto()
 
 
 class DiagnosticDefinition:
@@ -53,12 +63,45 @@ class DiagnosticDefinition:
 
         DiagnosticDefinition.by_type[type] = self
 
+    def get_name(self) -> str:
+        """Provides an identifier for the diagnostic type."""
+        return self.type.name
+
 
 @dataclass
-class Diagnostic:
+class DiagnosticInfo:
     type: DiagnosticType
     location: TextRange
     args: dict[str, Any]
+
+
+class DiagnosticCollection(list[DiagnosticInfo]):
+    def to_lsp(self) -> list[types.Diagnostic]:
+        """
+        Converts the different diagnostic information into LSP-compatible diagnostics.
+        """
+        lsp_diagnostics: list[types.Diagnostic] = []
+        for diagnostic in self:
+            definition = DiagnosticDefinition.by_type[diagnostic.type]
+
+            # ensure that the correct arguments are always passed
+            for name, arg_type in definition.args.items():
+                assert name in diagnostic.args
+                assert isinstance(diagnostic.args[name], arg_type)
+
+            lsp_diagnostics.append(
+                types.Diagnostic(
+                    range=range_to_lsp(diagnostic.location),
+                    message=zedlocalizer.localize_string(definition.type,
+                                                                args=diagnostic.args),
+                    severity=definition.severity,
+                    source=ZedScripts.SOURCE,
+                    code=definition.get_name(),
+                    tags=definition.tags
+                )
+            )
+        return lsp_diagnostics
+
 
 
 DiagnosticDefinition(DiagnosticType.PARSER_TOO_MANY_CLOSING_BRACKETS,
