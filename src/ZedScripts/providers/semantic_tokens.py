@@ -10,8 +10,6 @@ from lsprotocol.types import SemanticTokens
 
 from .. import IS_DEBUG
 from ..structure.lexer import TokenType, chars_in_range, Token, TokenCollection, TextPosition, TextRange
-from ..schema import SchemaType, SchemaBlock
-from ..schema.validator import SchemaError, ResultVisitor
 
 if TYPE_CHECKING:
     from ..environment.document import Document
@@ -81,98 +79,6 @@ class SemanticToken:
 
     def __repr__(self) -> str:
         return f"SemanticToken(range={self.range}, type={self.type.name}[{self.type}], modifiers={self.modifiers})"
-
-class SemanticTokensVisitor(ResultVisitor):
-    """
-    Value visitor that adds semantic tokens for the values encountered.
-    """
-    def __init__(self, document: Document, delegate: ResultVisitor | None = None) -> None:
-        super().__init__(delegate)
-        self.document: Document = document
-
-    def add_semantic_token(
-            self, location: TextRange,
-            type: SemanticTokenType, modifiers: SemanticTokenModifiers | None = None) -> None:
-        self.document.semantic_tokens.append(
-            SemanticToken(
-                location,
-                type,
-                modifiers
-            )
-        )
-
-    def visit_type(self, schema: SchemaType | None, tokens: TokenCollection,
-                   start: int, length: int, errors: list[SchemaError]) -> None:
-        range = TextRange(tokens.pos_of(start), tokens.pos_of(start + length))
-        if schema is None:
-            # add token for non-schema parameters
-            token_type = SemanticTokenType.STRING
-            if re.fullmatch(PATTERN_FLOAT, str(tokens)[start:start + length]) is not None:
-                token_type = SemanticTokenType.NUMBER
-            self.add_semantic_token(
-                range,
-                token_type
-            )
-            return
-
-        match schema.basic:
-            case "sequence":
-                # might want to add tokens for separators
-                return
-            case "list":
-                # might want to add tokens for delimiters
-                return
-            case "const":
-                return
-
-        token_type: SemanticTokenType
-        match schema.basic:
-            case "string":
-                token_type = SemanticTokenType.STRING
-            case "reference":
-                token_type = SemanticTokenType.VARIABLE
-            case "enum":
-                token_type = SemanticTokenType.ENUM_MEMBER
-            case "integer":
-                token_type = SemanticTokenType.NUMBER
-            case "float":
-                token_type = SemanticTokenType.NUMBER
-            case "boolean":
-                token_type = SemanticTokenType.KEYWORD
-            case _:
-                raise RuntimeError("Unrecognised SchemaType in SemanticTokenVisitor.visit")
-
-        self.add_semantic_token(range, token_type)
-        super().visit_type(schema, tokens, start, length, errors)
-
-    def visit_pair(self, schema: SchemaType | None, key: TokenCollection, equals: Token, value: TokenCollection,
-                   errors: list[SchemaError]) -> None:
-        self.add_semantic_token(
-            TextRange(key[0].pos, key[-1].end),
-            SemanticTokenType.PROPERTY
-        )
-        self.add_semantic_token(
-            TextRange(equals.pos, equals.end),
-            SemanticTokenType.OPERATOR
-        )
-
-        super().visit_pair(schema, key, equals, value, errors)
-
-    def visit_block(self, schema: SchemaBlock,
-                    block_type: TokenCollection | None, block_id: TokenCollection | None,
-                    open_bracket: Token | None, close_bracket: Token | None,
-                    errors: list[SchemaError]) -> None:
-        if block_type is not None:
-            self.add_semantic_token(
-                TextRange(block_type[0].pos, block_type[-1].end),
-                SemanticTokenType.TYPE
-            )
-        if block_id is not None:
-            self.add_semantic_token(
-                TextRange(block_id[0].pos, block_id[-1].end),
-                SemanticTokenType.VARIABLE
-            )
-        super().visit_block(schema, block_type, block_id, open_bracket, close_bracket, errors)
 
 
 def build_syntactic_tokens(document: Document) -> list[SemanticToken]:
