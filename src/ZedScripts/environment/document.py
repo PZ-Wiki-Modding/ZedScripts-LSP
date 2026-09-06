@@ -4,7 +4,6 @@ from lsprotocol import types
 
 from ..structure.lexer import TokenCollection
 from ..providers.diagnostics import DiagnosticInfo, DiagnosticReport, DiagnosticCollection
-from ..providers.semantic_tokens import tokens_to_lsp
 from ..providers.notifications import ZedNotification, SetZedScriptsNotificationParams
 from ..providers.semantic_tokens import SemanticToken, SemanticTokenCollection
 from ..utils import path_to_uri
@@ -23,7 +22,7 @@ class Document:
         self.text: str = text
         self.lexical_tokens: TokenCollection = TokenCollection()
         self.body: Block | None = None
-        self.semantic_tokens: SemanticTokenCollection = SemanticTokenCollection()
+        self.semantic_tokens: SemanticTokenCollection = SemanticTokenCollection(self)
         self.diagnostics: DiagnosticCollection = DiagnosticCollection()
 
         self._version_: int = 0
@@ -92,6 +91,8 @@ class Document:
         return str(self._version_)
 
 
+# notification response
+
     def get_lsp_diagnostic(self, 
             params: types.DocumentDiagnosticParams
         ) -> DiagnosticReport:
@@ -110,6 +111,6 @@ class Document:
 
     def get_lsp_semantic_tokens(self) -> types.SemanticTokens:
         return types.SemanticTokens(
-            data=tokens_to_lsp(self),
+            data=self.semantic_tokens.to_lsp(),
             result_id=self.get_id(), # useless since they don't send it back ?
         )

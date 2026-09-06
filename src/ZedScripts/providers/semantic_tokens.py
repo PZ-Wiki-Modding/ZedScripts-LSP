@@ -82,12 +82,57 @@ class SemanticToken:
 
 
 class SemanticTokenCollection(list):
-    def __init__(self, *args: SemanticToken) -> None:
+    def __init__(self, document: Document, *args: SemanticToken) -> None:
         super().__init__(args)
+        self.document = document
 
     def sort_tokens(self) -> "SemanticTokenCollection":
         self.sort(key=attrgetter("range.start.line", "range.start.offset"))
         return self
+
+    def to_lsp(self) -> list[int]:
+        lsp_tokens: list[int] = []
+        last_pos: TextPosition = TextPosition(0, 0)
+
+        # make sure to sort the semantic tokens by their position
+        semantic_tokens = self.sort_tokens()
+        for i in range(len(semantic_tokens)):
+            token = semantic_tokens[i]
+
+            line_delta = token.range.start.line - last_pos.line
+            if line_delta == 0:
+                offset_delta = token.range.start.offset - last_pos.offset
+            else:
+                offset_delta = token.range.start.offset
+
+            characters = chars_in_range(self.document.text, token.range)
+            if characters == "":
+                continue
+
+            lines = characters.split("\n")
+            lsp_tokens.append(line_delta)
+            lsp_tokens.append(offset_delta)
+            lsp_tokens.append(len(lines[0]))
+            lsp_tokens.append(token.type.value)
+            # false positive U_U
+            lsp_tokens.append(int(token.modifiers))
+            for line in lines[1:]:
+                lsp_tokens.append(1)
+                lsp_tokens.append(0)
+                lsp_tokens.append(len(line))
+                lsp_tokens.append(token.type.value)
+                # false positive U_U
+                lsp_tokens.append(int(token.modifiers))
+
+            last_pos = token.range.start if len(lines) == 1 else TextPosition(token.range.start.line + len(lines) - 1, 0)
+
+        # just so we don't have a for loop when not in debug mode
+        if IS_DEBUG:
+            max_token_length = 70
+            for line, token in enumerate(semantic_tokens):
+                logging.debug(f"{str(token).ljust(max_token_length+2)} {lsp_tokens[line * 5: (line + 1) * 5]}")
+
+        return lsp_tokens
 
 
 def build_syntactic_tokens(document: Document) -> SemanticTokenCollection:
@@ -96,7 +141,7 @@ def build_syntactic_tokens(document: Document) -> SemanticTokenCollection:
     :param document:
     :return:
     """
-    semantic_tokens: SemanticTokenCollection = SemanticTokenCollection()
+    semantic_tokens: SemanticTokenCollection = SemanticTokenCollection(document)
 
     # mark every typical lexical token with a corresponding semantic token
     for token in document.lexical_tokens:
@@ -124,47 +169,3 @@ def build_syntactic_tokens(document: Document) -> SemanticTokenCollection:
                 )
     return semantic_tokens
 
-
-def tokens_to_lsp(document: Document) -> list[int]:
-    lsp_tokens: list[int] = []
-    last_pos: TextPosition = TextPosition(0, 0)
-
-    # make sure to sort the semantic tokens by their position
-    semantic_tokens = document.semantic_tokens.sort_tokens()
-    for i in range(len(semantic_tokens)):
-        token = semantic_tokens[i]
-
-        line_delta = token.range.start.line - last_pos.line
-        if line_delta == 0:
-            offset_delta = token.range.start.offset - last_pos.offset
-        else:
-            offset_delta = token.range.start.offset
-
-        characters = chars_in_range(document.text, token.range)
-        if characters == "":
-            continue
-
-        lines = characters.split("\n")
-        lsp_tokens.append(line_delta)
-        lsp_tokens.append(offset_delta)
-        lsp_tokens.append(len(lines[0]))
-        lsp_tokens.append(token.type.value)
-        # false positive U_U
-        lsp_tokens.append(int(token.modifiers))
-        for line in lines[1:]:
-            lsp_tokens.append(1)
-            lsp_tokens.append(0)
-            lsp_tokens.append(len(line))
-            lsp_tokens.append(token.type.value)
-            # false positive U_U
-            lsp_tokens.append(int(token.modifiers))
-
-        last_pos = token.range.start if len(lines) == 1 else TextPosition(token.range.start.line + len(lines) - 1, 0)
-
-    # just so we don't have a for loop when not in debug mode
-    if IS_DEBUG:
-        max_token_length = 70
-        for line, token in enumerate(semantic_tokens):
-            logging.debug(f"{str(token).ljust(max_token_length+2)} {lsp_tokens[line * 5: (line + 1) * 5]}")
-
-    return lsp_tokens
