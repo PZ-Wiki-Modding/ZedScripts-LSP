@@ -156,9 +156,7 @@ def semantic_tokens(server: ZedServer, params: types.SemanticTokensParams):
     path = uri_to_path(params.text_document.uri)
     document = Document.find(path)
     if document is None:
-        logging.warning("Document not found for semantic tokens: %s", path)
         return
-    logging.info("Fetching semantic tokens for document: %s", path)
     return document.get_lsp_semantic_tokens()
 
 
