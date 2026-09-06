@@ -2,15 +2,14 @@ from __future__ import annotations
 
 import enum
 import re
-from typing import cast
+import logging
+from typing import TYPE_CHECKING, cast
 from operator import attrgetter
 
 from lsprotocol.types import SemanticTokens
 
+from .. import IS_DEBUG
 from ..structure.lexer import TokenType, chars_in_range, Token, TokenCollection, TextPosition, TextRange
-
-from typing import TYPE_CHECKING
-
 from ..schema import SchemaType, SchemaBlock
 from ..schema.validator import SchemaError, ResultVisitor
 
@@ -81,7 +80,7 @@ class SemanticToken:
         self.modifiers: SemanticTokenModifiers = modifiers
 
     def __repr__(self) -> str:
-        return f"SemanticToken(range={self.range}, type={self.type}, modifiers={self.modifiers})"
+        return f"SemanticToken(range={self.range}, type={self.type.name}[{self.type}], modifiers={self.modifiers})"
 
 class SemanticTokensVisitor(ResultVisitor):
     """
@@ -183,9 +182,11 @@ def build_syntactic_tokens(document: Document) -> list[SemanticToken]:
     :return:
     """
     semantic_tokens: list[SemanticToken] = []
+
+    # mark every typical lexical token with a corresponding semantic token
     for token in document.lexical_tokens:
         match token.type:
-            case TokenType.PUNCTUATOR:
+            case TokenType.ELEMENT_DELIMITER:
                 semantic_tokens.append(
                     SemanticToken(
                         TextRange(token.pos, token.end),
@@ -199,13 +200,15 @@ def build_syntactic_tokens(document: Document) -> list[SemanticToken]:
                         SemanticTokenType.COMMENT
                     )
                 )
-            case TokenType.TEXT:
+            case TokenType.PUNCTUATOR:
                 semantic_tokens.append(
                     SemanticToken(
                         TextRange(token.pos, token.end),
-                        SemanticTokenType.STRING
+                        SemanticTokenType.KEYWORD
                     )
                 )
+
+    # visit blocks to find semantic tokens that require context here
 
     return semantic_tokens
 
@@ -213,6 +216,8 @@ def build_syntactic_tokens(document: Document) -> list[SemanticToken]:
 def tokens_to_lsp(document: Document) -> list[int]:
     lsp_tokens: list[int] = []
     last_pos: TextPosition = TextPosition(0, 0)
+
+    # make sure to sort the semantic tokens by their position
     semantic_tokens = sorted(document.semantic_tokens, key=attrgetter("range.start.line", "range.start.offset"))
     for i in range(len(semantic_tokens)):
         token = semantic_tokens[i]
@@ -244,9 +249,10 @@ def tokens_to_lsp(document: Document) -> list[int]:
 
         last_pos = token.range.start if len(lines) == 1 else TextPosition(token.range.start.line + len(lines) - 1, 0)
 
-    import logging
-    max_token_length = max(len(str(token)) for token in semantic_tokens)
-    for line, token in enumerate(semantic_tokens):
-        logging.debug(f"{str(token).ljust(max_token_length+2)} {lsp_tokens[line * 5: (line + 1) * 5]}")
+    # just so we don't have a for loop when not in debug mode
+    if IS_DEBUG:
+        max_token_length = 70
+        for line, token in enumerate(semantic_tokens):
+            logging.debug(f"{str(token).ljust(max_token_length+2)} {lsp_tokens[line * 5: (line + 1) * 5]}")
 
     return lsp_tokens

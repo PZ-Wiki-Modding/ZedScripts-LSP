@@ -2,7 +2,12 @@ import enum
 import re
 
 from .blocks import Block, Value
-from .lexer import Lexer, TokenType, Token, TokenCollection, TextRange, TextPosition
+from .lexer import (
+    Lexer, 
+    TokenType, Token, TokenCollection, 
+    TextRange, TextPosition, 
+    ELEMENTS_DELIMITERS
+)
 from .ast import Node, Chunk, BlockNode, ValueNode
 
 
@@ -102,7 +107,7 @@ def parse_tokens(tokens: TokenCollection) -> ParseResult:
 
     for token in tokens:
         match token.type:
-            case TokenType.PUNCTUATOR:
+            case TokenType.ELEMENT_DELIMITER:
                 match token.text:
                     case "}":
                         if len(parser.block_stack) == 0:

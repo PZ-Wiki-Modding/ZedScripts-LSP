@@ -19,7 +19,7 @@ def uri_to_path(uri: str) -> Path:
         raise ValueError(f"Cannot convert URI to file path: {uri}")
     return Path(fs_path)
 
-def path_to_uri(path: Path) -> str:
+def path_to_uri(path: Path | str) -> str:
     uri = from_fs_path(str(path))
     if uri is None:
         raise ValueError(f"Cannot convert file path to URI: {path}")

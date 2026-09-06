@@ -2,12 +2,12 @@ import os
 import logging
 from pathlib import Path
 
-DEBUG_MODE = os.getenv("ZEDSCRIPTS_DEBUG_MODE") == "1"
+IS_DEBUG = os.getenv("ZEDSCRIPTS_DEBUG_MODE") == "1"
 
 # setup the logger
 log_file = Path.home() / "server.log"
 
-level = logging.DEBUG if DEBUG_MODE else logging.INFO
+level = logging.DEBUG if IS_DEBUG else logging.INFO
 logging.basicConfig(
     filename=log_file,
     level=level,
@@ -16,7 +16,7 @@ logging.basicConfig(
     # force=True,
 )
 
-logging.info("ZedScripts logger initialized. Debug mode: %s", DEBUG_MODE)
+logging.info("ZedScripts logger initialized. Debug mode: %s", IS_DEBUG)
 
 IDENTIFIER = "ZedScripts"
 SOURCE = IDENTIFIER

@@ -1,4 +1,5 @@
 import os
+import enum
 import logging
 from pathlib import Path
 
@@ -16,14 +17,21 @@ from .providers.diagnostics import DiagnosticInfo, DiagnosticType
 from .providers.semantic_tokens import build_syntactic_tokens, get_tokens
 from .providers.locale import zedlocalizer
 from .providers import capabilities
+from .providers.notifications import ZedNotification, NotificationParams
 
-logger = logging.getLogger(__name__)
+
 
 class ZedServer(LanguageServer):
     def __init__(self):
         super().__init__("zedserver", __version__)
         self.documents: dict[Path, Document] = {}
         zedlocalizer.load_locale_files()
+
+    def send_notification(self, method: ZedNotification, params: NotificationParams) -> None:
+        self.protocol.notify(
+            method,
+            params
+        )
 
     def wait_for_debug_client(self) -> None:
         import time
@@ -67,7 +75,7 @@ class ZedServer(LanguageServer):
     def document_changed(self, path: Path, text: str) -> None:
         logging.debug("Document changed: %s\n%s", path, text)
 
-        document = Document.make_or_find(path, text)
+        document = Document.make_or_find(self, path, text)
         document.update_text(text)
 
         if not document.was_changed():

@@ -127,11 +127,20 @@ def chars_in_range(text: str, range: TextRange) -> str:
 class TokenType(enum.Enum):
     TEXT = enum.auto()
     WHITESPACE = enum.auto()
+    NEWLINE = enum.auto()
+    ELEMENT_DELIMITER = enum.auto()
     PUNCTUATOR = enum.auto()
     COMMENT = enum.auto()
 
 
-PUNCTUATORS: set[str] = {"{", "}", ","}
+ELEMENTS_DELIMITERS: set[str] = {"{", "}", ","}
+PUNCTUATORS: set[str] = {"=", ":", ";"}
+
+
+
+WHITESPACE_NO_NEWLINE = string.whitespace.replace("\n", "")
+"""Whitespace characters without a newline"""
+
 
 
 class ZedscriptSource:
@@ -302,7 +311,7 @@ class Lexer:
 
         while self.has_next():
             char = self.peek()
-            if self.check_comment() or char in PUNCTUATORS or char in string.whitespace:
+            if self.check_comment() or char in ELEMENTS_DELIMITERS or char in string.whitespace:
                 break
             token.add(self.next())
 
@@ -335,8 +344,8 @@ class Lexer:
             if lexer.check_comment():
                 lexer.tokenize_comment()
                 continue
-            elif char in PUNCTUATORS:
-                token = lexer.start_token(TokenType.PUNCTUATOR)
+            elif char in ELEMENTS_DELIMITERS:
+                token = lexer.start_token(TokenType.ELEMENT_DELIMITER)
                 token.add(lexer.next())
                 lexer.source.tokens.append(
                     token.build(
