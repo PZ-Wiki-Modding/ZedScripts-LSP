@@ -79,7 +79,7 @@ class TextPosition:
         return self.line == other.line and self.offset == other.offset
 
     def __repr__(self) -> str:
-        return f"<{str(self.line + 1)}:{str(self.offset + 1)}>"
+        return f"<{str(self.line)}:{str(self.offset)}>"
 
 
 class TextRange:

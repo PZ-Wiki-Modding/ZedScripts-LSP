@@ -12,8 +12,8 @@ from .utils import uri_to_path
 from .environment.document import Document
 from .structure.lexer import Lexer
 from .structure.parser import parse_tokens, chunk_to_block
-from .providers.diagnostics import DiagnosticInfo, DiagnosticType, DiagnosticDefinition
-from .providers.semantic_tokens import build_syntactic_tokens, SemanticTokensVisitor
+from .providers.diagnostics import DiagnosticInfo, DiagnosticType
+from .providers.semantic_tokens import build_syntactic_tokens, get_tokens
 from .providers.locale import zedlocalizer
 from .providers import capabilities
 
@@ -67,10 +67,6 @@ class ZedServer(LanguageServer):
     def document_changed(self, path: Path, text: str) -> None:
         logging.debug("Document changed: %s\n%s", path, text)
 
-        # only handle file named "test.txt" for now
-        if path.name != "test.txt":
-            return
-
         document = Document.make_or_find(path, text)
         document.update_text(text)
 
@@ -91,6 +87,11 @@ class ZedServer(LanguageServer):
 
         document.body = chunk_to_block(result.chunk)
         document.semantic_tokens = build_syntactic_tokens(document)
+        logging.debug(f"Token amount: {len(document.semantic_tokens)}")
+        document.get_lsp_semantic_tokens()
+
+        # logging.debug("Semantic tokens for document %s: %s", path, str(document.semantic_tokens))
+        logging.debug("Made semantic tokens")
 
 
 zedserver = ZedServer()
@@ -143,18 +144,30 @@ def diagnostic(server: ZedServer, params: types.DocumentDiagnosticParams):
     return document.get_lsp_diagnostic(params)
 
 
+token_types, token_modifiers = get_tokens()
+@zedserver.feature(
+        types.TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL,
+        types.SemanticTokensLegend(
+            token_types=token_types,
+            token_modifiers=token_modifiers,
+        )
+    )
+def semantic_tokens(server: ZedServer, params: types.SemanticTokensParams):
+    path = uri_to_path(params.text_document.uri)
+    document = Document.find(path)
+    if document is None:
+        logging.warning("Document not found for semantic tokens: %s", path)
+        return
+    logging.info("Fetching semantic tokens for document: %s", path)
+    return document.get_lsp_semantic_tokens()
+
 
 
 
 
 ## TODO
 
-@zedserver.feature(types.TEXT_DOCUMENT_HOVER)
-def hover(server: ZedServer, params: types.HoverParams) -> types.Hover | None:
-    # return hover info
-    pass
-
-@zedserver.feature(types.TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL)
-def semantic_tokens(server: ZedServer, params: types.SemanticTokensParams):
-    # return semantic tokens
-    pass
+# @zedserver.feature(types.TEXT_DOCUMENT_HOVER)
+# def hover(server: ZedServer, params: types.HoverParams) -> types.Hover | None:
+#     # return hover info
+#     pass

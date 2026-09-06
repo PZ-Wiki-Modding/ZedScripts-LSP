@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import enum
 import re
+from typing import cast
 from operator import attrgetter
 
 from lsprotocol.types import SemanticTokens
@@ -14,7 +15,7 @@ from ..schema import SchemaType, SchemaBlock
 from ..schema.validator import SchemaError, ResultVisitor
 
 if TYPE_CHECKING:
-    from ..workspace.document import Document
+    from ..environment.document import Document
 
 PATTERN_FLOAT = re.compile("-?\\d+(?:\\.\\d+)?")
 
@@ -43,6 +44,7 @@ class SemanticTokenType(enum.IntEnum):
     REGEXP = 20
     OPERATOR = 21
     DECORATOR = 22
+    LABEL = 23
 
 
 class SemanticTokenModifiers(enum.IntFlag):
@@ -57,6 +59,16 @@ class SemanticTokenModifiers(enum.IntFlag):
     DOCUMENTATION = enum.auto()
     DEFAULT_LIBRARY = enum.auto()
 
+def get_tokens() -> tuple[list[str], list[str]]:
+    """
+    Returns the list of semantic token types and modifiers as strings.
+    """
+    return [t.name.lower() for t in SemanticTokenType], [cast(str, m.name).lower() for m in SemanticTokenModifiers]
+
+
+
+
+
 
 class SemanticToken:
     def __init__(
@@ -68,6 +80,8 @@ class SemanticToken:
         self.type: SemanticTokenType = type
         self.modifiers: SemanticTokenModifiers = modifiers
 
+    def __repr__(self) -> str:
+        return f"SemanticToken(range={self.range}, type={self.type}, modifiers={self.modifiers})"
 
 class SemanticTokensVisitor(ResultVisitor):
     """
@@ -185,11 +199,18 @@ def build_syntactic_tokens(document: Document) -> list[SemanticToken]:
                         SemanticTokenType.COMMENT
                     )
                 )
+            case TokenType.TEXT:
+                semantic_tokens.append(
+                    SemanticToken(
+                        TextRange(token.pos, token.end),
+                        SemanticTokenType.STRING
+                    )
+                )
 
     return semantic_tokens
 
 
-def tokens_to_lsp(document: Document) -> SemanticTokens:
+def tokens_to_lsp(document: Document) -> list[int]:
     lsp_tokens: list[int] = []
     last_pos: TextPosition = TextPosition(0, 0)
     semantic_tokens = sorted(document.semantic_tokens, key=attrgetter("range.start.line", "range.start.offset"))
@@ -223,4 +244,9 @@ def tokens_to_lsp(document: Document) -> SemanticTokens:
 
         last_pos = token.range.start if len(lines) == 1 else TextPosition(token.range.start.line + len(lines) - 1, 0)
 
-    return SemanticTokens(lsp_tokens)
+    import logging
+    max_token_length = max(len(str(token)) for token in semantic_tokens)
+    for line, token in enumerate(semantic_tokens):
+        logging.debug(f"{str(token).ljust(max_token_length+2)} {lsp_tokens[line * 5: (line + 1) * 5]}")
+
+    return lsp_tokens

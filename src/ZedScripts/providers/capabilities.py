@@ -6,6 +6,8 @@ import logging
 
 from lsprotocol import types
 
+from .semantic_tokens import get_tokens
+
 _client_init: types.InitializeParams | None
 
 def register_client_capabilities(params: types.InitializeParams):
@@ -69,14 +71,37 @@ def get_server_capabilities() -> types.ServerCapabilities:
     # diagnostic support in pull mode
     if is_support_pull_diagnostics():
         diagnostic_provider = types.DiagnosticOptions(
-            inter_file_dependencies=True,
-            workspace_diagnostics=True,
-            identifier="zedscripts",
-            work_done_progress=True,
+            inter_file_dependencies = True,
+            workspace_diagnostics   = True,
+            identifier              = "zedscripts",
+            work_done_progress      = True,
         )
     else:
         diagnostic_provider = None
 
+    # for onChange capabilities, for the token reparsing
+    # we should look into the delta method
+    # added in LSP 3.18
+    # https://pygls.readthedocs.io/en/latest/pygls/api-reference/types.html#lsprotocol.types.DidChangeTextDocumentParams
+    # https://pygls.readthedocs.io/en/latest/pygls/api-reference/types.html#lsprotocol.types.SemanticTokensOptions.full
+    # so we update the lexical tokens accordingly
+    # to then update the semantic tokens
+    # and only change the parts of the document that have actually been modified
+
+    # for now, we just retokenize the whole document
+    token_types, token_modifiers = get_tokens()
+    logging.debug("Token types: %s", token_types)
+    logging.debug("Token modifiers: %s", token_modifiers)
+    semantic_tokens_provider = types.SemanticTokensOptions(
+        legend = types.SemanticTokensLegend(
+            token_types     = token_types,
+            token_modifiers = token_modifiers
+        ),
+        full               = True, # for deltas, we need to change that
+        work_done_progress = True,
+    )
+
     return types.ServerCapabilities(
-        diagnostic_provider=diagnostic_provider
+        diagnostic_provider=diagnostic_provider,
+        semantic_tokens_provider=semantic_tokens_provider,
     )

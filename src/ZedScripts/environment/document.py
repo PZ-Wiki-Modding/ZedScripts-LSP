@@ -4,6 +4,7 @@ from lsprotocol import types
 
 from ..structure.lexer import TokenCollection
 from ..providers.diagnostics import DiagnosticInfo, DiagnosticReport, DiagnosticCollection
+from ..providers.semantic_tokens import tokens_to_lsp
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -23,7 +24,7 @@ class Document:
         self.diagnostics: DiagnosticCollection = DiagnosticCollection()
 
         self._version_: int = 0
-        self._needs_validation: bool = False
+        self._needs_validation: bool = True
 
     def update_text(self, text: str) -> None:
         if self.text != text:
@@ -70,6 +71,8 @@ class Document:
         self.mark_changed()
         self.diagnostics.clear()
 
+    def get_id(self) -> str:
+        return str(self._version_)
 
 
     def get_lsp_diagnostic(self, 
@@ -77,13 +80,20 @@ class Document:
         ) -> DiagnosticReport:
 
         previous_result_id = params.previous_result_id
-        result_id = str(self._version_)
+        result_id = self.get_id()
         if (previous_result_id is not None
             and previous_result_id == result_id):
             return types.UnchangedDocumentDiagnosticReport(result_id)
 
-        # should validate document here
+        # should validate document here probably
 
         return types.FullDocumentDiagnosticReport(
             items=self.diagnostics.to_lsp(), 
             result_id=result_id)
+
+    def get_lsp_semantic_tokens(self) -> types.SemanticTokens:
+        
+        return types.SemanticTokens(
+            data=tokens_to_lsp(self),
+            result_id=self.get_id(), # useless since they don't send it back ?
+        )
