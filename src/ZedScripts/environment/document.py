@@ -6,6 +6,7 @@ from ..structure.lexer import TokenCollection
 from ..providers.diagnostics import DiagnosticInfo, DiagnosticReport, DiagnosticCollection
 from ..providers.semantic_tokens import tokens_to_lsp
 from ..providers.notifications import ZedNotification, SetZedScriptsNotificationParams
+from ..providers.semantic_tokens import SemanticToken, SemanticTokenCollection
 from ..utils import path_to_uri
 
 from typing import TYPE_CHECKING
@@ -14,7 +15,6 @@ if TYPE_CHECKING:
 
     from ..server import ZedServer
     from ..structure.blocks import Block
-    from ..providers.semantic_tokens import SemanticToken
 
 class Document:
     documents: list['Document'] = []
@@ -23,7 +23,7 @@ class Document:
         self.text: str = text
         self.lexical_tokens: TokenCollection = TokenCollection()
         self.body: Block | None = None
-        self.semantic_tokens: list[SemanticToken] = []
+        self.semantic_tokens: SemanticTokenCollection = SemanticTokenCollection()
         self.diagnostics: DiagnosticCollection = DiagnosticCollection()
 
         self._version_: int = 0

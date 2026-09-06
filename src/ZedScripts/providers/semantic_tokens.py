@@ -81,13 +81,22 @@ class SemanticToken:
         return f"SemanticToken(range={self.range}, type={self.type.name}[{self.type}], modifiers={self.modifiers})"
 
 
-def build_syntactic_tokens(document: Document) -> list[SemanticToken]:
+class SemanticTokenCollection(list):
+    def __init__(self, *args: SemanticToken) -> None:
+        super().__init__(args)
+
+    def sort_tokens(self) -> "SemanticTokenCollection":
+        self.sort(key=attrgetter("range.start.line", "range.start.offset"))
+        return self
+
+
+def build_syntactic_tokens(document: Document) -> SemanticTokenCollection:
     """
     Builds tokens that can be inferred directly from the lexical tokens without further context.
     :param document:
     :return:
     """
-    semantic_tokens: list[SemanticToken] = []
+    semantic_tokens: SemanticTokenCollection = SemanticTokenCollection()
 
     # mark every typical lexical token with a corresponding semantic token
     for token in document.lexical_tokens:
@@ -113,9 +122,6 @@ def build_syntactic_tokens(document: Document) -> list[SemanticToken]:
                         SemanticTokenType.KEYWORD
                     )
                 )
-
-    # visit blocks to find semantic tokens that require context here
-
     return semantic_tokens
 
 
@@ -124,7 +130,7 @@ def tokens_to_lsp(document: Document) -> list[int]:
     last_pos: TextPosition = TextPosition(0, 0)
 
     # make sure to sort the semantic tokens by their position
-    semantic_tokens = sorted(document.semantic_tokens, key=attrgetter("range.start.line", "range.start.offset"))
+    semantic_tokens = document.semantic_tokens.sort_tokens()
     for i in range(len(semantic_tokens)):
         token = semantic_tokens[i]
 
