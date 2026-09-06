@@ -81,7 +81,7 @@ class SemanticToken:
         return f"SemanticToken(range={self.range}, type={self.type.name}[{self.type}], modifiers={self.modifiers})"
 
 
-class SemanticTokenCollection(list):
+class SemanticTokenCollection(list[SemanticToken]):
     def __init__(self, document: Document, *args: SemanticToken) -> None:
         super().__init__(args)
         self.document = document
