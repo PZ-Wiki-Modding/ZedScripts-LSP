@@ -1,0 +1,24 @@
+"""
+Concept to copy pz-scripts-data out files into the package directory
+But it sucks ass because if you run the package without building it first, the data files won't be there
+Or some shit like that I guess
+"""
+
+from pathlib import Path
+from shutil import copytree
+
+from setuptools import setup
+from setuptools.command.build_py import build_py
+
+
+class BuildPy(build_py):
+    def run(self):
+        super().run()
+
+        source = Path(self.distribution.src_root or ".") / "src" / "scriptsData" / "out"
+        destination = Path(self.build_lib) / "ZedScripts" / "data"
+
+        copytree(source, destination, dirs_exist_ok=True)
+
+
+setup(cmdclass={"build_py": BuildPy})
