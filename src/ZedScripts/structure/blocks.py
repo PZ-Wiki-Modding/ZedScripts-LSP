@@ -67,45 +67,10 @@ class Block(Element["BlockBody"]):
         ID of the block.
         Blocks are not required to have an ID: this is represented by the empty string.
         """
-        self.elements: list[Element] = []
 
-    def get_value(self, key: str) -> str | None:
-        for value in self.values():
-            if value.key() == key:
-                return value.value()
-        return None
-
-    def get_block(self, type: str) -> Block | None:
-        for block in self.blocks():
-            if block.type == type:
-                return block
-        return None
-
-    def values(self) -> list[Value]:
-        values: list[Value] = []
-        for element in self.elements:
-            if isinstance(element, Value):
-                values.append(element)
-        return values
-
-    def blocks(self) -> list[Block]:
-        blocks: list[Block] = []
-        for element in self.elements:
-            if isinstance(element, Block):
-                blocks.append(element)
-        return blocks
-
-    # def set_value(self, key: str, value: str) -> None:
-    #     value_string = key + " = " + value
-    #     for value in self.values:
-    #         if value.key() == key:
-    #             value.string = value_string
-    #             # empty tokens list if it isn't already, as it's no longer accurate
-    #             if len(value.tokens) > 0:
-    #                 value.tokens = []
-    #     self.values.append(
-    #         Value(value_string)
-    #     )
+        self.parent: Block | None = None
+        self.children: list[Block] = []
+        self.values: list[Value] = []
 
     def __repr__(self) -> str:
         if self.id == "":

@@ -200,6 +200,16 @@ def ast_to_value(node: ValueNode) -> Value:
     return value
 
 
+def ast_to_any(parent: Block):
+    if parent.node is None:
+        raise RuntimeError("Parent block has no associated AST node.")
+    for child in parent.node.children:
+        if isinstance(child, ValueNode):
+            parent.values.append(ast_to_value(child))
+        elif isinstance(child, BlockNode):
+            parent.children.append(ast_to_block(child))
+
+
 def ast_to_block(node: BlockNode) -> Block:
     if node.type is None:
         type = ""
@@ -210,12 +220,7 @@ def ast_to_block(node: BlockNode) -> Block:
     block.node = node
     if node.id is not None:
         block.id = str(node.id)
-
-    for child in node.children:
-        if isinstance(child, ValueNode):
-            block.elements.append(ast_to_value(child))
-        elif isinstance(child, BlockNode):
-            block.elements.append(ast_to_block(child))
+    ast_to_any(block)
 
     block.comment = ast_to_comment(node, node.open_bracket.pos)
 
@@ -225,11 +230,5 @@ def ast_to_block(node: BlockNode) -> Block:
 def chunk_to_block(chunk: Chunk) -> Block:
     root = Block("")
     root.node = chunk
-
-    for node in chunk.children:
-        if isinstance(node, ValueNode):
-            root.elements.append(ast_to_value(node))
-        elif isinstance(node, BlockNode):
-            root.elements.append(ast_to_block(node))
-
+    ast_to_any(root)
     return root

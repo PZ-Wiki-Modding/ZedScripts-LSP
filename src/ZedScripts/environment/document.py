@@ -96,7 +96,6 @@ class Document:
     def get_lsp_diagnostic(self, 
             params: types.DocumentDiagnosticParams
         ) -> DiagnosticReport:
-
         previous_result_id = params.previous_result_id
         result_id = self.get_id()
         if (previous_result_id is not None
@@ -114,3 +113,5 @@ class Document:
             data=self.semantic_tokens.to_lsp(),
             result_id=self.get_id(), # useless since they don't send it back ?
         )
+
+    # def validate(self) -> None:
