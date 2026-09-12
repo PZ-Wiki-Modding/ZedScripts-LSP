@@ -2,10 +2,11 @@ from pathlib import Path
 
 from lsprotocol import types
 
-from ..structure.lexer import TokenCollection
-from ..providers.diagnostics import DiagnosticInfo, DiagnosticReport, DiagnosticCollection
+from ..structure.lexer import Lexer, TokenCollection
+from ..structure.parser import parse_tokens, chunk_to_block
+from ..providers.diagnostics import DiagnosticInfo, DiagnosticType, DiagnosticReport, DiagnosticCollection
 from ..providers.notifications import ZedNotification, SetZedScriptsNotificationParams
-from ..providers.semantic_tokens import SemanticToken, SemanticTokenCollection
+from ..providers.semantic_tokens import SemanticTokenCollection, build_syntactic_tokens
 from ..utils import path_to_uri
 
 from typing import TYPE_CHECKING
@@ -92,6 +93,22 @@ class Document:
 
 
 # notification response
+
+    def parse(self) -> None:
+        self.lexical_tokens = Lexer.tokenize(self.text)
+        result = parse_tokens(self.lexical_tokens)
+        for error in result.errors:
+            self.diagnostics.append(
+                DiagnosticInfo(
+                    type=DiagnosticType(error.type),
+                    location=error.location,
+                    args={}
+                )
+            )
+
+        self.body = chunk_to_block(result.chunk)
+        self.semantic_tokens = build_syntactic_tokens(self)
+
 
     def get_lsp_diagnostic(self, 
             params: types.DocumentDiagnosticParams

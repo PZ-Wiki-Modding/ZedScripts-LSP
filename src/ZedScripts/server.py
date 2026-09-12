@@ -84,21 +84,7 @@ class ZedServer(LanguageServer):
             logging.debug("Document was not changed, skipping revalidation.")
             return
 
-        document.lexical_tokens = Lexer.tokenize(text)
-        result = parse_tokens(document.lexical_tokens)
-        for error in result.errors:
-            document.diagnostics.append(
-                DiagnosticInfo(
-                    type=DiagnosticType(error.type),
-                    location=error.location,
-                    args={}
-                )
-            )
-
-        document.body = chunk_to_block(result.chunk)
-        document.semantic_tokens = build_syntactic_tokens(document)
-        logging.debug(f"Token amount: {len(document.semantic_tokens)}")
-
+        document.parse()
         # document.validate()
 
 
