@@ -16,7 +16,7 @@ from .providers.semantic_tokens import get_tokens
 from .providers.locale import zedlocalizer
 from .providers import capabilities
 from .providers.notifications import ZedNotification, NotificationParams
-from .schemas.dataset import Dataset
+from .scripts.dataset import Dataset
 
 
 class ZedServer(LanguageServer):
