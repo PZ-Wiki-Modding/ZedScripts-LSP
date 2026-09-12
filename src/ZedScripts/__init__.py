@@ -20,3 +20,12 @@ logging.info("ZedScripts logger initialized. Debug mode: %s", IS_DEBUG)
 
 IDENTIFIER = "ZedScripts"
 SOURCE = IDENTIFIER
+
+ZEDSCRIPT_CACHE_DIR = Path.home() / ".zedscripts"
+"""
+Cache directory to hold various information related to ZedScripts.
+"""
+
+SCRIPTS_DATA_MANIFEST = "https://raw.githubusercontent.com/PZ-Wiki-Modding/pz-scripts-data/refs/heads/main/manifest.json"
+SCRIPTS_BLOCKS_DATA_LINK = "https://raw.githubusercontent.com/pz-wiki-modding/pz-scripts-data/refs/heads/main/out/scriptsBlocks.json"
+ROOTS_DATA_LINK = "https://raw.githubusercontent.com/pz-wiki-modding/pz-scripts-data/refs/heads/main/out/roots.json"

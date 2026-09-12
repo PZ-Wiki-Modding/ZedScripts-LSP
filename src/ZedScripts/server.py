@@ -18,6 +18,7 @@ from .providers.semantic_tokens import build_syntactic_tokens, get_tokens
 from .providers.locale import zedlocalizer
 from .providers import capabilities
 from .providers.notifications import ZedNotification, NotificationParams
+from .schemas.dataset import Dataset
 
 
 
@@ -26,6 +27,7 @@ class ZedServer(LanguageServer):
         super().__init__("zedserver", __version__)
         self.documents: dict[Path, Document] = {}
         zedlocalizer.load_locale_files()
+        self.dataset: Dataset = Dataset()
 
     def send_notification(self, method: ZedNotification, params: NotificationParams) -> None:
         self.protocol.notify(
@@ -96,10 +98,8 @@ class ZedServer(LanguageServer):
         document.body = chunk_to_block(result.chunk)
         document.semantic_tokens = build_syntactic_tokens(document)
         logging.debug(f"Token amount: {len(document.semantic_tokens)}")
-        document.get_lsp_semantic_tokens()
 
-        # logging.debug("Semantic tokens for document %s: %s", path, str(document.semantic_tokens))
-        logging.debug("Made semantic tokens")
+        # document.validate()
 
 
 zedserver = ZedServer()
@@ -122,6 +122,9 @@ def initialize(server: ZedServer, params: types.InitializeParams):
     """
     # this will store what the server can currently do
     capabilities.register_client_capabilities(params)
+
+    # load the dataset
+    server.dataset.load()
 
     # from the above, we determine what the server capabilities should be
     return types.InitializeResult(
