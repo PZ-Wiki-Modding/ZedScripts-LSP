@@ -89,7 +89,17 @@ class Document:
         self.diagnostics.clear()
 
     def get_id(self) -> str:
-        return str(self._version_)
+        """
+        Generate a result ID based on the hash of the diagnostics.
+        This ensures that if diagnostics don't change (even if text changes),
+        the client knows to skip processing via the "unchanged" report.
+        """
+        # Create a deterministic hash of the current diagnostics
+        diagnostics_str = str(sorted([
+            (d.type.value, d.location, d.args) 
+            for d in self.diagnostics
+        ]))
+        return hashlib.md5(diagnostics_str.encode()).hexdigest()
 
 
 # notification response
