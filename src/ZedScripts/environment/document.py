@@ -124,7 +124,8 @@ class Document:
         self.lexical_tokens = Lexer.tokenize(self.text)
         result = parse_tokens(self.lexical_tokens)
 
-        syntactic_diagnostics: DiagnosticCollection = DiagnosticCollection()
+        syntactic_diagnostics = self.syntactic_diagnostics
+        syntactic_diagnostics.clear() # reset previous syntactic diagnostics
         for error in result.errors:
             syntactic_diagnostics.append(
                 DiagnosticInfo(
@@ -136,7 +137,6 @@ class Document:
 
         self.body = chunk_to_block(result.chunk)
         self.semantic_tokens = build_syntactic_tokens(self)
-        self.syntactic_diagnostics = syntactic_diagnostics
 
     def validate(self) -> None:
         validate(self)
