@@ -1,10 +1,11 @@
 from pathlib import Path
+import hashlib
 
 from lsprotocol import types
 
 from ..structure.lexer import Lexer, TokenCollection
 from ..structure.parser import parse_tokens, chunk_to_block
-from ..providers.diagnostics import DiagnosticInfo, DiagnosticType, DiagnosticReport, DiagnosticCollection
+from ..providers.diagnostics import DiagnosticInfo, DiagnosticType, DiagnosticReport, WorkspaceDiagnosticReport, DiagnosticCollection
 from ..providers.notifications import ZedNotification, SetZedScriptsNotificationParams
 from ..providers.semantic_tokens import SemanticTokenCollection, build_syntactic_tokens
 from ..utils import path_to_uri
@@ -41,6 +42,12 @@ class Document:
         if self.text != text:
             self.text = text
             self.bump()
+
+    def get_uri(self):
+        return path_to_uri(self.path)
+
+
+# document management
 
     @staticmethod
     def get_documents() -> list['Document']:
@@ -120,10 +127,9 @@ class Document:
         self.semantic_tokens = build_syntactic_tokens(self)
 
 
-    def get_lsp_diagnostic(self, 
-            params: types.DocumentDiagnosticParams
+    def get_lsp_diagnostics(self, 
+            previous_result_id: str | None
         ) -> DiagnosticReport:
-        previous_result_id = params.previous_result_id
         result_id = self.get_id()
         if (previous_result_id is not None
             and previous_result_id == result_id):
@@ -134,6 +140,24 @@ class Document:
         return types.FullDocumentDiagnosticReport(
             items=self.diagnostics.to_lsp(), 
             result_id=result_id)
+
+    def get_lsp_workspace_diagnostics(self, previous_result_id: str | None) -> WorkspaceDiagnosticReport:
+        result_id = self.get_id()
+        if (previous_result_id is not None
+            and previous_result_id == result_id):
+            return types.WorkspaceUnchangedDocumentDiagnosticReport(
+                uri=self.get_uri(),
+                result_id=result_id,
+            )
+
+        # should validate document here probably
+
+        return types.WorkspaceFullDocumentDiagnosticReport(
+            uri=self.get_uri(),
+            items=self.diagnostics.to_lsp(),
+            result_id=result_id,
+        )
+
 
     def get_lsp_semantic_tokens(self) -> types.SemanticTokens:
         return types.SemanticTokens(

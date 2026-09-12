@@ -1,25 +1,22 @@
 import os
-import enum
+import typing
 import logging
 from pathlib import Path
+from pprint import pformat
 
 from lsprotocol import types
 from pygls.lsp.server import LanguageServer
 from pygls.uris import from_fs_path, to_fs_path
 
-import ZedScripts
 from .__about__ import __version__
 from .utils import uri_to_path
 from .environment.document import Document
-from .structure.lexer import Lexer
-from .structure.parser import parse_tokens, chunk_to_block
-from .providers.diagnostics import DiagnosticInfo, DiagnosticType
-from .providers.semantic_tokens import build_syntactic_tokens, get_tokens
+from .providers.diagnostics import DiagnosticReport
+from .providers.semantic_tokens import get_tokens
 from .providers.locale import zedlocalizer
 from .providers import capabilities
 from .providers.notifications import ZedNotification, NotificationParams
 from .schemas.dataset import Dataset
-
 
 
 class ZedServer(LanguageServer):
@@ -133,12 +130,39 @@ def did_change(server: ZedServer, params: types.DidChangeTextDocumentParams) -> 
 
 
 @zedserver.feature(types.TEXT_DOCUMENT_DIAGNOSTIC)
-def diagnostic(server: ZedServer, params: types.DocumentDiagnosticParams):
+def diagnostic(server: ZedServer, params: types.DocumentDiagnosticParams) -> DiagnosticReport | None:
     path = uri_to_path(params.text_document.uri)
     document = Document.find(path)
     if document is None:
-        return
-    return document.get_lsp_diagnostic(params)
+        return None
+    return document.get_lsp_diagnostics(params.previous_result_id)
+
+
+# sadly I'm not sure that implementation works as expected because the client constantly
+# asks again and again for workspace diagnostics
+# it also doesn't ask for diagnostics of non-opened documents
+# 
+# # also see when implementing the configuration file:
+# # https://microsoft.github.io/language-server-protocol/specifications/lsp/3.18/specification/#diagnostic_refresh
+# @zedserver.feature(types.WORKSPACE_DIAGNOSTIC)
+# def workspace_diagnostic(server: ZedServer, params: types.WorkspaceDiagnosticParams):
+#     """
+#     Provides diagnostics for all documents in the workspace.
+#     This is called when the client requests workspace-wide diagnostics.
+#     """
+#     logging.info("Workspace diagnostic requested.")
+
+#     # map of previous result IDs by document URI
+#     previous_result_ids = {item.uri: item.value for item in params.previous_result_ids}
+#     logging.debug(pformat(previous_result_ids))
+
+#     items: list[types.WorkspaceDocumentDiagnosticReport] = []
+#     for document in Document.get_documents():
+#         uri = document.get_uri()
+#         previous_result_id = previous_result_ids.get(uri)
+#         items.append(document.get_lsp_workspace_diagnostics(previous_result_id))
+
+#     return types.WorkspaceDiagnosticReport(items=items)
 
 
 token_types, token_modifiers = get_tokens()

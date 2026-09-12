@@ -21,6 +21,12 @@ type DiagnosticReport = (
 )
 """Defines diagnostic report types to send to the client"""
 
+type WorkspaceDiagnosticReport = (
+      types.WorkspaceUnchangedDocumentDiagnosticReport
+    | types.WorkspaceFullDocumentDiagnosticReport
+)
+"""Defines workspace diagnostic report types to send to the client"""
+
 
 class DiagnosticType(enum.Enum):
     @classmethod
