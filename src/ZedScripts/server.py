@@ -135,7 +135,7 @@ def diagnostic(server: ZedServer, params: types.DocumentDiagnosticParams) -> Dia
     document = Document.find(path)
     if document is None:
         return None
-    return document.get_lsp_diagnostics(params.previous_result_id)
+    return document.on_document_diagnostics(params.previous_result_id)
 
 
 # sadly I'm not sure that implementation works as expected because the client constantly
@@ -178,7 +178,7 @@ def semantic_tokens(server: ZedServer, params: types.SemanticTokensParams):
     document = Document.find(path)
     if document is None:
         return
-    return document.get_lsp_semantic_tokens()
+    return document.on_semantic_tokens()
 
 
 

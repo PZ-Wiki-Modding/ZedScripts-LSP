@@ -1,14 +1,16 @@
-from pathlib import Path
 import hashlib
+import logging
+from pathlib import Path
 
 from lsprotocol import types
 
+from ..utils import path_to_uri
 from ..structure.lexer import Lexer, TokenCollection
 from ..structure.parser import parse_tokens, chunk_to_block
 from ..providers.diagnostics import DiagnosticInfo, DiagnosticType, DiagnosticReport, WorkspaceDiagnosticReport, DiagnosticCollection
 from ..providers.notifications import ZedNotification, SetZedScriptsNotificationParams
 from ..providers.semantic_tokens import SemanticTokenCollection, build_syntactic_tokens
-from ..utils import path_to_uri
+from ..scripts.validate import validate
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -25,7 +27,9 @@ class Document:
         self.lexical_tokens: TokenCollection = TokenCollection()
         self.body: Block | None = None
         self.semantic_tokens: SemanticTokenCollection = SemanticTokenCollection(self)
+
         self.diagnostics: DiagnosticCollection = DiagnosticCollection()
+        self.syntactic_diagnostics: DiagnosticCollection = DiagnosticCollection()
 
         self._version_: int = 0
         self._needs_validation: bool = True
@@ -45,6 +49,11 @@ class Document:
 
     def get_uri(self):
         return path_to_uri(self.path)
+    
+    def get_lsp_diagnostics(self) -> list[types.Diagnostic]:
+        lsp_diagnostics = self.diagnostics.to_lsp() + self.syntactic_diagnostics.to_lsp()
+        logging.debug(f"LSP Diagnostics for {self.get_uri()}: {len(lsp_diagnostics)}")
+        return lsp_diagnostics
 
 
 # document management
@@ -104,7 +113,7 @@ class Document:
         # Create a deterministic hash of the current diagnostics
         diagnostics_str = str(sorted([
             (d.type.value, d.location, d.args) 
-            for d in self.diagnostics
+            for d in self.diagnostics + self.syntactic_diagnostics
         ]))
         return hashlib.md5(diagnostics_str.encode()).hexdigest()
 
@@ -114,8 +123,10 @@ class Document:
     def parse(self) -> None:
         self.lexical_tokens = Lexer.tokenize(self.text)
         result = parse_tokens(self.lexical_tokens)
+
+        syntactic_diagnostics: DiagnosticCollection = DiagnosticCollection()
         for error in result.errors:
-            self.diagnostics.append(
+            syntactic_diagnostics.append(
                 DiagnosticInfo(
                     type=DiagnosticType(error.type),
                     location=error.location,
@@ -125,11 +136,12 @@ class Document:
 
         self.body = chunk_to_block(result.chunk)
         self.semantic_tokens = build_syntactic_tokens(self)
+        self.syntactic_diagnostics = syntactic_diagnostics
 
+    def validate(self) -> None:
+        validate(self)
 
-    def get_lsp_diagnostics(self, 
-            previous_result_id: str | None
-        ) -> DiagnosticReport:
+    def on_document_diagnostics(self, previous_result_id: str | None) -> DiagnosticReport:
         result_id = self.get_id()
         if (previous_result_id is not None
             and previous_result_id == result_id):
@@ -138,10 +150,10 @@ class Document:
         # should validate document here probably
 
         return types.FullDocumentDiagnosticReport(
-            items=self.diagnostics.to_lsp(), 
+            items=self.get_lsp_diagnostics(),
             result_id=result_id)
 
-    def get_lsp_workspace_diagnostics(self, previous_result_id: str | None) -> WorkspaceDiagnosticReport:
+    def on_workspace_diagnostics(self, previous_result_id: str | None) -> WorkspaceDiagnosticReport:
         result_id = self.get_id()
         if (previous_result_id is not None
             and previous_result_id == result_id):
@@ -154,16 +166,13 @@ class Document:
 
         return types.WorkspaceFullDocumentDiagnosticReport(
             uri=self.get_uri(),
-            items=self.diagnostics.to_lsp(),
+            items=self.get_lsp_diagnostics(),
             result_id=result_id,
         )
 
-
-    def get_lsp_semantic_tokens(self) -> types.SemanticTokens:
+    def on_semantic_tokens(self) -> types.SemanticTokens:
         return types.SemanticTokens(
             data=self.semantic_tokens.to_lsp(),
             result_id=self.get_id(), # useless since they don't send it back ?
         )
-
-    # def validate(self) -> None:
 
