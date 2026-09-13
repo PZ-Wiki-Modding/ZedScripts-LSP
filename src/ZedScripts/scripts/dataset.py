@@ -146,8 +146,8 @@ class Dataset:
         logging.debug(roots)
 
         # convert to proper type and store it
-        self.blocks = {k: ScriptBlockData(v) for k, v in blocks.items()}
-        self.roots = {k: ScriptBlockData(v) for k, v in roots.items()}
+        self.blocks = {k.lower(): ScriptBlockData(v) for k, v in blocks.items()}
+        self.roots = {k.lower(): ScriptBlockData(v) for k, v in roots.items()}
 
     def test_for_root(self, path: Path) -> str | None:
         """
@@ -167,7 +167,7 @@ class Dataset:
         # to determine if the document is a zedscript doc
         logging.debug(f"Resolved path for testing: {resolved_path}")
         for rootFile in self.roots.values():
-            patterns = rootFile['pattern'] or []
+            patterns = rootFile.get('pattern', [])
             for pattern in patterns:
                 regex = re.compile(pattern)
                 logging.debug(f"Testing pattern {pattern}")
@@ -185,4 +185,38 @@ class Dataset:
         Returns:
             bool: True if the type corresponds to a script block, False otherwise.
         """
-        return type.lower() in [k.lower() for k in self.blocks.keys()]
+        return type.lower() in self.blocks.keys()
+
+    def is_root(self, type: str) -> bool:
+        """
+        Determine if the given type corresponds to a root in the dataset.
+
+        Args:
+            type (str): The type to check against the dataset's roots.
+
+        Returns:
+            bool: True if the type corresponds to a root, False otherwise.
+        """
+        return type.lower() in self.roots.keys()
+
+    def get_script_block_data(self, type: str) -> ScriptBlockData:
+        """
+        Retrieve the script block data for the given type from the dataset.
+        You first need to verify that the type corresponds to a script block 
+        or root in the dataset or the function will raise a ValueError.
+
+        Args:
+            type (str): The type of the script block or root to retrieve.
+
+        Raises:
+            ValueError: If the type does not correspond to a script block or root in the dataset.
+
+        Returns:
+            ScriptBlockData: The data associated with the specified script block or root type.
+        """
+        if self.is_script_block(type):
+            return self.blocks[type.lower()]
+        if self.is_root(type):
+            return self.roots[type.lower()]
+        raise ValueError(f"Script block data for type '{type}' not found")
+        
