@@ -94,6 +94,31 @@ class Document:
             document = Document.make(server, path, text)
         return document
 
+    @staticmethod
+    def delete(path: Path) -> None:
+        document = Document.find(path)
+        if document is not None:
+            Document.documents.remove(document)
+
+            # TODO: there might be some diagnostics cleanup needed here
+            # aka remove any diagnostics by the LSP associated with this
+            # document
+
+    @staticmethod
+    def rename(server: 'ZedServer', old_path: Path, new_path: Path) -> None:
+        # first make sure that the new path is a valid root in the dataset
+        rootType = server.dataset.test_for_root(new_path)
+        if rootType is None:
+            Document.delete(old_path)
+            return
+
+        # update the document information with new path and new root type
+        document = Document.find(old_path)
+        if document is not None:
+            document.path = new_path
+            document.rootType = rootType
+            document.make_zedscripts(server)
+
 
 
 # this should mostly all be handled by the parser, to automatically mark files

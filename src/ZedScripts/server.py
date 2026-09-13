@@ -71,10 +71,14 @@ class ZedServer(LanguageServer):
 
 
 
-    def document_changed(self, path: Path, text: str) -> None:
+    def on_document_changed(self, path: Path, text: str) -> None:
         logging.debug("Document changed: %s\n%s", path, text)
 
-        document = Document.make_or_find(self, path, text)
+        # first check if the file is a zedscripts file
+        document = Document.find_or_make(self, path, text)
+        if document is None:
+            return
+
         document.update_text(text)
 
         if not document.was_changed():
@@ -83,6 +87,13 @@ class ZedServer(LanguageServer):
 
         document.parse()
         # document.validate()
+
+    def on_document_deleted(self, path: Path) -> None:
+        Document.delete(path)
+
+    def on_document_renamed(self, old_file: Path, new_file: Path) -> None:
+        Document.rename(self, old_file, new_file)
+
 
 
 zedserver = ZedServer()
@@ -121,12 +132,26 @@ def initialize(server: ZedServer, params: types.InitializeParams):
 
 @zedserver.feature(types.TEXT_DOCUMENT_DID_OPEN)
 def did_open(server: ZedServer, params: types.DidOpenTextDocumentParams) -> None:
-    server.document_changed(uri_to_path(params.text_document.uri), params.text_document.text)
+    server.on_document_changed(uri_to_path(params.text_document.uri), params.text_document.text)
     
 @zedserver.feature(types.TEXT_DOCUMENT_DID_CHANGE)
 def did_change(server: ZedServer, params: types.DidChangeTextDocumentParams) -> None:
     document = server.workspace.get_text_document(params.text_document.uri)
-    server.document_changed(uri_to_path(document.uri), str.join("", document.lines))
+    server.on_document_changed(uri_to_path(document.uri), str.join("", document.lines))
+
+@zedserver.feature(types.WORKSPACE_DID_DELETE_FILES)
+def workspace_did_delete_files(server: ZedServer, params: types.DeleteFilesParams) -> None:
+    for file in params.files:
+        path = uri_to_path(file.uri)
+        server.on_document_deleted(path)
+
+@zedserver.feature(types.WORKSPACE_DID_RENAME_FILES)
+def workspace_did_rename_files(server: ZedServer, params: types.RenameFilesParams) -> None:
+    for file in params.files:
+        old_path = uri_to_path(file.old_uri)
+        new_path = uri_to_path(file.new_uri)
+        server.on_document_renamed(old_path, new_path)
+
 
 
 @zedserver.feature(types.TEXT_DOCUMENT_DIAGNOSTIC)
