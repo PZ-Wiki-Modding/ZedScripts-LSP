@@ -53,7 +53,8 @@ DiagnosticDefinition(DiagnosticType.SCHEMA_MISSING_REQUIRED_PARAMETER,
                      args={"key": str})
 
 DiagnosticDefinition(DiagnosticType.SCHEMA_UNEXPECTED_BLOCK,
-                     DiagnosticSeverity.Warning)
+                     DiagnosticSeverity.Warning,
+                     args={"type": str})
 
 DiagnosticDefinition(DiagnosticType.SCHEMA_VALUE_WRONG_TYPE,
                      DiagnosticSeverity.Warning,
