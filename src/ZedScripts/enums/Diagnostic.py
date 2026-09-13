@@ -14,17 +14,27 @@ class DiagnosticType(enum.Enum):
             return cls["PARSER_" + value.name]
         return None
 
+    # syntax diagnostics
     PARSER_TOO_MANY_CLOSING_BRACKETS = enum.auto()
     PARSER_BLOCK_MISSING_TYPE =        enum.auto()
     PARSER_BLOCK_NOT_CLOSED =          enum.auto()
 
+    # block diagnostics
     SCHEMA_UNKNOWN_BLOCK =             enum.auto()
-    SCHEMA_UNEXPECTED_ID =             enum.auto()
 
+    # ID related diagnostics
+    SCHEMA_UNEXPECTED_ID =             enum.auto()
+    SCHEMA_MISSING_ID =                enum.auto()
+    SCHEMA_HAS_ID_IN_PARENT =          enum.auto()
+    SCHEMA_ID_CANNOT_CONTAIN_SPACES =  enum.auto()
+    SCHEMA_INVALID_ID =                enum.auto()
+    SCHEMA_FORBIDDEN_ID =              enum.auto()
+
+    # parameters diagnostics
     SCHEMA_UNKNOWN_PARAMETER =         enum.auto()
 
 
-
+# syntax diagnostics
 DiagnosticDefinition(DiagnosticType.PARSER_TOO_MANY_CLOSING_BRACKETS,
                      DiagnosticSeverity.Error)
 DiagnosticDefinition(DiagnosticType.PARSER_BLOCK_MISSING_TYPE,
@@ -32,13 +42,35 @@ DiagnosticDefinition(DiagnosticType.PARSER_BLOCK_MISSING_TYPE,
 DiagnosticDefinition(DiagnosticType.PARSER_BLOCK_NOT_CLOSED,
                      DiagnosticSeverity.Error)
 
+# block diagnostics
 DiagnosticDefinition(DiagnosticType.SCHEMA_UNKNOWN_BLOCK,
                      DiagnosticSeverity.Error,
-                     args={"type": str})
+                     args={"type": str},
+                     tags=[DiagnosticTag.Unnecessary])
+
+# ID related diagnostics
 DiagnosticDefinition(DiagnosticType.SCHEMA_UNEXPECTED_ID,
                      DiagnosticSeverity.Error,
-                     args={"id": str})
+                     args={"type": str, "id": str},
+                     tags=[DiagnosticTag.Unnecessary])
+DiagnosticDefinition(DiagnosticType.SCHEMA_MISSING_ID,
+                     DiagnosticSeverity.Error,
+                     args={"type": str, "id": str})
+DiagnosticDefinition(DiagnosticType.SCHEMA_HAS_ID_IN_PARENT,
+                     DiagnosticSeverity.Error,
+                     args={"type": str, "parentType": str, "invalidBlocks": list},
+                     tags=[DiagnosticTag.Unnecessary])
+DiagnosticDefinition(DiagnosticType.SCHEMA_ID_CANNOT_CONTAIN_SPACES,
+                     DiagnosticSeverity.Error,
+                     args={"type": str, "id": str})
+DiagnosticDefinition(DiagnosticType.SCHEMA_INVALID_ID,
+                     DiagnosticSeverity.Error,
+                     args={"type": str, "id": str, "validIDs": list})
+DiagnosticDefinition(DiagnosticType.SCHEMA_FORBIDDEN_ID,
+                     DiagnosticSeverity.Error,
+                     args={"type": str, "id": str, "forbiddenIDs": list})
 
+# parameter diagnostics
 DiagnosticDefinition(DiagnosticType.SCHEMA_UNKNOWN_PARAMETER,
                      DiagnosticSeverity.Warning,
                      args={"key": str})

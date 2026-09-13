@@ -162,7 +162,6 @@ class ScriptBlock(Block, Element["BlockNode"]):
                 node.type.to_range(),
                 {"type": type}
             )
-            logging.debug("Unexpected block type: %s", type)
             return False
 
         # validate the ID of the block
@@ -172,16 +171,21 @@ class ScriptBlock(Block, Element["BlockNode"]):
         return True
 
     def validate_id(self, dataset: Dataset) -> bool:
+        type = self.type
         node = self.node
-        blockData = dataset.get_script_block_data(self.type)
-        idInfo = blockData.get('ID')
+        if node.type is None or type == "":
+            return False
+
+        # get ID data
+        block_data = dataset.get_script_block_data(self.type)
+        ID_data = block_data.get('ID')
 
         # retrieve ID info
         id = self.id
-        hasID = id is not None
+        has_ID = id is not None
 
         # no ID data means there shouldn't be any ID
-        if hasID:
+        if has_ID:
             node_id = node.id
             assert node_id is not None, "ID node should not be None when ID is present"
 
@@ -194,14 +198,96 @@ class ScriptBlock(Block, Element["BlockNode"]):
             )
 
             # there shouldn't be an ID
-            if idInfo is None:
+            if ID_data is None:
                 self.add_diagnostic(
                     DiagnosticType.SCHEMA_UNEXPECTED_ID,
                     node_id.to_range(),
-                    {"id": id}
+                    {"type": type, "id": id}
                 )
-                logging.debug("Unexpected ID for block type %s: %s", self.type, id)
                 return False
+
+        # it doesn't have ID needs
+        if ID_data is None:
+            return True
+
+        # check if ID is optional for this block with a specific parent type
+        optional_blocks = ID_data.get('optional')
+        if optional_blocks is not None:
+            parent_type = self.parent.type
+            if parent_type.lower() in [block.lower() for block in optional_blocks]:
+                return True # it's optional, so we skip any other checks
+
+        # used to check if the parent block requires an ID for this sub-block
+        parents_without = ID_data.get('parentsWithout')
+        should_have_id_from_parent = True
+        if parents_without is not None:
+            parent_type = self.parent.type
+            if parent_type.lower() in [block.lower() for block in parents_without]:
+                should_have_id_from_parent = False
+
+        # there should be an ID but there isn't one
+        if not has_ID:
+            if should_have_id_from_parent:
+                self.add_diagnostic(
+                    DiagnosticType.SCHEMA_MISSING_ID,
+                    node.type.to_range(),
+                    {"id": ID_data}
+                )
+                return False
+
+        # there is an ID, so validate it
+        else:
+            if not should_have_id_from_parent:
+                assert parents_without is not None, "parents_without should not be None when checking for unexpected ID with specific parent"
+                self.add_diagnostic(
+                    DiagnosticType.SCHEMA_HAS_ID_IN_PARENT,
+                    node.type.to_range(),
+                    {"type": type, "parentType": self.parent.type, "invalidBlocks": parents_without}
+                )
+                return False
+
+            # verify that the ID can have spaces
+            can_have_spaces = ID_data.get('canHaveSpace', False)
+            if not can_have_spaces and " " in id:
+                self.add_diagnostic(
+                    DiagnosticType.SCHEMA_ID_CANNOT_CONTAIN_SPACES,
+                    node.type.to_range(),
+                    {"type": type, "id": id}
+                )
+                return False
+
+            # check if the ID is an accepted value
+            valid_IDs = ID_data.get('values')
+            if valid_IDs is not None:
+                if id not in valid_IDs:
+                    self.add_diagnostic(
+                        DiagnosticType.SCHEMA_INVALID_ID,
+                        node.type.to_range(),
+                        {"type": type, "id": id, "validIDs": valid_IDs}
+                    )
+                    return False
+
+                # TODO: this needs to be modified to support a wider range of condition for variants
+                # for example specific parameters or parents defining variants
+
+                # whenever we need to consider it as its own type based on the provided ID
+                if ID_data.get('asType', False):
+                    self.type = self.type + " " + id
+                    self.id = None # set the ID to None since it is now part of the type
+
+            # forbidden IDs
+            forbidden_IDs = ID_data.get('forbidden')
+            if forbidden_IDs is not None:
+                if id in forbidden_IDs:
+                    self.add_diagnostic(
+                        DiagnosticType.SCHEMA_FORBIDDEN_ID,
+                        node.type.to_range(),
+                        {"type": type, "id": id, "forbiddenIDs": forbidden_IDs}
+                    )
+                    return False
+
+            # TODO: implement ID translation diagnostics
+            # requires workspace handling setup
 
         return True
 

@@ -69,13 +69,13 @@ class DiagnosticCollection(list[DiagnosticInfo]):
 
             # ensure that the correct arguments are always passed
             for name, arg_type in definition.args.items():
-                assert name in diagnostic.args
-                assert isinstance(diagnostic.args[name], arg_type)
+                assert name in diagnostic.args, f"Missing argument '{name}' for diagnostic '{definition.get_name()}'"
+                assert isinstance(diagnostic.args[name], arg_type), f"Argument '{name}' for diagnostic '{definition.get_name()}' must be of type '{arg_type.__name__}'"
 
             lsp_diagnostics.append(
                 types.Diagnostic(
                     range=range_to_lsp(diagnostic.location),
-                    message=zedlocalizer.localize_string(definition.type,
+                    message=zedlocalizer.localize_string(definition.type, definition,
                                                                 args=diagnostic.args),
                     severity=definition.severity,
                     source=ZedScripts.SOURCE,

@@ -5,6 +5,7 @@ from importlib.resources import files
 
 if TYPE_CHECKING:
     from ..enums.Diagnostic import DiagnosticType
+    from ..providers.diagnostics import DiagnosticDefinition
 
 
 class Locale:
@@ -21,7 +22,11 @@ class Localizer:
         self.default_locale: str = "en"
         self.current_locale: str = self.default_locale
 
-    def localize_string(self, identifier: 'DiagnosticType', locale: str | None = None, args: dict[str, Any] | None = None) -> str:
+    def localize_string(self, 
+                        identifier: 'DiagnosticType',
+                        definition: 'DiagnosticDefinition', 
+                        locale: str | None = None, 
+                        args: dict[str, Any] | None = None) -> str:
         if locale is None:
             locale = self.current_locale
         assert locale in self.locales, "Locale not loaded or invalid: {}".format(locale)
@@ -32,7 +37,19 @@ class Localizer:
             return identifier.name
 
         if args is not None:
-            return string.format(**args)
+            # format args properly based on the definition's argument types
+            args_formatted = {}
+            args_def = definition.args
+            for k,v in args.items():
+                assert k in args_def.keys()
+                assert isinstance(v, args_def[k])
+
+                # format based on the type
+                if isinstance(args_def[k], list):
+                    args_formatted[k] = ", ".join(str(item) for item in v)
+                else:
+                    args_formatted[k] = str(v)
+            return string.format(**args_formatted)
 
         return string
 
