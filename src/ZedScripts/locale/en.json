@@ -1,16 +1,19 @@
 {
     "code": "en",
     "strings": {
+        "PARSER_TOO_MANY_CLOSING_BRACKETS": "Too many closing brackets.",
+        "PARSER_BLOCK_MISSING_TYPE": "Block is missing a type.",
         "PARSER_BLOCK_NOT_CLOSED": "Block not closed.",
 
+        "BLOCK_UNKNOWN_BLOCK": "'{type}' is an unknown script block.",
 
-        "SCHEMA_UNKNOWN_BLOCK": "'{type}' is an unknown script block.",
+        "BLOCK_UNEXPECTED_ID": "'{type}' block cannot have an ID ('{id}').",
+        "BLOCK_MISSING_ID": "'{type}' block is missing an ID.",
+        "BLOCK_HAS_ID_IN_PARENT": "'{type}' block cannot have an ID when inside parent block '{parentType}', only for: {invalidBlocks}.",
+        "BLOCK_ID_CANNOT_CONTAIN_SPACES": "ID '{id}' for block '{type}' cannot contain spaces.",
+        "BLOCK_INVALID_ID": "'{type}' block has an invalid ID '{id}'. Valid IDs are: {validIDs}.",
+        "BLOCK_FORBIDDEN_ID": "'{type}' block has a forbidden ID '{id}'. Forbidden IDs are: {forbiddenIDs}.",
 
-        "SCHEMA_UNEXPECTED_ID": "'{type}' block cannot have an ID ('{id}').",
-        "SCHEMA_MISSING_ID": "'{type}' block is missing an ID.",
-        "SCHEMA_HAS_ID_IN_PARENT": "'{type}' block cannot have an ID when inside parent block '{parentType}', only for: {invalidBlocks}.",
-        "SCHEMA_ID_CANNOT_CONTAIN_SPACES": "ID '{id}' for block '{type}' cannot contain spaces.",
-        "SCHEMA_INVALID_ID": "'{type}' block has an invalid ID '{id}'. Valid IDs are: {validIDs}.",
-        "SCHEMA_FORBIDDEN_ID": "'{type}' block has a forbidden ID '{id}'. Forbidden IDs are: {forbiddenIDs}."
+        "VALUE_UNKNOWN_PARAMETER": "Unknown parameter '{key}' in block '{type}'."
     }
 }
