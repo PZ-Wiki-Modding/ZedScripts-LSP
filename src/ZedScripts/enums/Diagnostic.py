@@ -15,23 +15,29 @@ class DiagnosticType(enum.Enum):
         return None
 
     # syntax diagnostics
-    PARSER_TOO_MANY_CLOSING_BRACKETS = enum.auto()
-    PARSER_BLOCK_MISSING_TYPE =        enum.auto()
-    PARSER_BLOCK_NOT_CLOSED =          enum.auto()
+    PARSER_TOO_MANY_CLOSING_BRACKETS =     enum.auto()
+    PARSER_BLOCK_MISSING_TYPE =            enum.auto()
+    PARSER_BLOCK_NOT_CLOSED =              enum.auto()
 
     # block diagnostics
-    BLOCK_UNKNOWN_BLOCK =             enum.auto()
+    BLOCK_UNKNOWN_BLOCK =                  enum.auto()
 
     # ID related diagnostics
-    BLOCK_UNEXPECTED_ID =             enum.auto()
-    BLOCK_MISSING_ID =                enum.auto()
-    BLOCK_HAS_ID_IN_PARENT =          enum.auto()
-    BLOCK_ID_CANNOT_CONTAIN_SPACES =  enum.auto()
-    BLOCK_INVALID_ID =                enum.auto()
-    BLOCK_FORBIDDEN_ID =              enum.auto()
+    BLOCK_UNEXPECTED_ID =                  enum.auto()
+    BLOCK_MISSING_ID =                     enum.auto()
+    BLOCK_HAS_ID_IN_PARENT =               enum.auto()
+    BLOCK_ID_CANNOT_CONTAIN_SPACES =       enum.auto()
+    BLOCK_INVALID_ID =                     enum.auto()
+    BLOCK_FORBIDDEN_ID =                   enum.auto()
 
     # parameters diagnostics
-    VALUE_UNKNOWN_PARAMETER =         enum.auto()
+    VALUE_UNKNOWN_PARAMETER =              enum.auto()
+    VALUE_DEPRECATED_REPLACEMENT_VERSION = enum.auto()
+    VALUE_DEPRECATED_REPLACEMENT =         enum.auto()
+    VALUE_DEPRECATED_VERSION =             enum.auto()
+    VALUE_DEPRECATED =                     enum.auto()
+    VALUE_DUPLICATE =                      enum.auto()
+    VALUE_MISSING =                        enum.auto()
 
 
 # syntax diagnostics
@@ -72,8 +78,31 @@ DiagnosticDefinition(DiagnosticType.BLOCK_FORBIDDEN_ID,
 
 # parameter diagnostics
 DiagnosticDefinition(DiagnosticType.VALUE_UNKNOWN_PARAMETER,
+                     DiagnosticSeverity.Hint,
+                     args={"type": str, "key": str},
+                     tags=[DiagnosticTag.Unnecessary])
+DiagnosticDefinition(DiagnosticType.VALUE_DEPRECATED_REPLACEMENT_VERSION,
                      DiagnosticSeverity.Warning,
-                     args={"key": str})
+                     args={"description": str, "replacement": str, "version": str},
+                     tags=[DiagnosticTag.Deprecated])
+DiagnosticDefinition(DiagnosticType.VALUE_DEPRECATED_REPLACEMENT,
+                     DiagnosticSeverity.Warning,
+                     args={"description": str, "replacement": str},
+                     tags=[DiagnosticTag.Deprecated])
+DiagnosticDefinition(DiagnosticType.VALUE_DEPRECATED_VERSION,
+                     DiagnosticSeverity.Warning,
+                     args={"description": str, "version": str},
+                     tags=[DiagnosticTag.Deprecated])
+DiagnosticDefinition(DiagnosticType.VALUE_DEPRECATED,
+                     DiagnosticSeverity.Warning,
+                     args={"description": str},
+                     tags=[DiagnosticTag.Deprecated])
+DiagnosticDefinition(DiagnosticType.VALUE_DUPLICATE,
+                     DiagnosticSeverity.Warning,
+                     args={"type": str, "key": str})
+DiagnosticDefinition(DiagnosticType.VALUE_MISSING,
+                     DiagnosticSeverity.Warning,
+                     args={"type": str, "key": str})
 
 
 

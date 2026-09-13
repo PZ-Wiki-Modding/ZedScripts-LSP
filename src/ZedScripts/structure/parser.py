@@ -183,7 +183,7 @@ def ast_to_comment(node: Node, start: TextPosition) -> str:
     return comment
 
 
-def ast_to_value(node: ValueNode) -> Value:
+def ast_to_value(node: ValueNode, parent: Block) -> Value:
     tokens = node.tokens.strip()
     if len(tokens) > 0:
         comment = ast_to_comment(node, tokens[0].pos)
@@ -193,6 +193,7 @@ def ast_to_value(node: ValueNode) -> Value:
     value = Value(
         str(node.tokens).strip(),
         node,
+        parent,
         comment
     )
 
@@ -221,7 +222,7 @@ def ast_to_any(document, parent: ScriptBlock | Root):
         raise RuntimeError("Parent block has no associated AST node.")
     for child in parent.node.children:
         if isinstance(child, ValueNode):
-            parent.values.append(ast_to_value(child))
+            parent.values.append(ast_to_value(child, parent))
         elif isinstance(child, BlockNode):
             parent.children.append(ast_to_block(document, child, parent))
 

@@ -28,7 +28,23 @@ class Block:
 
     def validate(self, dataset: 'Dataset') -> bool: ...
     def validate_block(self, dataset: 'Dataset') -> bool: ...
-    def validate_children(self, dataset: 'Dataset'): ...
+    def validate_children(self, dataset: 'Dataset') -> None: ...
+
+    def check_for_duplicates(self, key: str) -> bool:
+        duplicate_count = 0
+        for value in self.values:
+            if not value.is_key_value():
+                continue
+            if value.key().lower() == key.lower():
+                duplicate_count += 1
+        return duplicate_count > 1 # > 1 bcs there's itself in the list
+
+    def add_diagnostic(self, type: DiagnosticType, location: TextRange, args: dict[str, Any] = {}) -> None:
+        self.document.diagnostics.add(type=type, location=location, args=args)
+
+    def add_semantic_token(self, type: SemanticTokenType, location: TextRange, modifiers: list[SemanticTokenModifiers] = []) -> None:
+        self.document.semantic_tokens.add(type=type, location=location, modifiers=modifiers)
+
 
 
 
@@ -56,14 +72,8 @@ class ScriptBlock(Block, Element["BlockNode"]):
             return "<" + self.type + " " + self.id + ">"
 
 
-# validation
 
-    def add_diagnostic(self, type: DiagnosticType, location: TextRange, args: dict[str, Any] = {}) -> None:
-        self.document.diagnostics.add(type=type, location=location, args=args)
-
-    def add_semantic_token(self, type: SemanticTokenType, location: TextRange, modifiers: list[SemanticTokenModifiers] = []) -> None:
-        self.document.semantic_tokens.add(type=type, location=location, modifiers=modifiers)
-
+## validation
 
     def validate(self, dataset: 'Dataset') -> bool:
         # validate self
@@ -242,7 +252,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
         return True
 
 
-    def validate_children(self, dataset: 'Dataset'):
+    def validate_children(self, dataset: 'Dataset') -> None:
         # validate all children blocks
         for child in self.children:
             child.validate(dataset)
@@ -264,7 +274,7 @@ class Root(Block, Element["Chunk"]):
         self.validate_children(dataset)
         return True
     
-    def validate_children(self, dataset: 'Dataset'):
+    def validate_children(self, dataset: 'Dataset') -> None:
         # validate all children blocks
         for child in self.children:
             child.validate(dataset)

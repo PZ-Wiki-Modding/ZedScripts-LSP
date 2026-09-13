@@ -37,12 +37,18 @@ class Localizer:
             return identifier.name
 
         if args is not None:
-            # format args properly based on the definition's argument types
             args_formatted = {}
             args_def = definition.args
+
+            # ensure that each keys in args_def are present in args
+            for k in args_def.keys():
+                if k not in args:
+                    raise ValueError(f"Missing argument '{k}' for localization.")
+
+            # format args properly based on the definition's argument types
             for k,v in args.items():
-                assert k in args_def.keys()
-                assert isinstance(v, args_def[k])
+                assert k in args_def.keys(), f"Unexpected argument '{k}' for localization."
+                assert isinstance(v, args_def[k]), f"Argument '{k}' must be of type {args_def[k].__name__}."
 
                 # format based on the type
                 if isinstance(args_def[k], list):

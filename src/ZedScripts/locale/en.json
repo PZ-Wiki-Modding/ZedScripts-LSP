@@ -14,6 +14,12 @@
         "BLOCK_INVALID_ID": "'{type}' block has an invalid ID '{id}'. Valid IDs are: {validIDs}.",
         "BLOCK_FORBIDDEN_ID": "'{type}' block has a forbidden ID '{id}'. Forbidden IDs are: {forbiddenIDs}.",
 
-        "VALUE_UNKNOWN_PARAMETER": "Unknown parameter '{key}' in block '{type}'."
+        "VALUE_UNKNOWN_PARAMETER": "Unknown parameter '{key}' in block '{type}'.",
+        "VALUE_DEPRECATED_REPLACEMENT_VERSION": "This parameter is deprecated since version '{version}' and replaced by '{replacement}'. {description}",
+        "VALUE_DEPRECATED_REPLACEMENT": "This parameter is deprecated and replaced by '{replacement}'. {description}",
+        "VALUE_DEPRECATED_VERSION": "This parameter is deprecated since version '{version}'. {description}",
+        "VALUE_DEPRECATED": "This parameter is deprecated. {description}",
+        "VALUE_DUPLICATE": "Duplicate parameter '{key}' in block '{type}'.",
+        "VALUE_MISSING": "Parameter '{key}' is missing a value in block '{type}'."
     }
 }

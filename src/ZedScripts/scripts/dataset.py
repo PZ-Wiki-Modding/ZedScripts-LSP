@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 from pprint import pformat
 
-from . import ScriptBlockData
+from . import ScriptBlockData, ScriptBlockParameter
 from .. import SCRIPTS_DATA_MANIFEST
 from ..providers.http import load_json
 
@@ -219,4 +219,15 @@ class Dataset:
         if self.is_root(type):
             return self.roots[type.lower()]
         raise ValueError(f"Script block data for type '{type}' not found")
-        
+
+    def can_block_have_parameter(self, type: str, parameter: str) -> bool:
+        block_data = self.get_script_block_data(type)
+        assert block_data is not None, f"{type} block should be validated before validating parameters"
+        parameters = block_data.get('parameters', [])
+        return parameter.lower() in parameters.keys()
+
+    def get_parameter_data(self, type: str, parameter: str) -> ScriptBlockParameter:
+        block_data = self.get_script_block_data(type)
+        assert block_data is not None, f"{type} block should be validated before retrieving parameter data"
+        parameters = block_data.get('parameters', {})
+        return parameters[parameter.lower()]
