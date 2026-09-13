@@ -1,5 +1,5 @@
-import enum
 import re
+from typing import TYPE_CHECKING
 
 from ..enums.SyntaxErrorType import SyntaxErrorType
 from .blocks import Block, ScriptBlock, Root, Value
@@ -10,6 +10,9 @@ from .lexer import (
     ELEMENTS_DELIMITERS
 )
 from .ast import Node, Chunk, BlockNode, ValueNode
+
+if TYPE_CHECKING:
+    from ..environment.document import Document
 
 class SyntaxError:
     def __init__(self, type: SyntaxErrorType, location: TextRange) -> None:
@@ -194,35 +197,35 @@ def ast_to_value(node: ValueNode) -> Value:
 
     return value
 
-def ast_to_block(node: BlockNode, parent: Block) -> ScriptBlock:
+def ast_to_block(document: 'Document', node: BlockNode, parent: Block) -> ScriptBlock:
     if node.type is None:
         type = ""
     else:
         type = str(node.type)
     
-    if node.id is not None:
-        id = str(node.id)
+    if node.id is None:
+        id = None
     else:
-        id = ""
+        id = str(node.id)
 
     comment = ast_to_comment(node, node.open_bracket.pos)
-    block = ScriptBlock(type, id, node, parent, comment)
-    ast_to_any(block)
+    block = ScriptBlock(document, type, id, node, parent, comment)
+    ast_to_any(document, block)
 
     return block
 
 
-def ast_to_any(parent: ScriptBlock | Root):
+def ast_to_any(document, parent: ScriptBlock | Root):
     if parent.node is None:
         raise RuntimeError("Parent block has no associated AST node.")
     for child in parent.node.children:
         if isinstance(child, ValueNode):
             parent.values.append(ast_to_value(child))
         elif isinstance(child, BlockNode):
-            parent.children.append(ast_to_block(child, parent))
+            parent.children.append(ast_to_block(document, child, parent))
 
 
-def chunk_to_block(chunk: Chunk, rootType: str) -> Root:
-    root = Root(rootType, chunk, "")
-    ast_to_any(root)
+def chunk_to_root(document: 'Document', chunk: Chunk, rootType: str) -> Root:
+    root = Root(document, rootType, chunk, "")
+    ast_to_any(document, root)
     return root

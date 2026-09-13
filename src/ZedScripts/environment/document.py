@@ -7,7 +7,7 @@ from lsprotocol import types
 from ..utils import path_to_uri
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.lexer import Lexer, TokenCollection
-from ..structure.parser import parse_tokens, chunk_to_block
+from ..structure.parser import parse_tokens, chunk_to_root
 from ..providers.diagnostics import DiagnosticInfo, DiagnosticReport, WorkspaceDiagnosticReport, DiagnosticCollection
 from ..providers.notifications import ZedNotification, SetZedScriptsNotificationParams
 from ..providers.semantic_tokens import SemanticTokenCollection, build_syntactic_tokens
@@ -27,12 +27,14 @@ class Document:
         self.text: str = text
         self.lexical_tokens: TokenCollection = TokenCollection()
         self.body: Root | None = None
+
         self.semantic_tokens: SemanticTokenCollection = SemanticTokenCollection(self)
+        self.syntactic_semantic_tokens: SemanticTokenCollection = SemanticTokenCollection(self)
 
         self.diagnostics: DiagnosticCollection = DiagnosticCollection()
         self.syntactic_diagnostics: DiagnosticCollection = DiagnosticCollection()
 
-        self._version_: int = 0
+        self._version: int = 0
         self._needs_validation: bool = True
 
     def make_zedscripts(self, server: 'ZedServer') -> None:
@@ -136,11 +138,11 @@ class Document:
         Increment the document version and mark it as needing validation.
         This version is used as an identifier for the diagnostic reports.
         """
-        self._version_ += 1
+        self._version += 1
         self.mark_changed()
         self.diagnostics.clear()
 
-    def get_id(self) -> str:
+    def get_diagnostics_id(self) -> str:
         """
         Generate a result ID based on the hash of the diagnostics.
         This ensures that if diagnostics don't change (even if text changes),
@@ -152,6 +154,20 @@ class Document:
             for d in self.diagnostics + self.syntactic_diagnostics
         ]))
         return hashlib.md5(diagnostics_str.encode()).hexdigest()
+
+    def get_tokens_id(self) -> str:
+        """
+        Generate a result ID based on the hash of the semantic tokens.
+        This ensures that if tokens don't change (even if text changes),
+        the client knows to skip processing via the "unchanged" report.
+        """
+        # Create a deterministic hash of the current semantic tokens
+        tokens_str = str(sorted([
+            (t.type.value, t.range) 
+            for t in self.semantic_tokens
+        ]))
+        return hashlib.md5(tokens_str.encode()).hexdigest()
+
 
 
 # notification response
@@ -166,17 +182,14 @@ class Document:
         syntactic_diagnostics = self.syntactic_diagnostics
         syntactic_diagnostics.clear() # reset previous syntactic diagnostics
         for error in result.errors:
-            syntactic_diagnostics.append(
-                DiagnosticInfo(
-                    type=DiagnosticType(error.type),
-                    location=error.location,
-                    args={}
-                )
+            syntactic_diagnostics.add(
+                type=DiagnosticType(error.type),
+                location=error.location
             )
 
         # reparse the document body into a block structure for easier diagnostics
-        self.body = chunk_to_block(result.chunk, self.rootType)
-        self.semantic_tokens = build_syntactic_tokens(self)
+        self.body = chunk_to_root(self, result.chunk, self.rootType)
+        build_syntactic_tokens(self)
 
     def validate(self, server: 'ZedServer') -> None:
         logging.debug("Validating document: %s", self.get_uri())
@@ -188,13 +201,17 @@ class Document:
         assert body is not None, f"Document ({self.get_uri()}) body should not be None before validation"
 
         # validate the root block, which will validate its children
-        body.validate(server.dataset, diagnostics)
+        body.validate(server.dataset)
 
     def on_document_diagnostics(self, server: 'ZedServer', previous_result_id: str | None) -> DiagnosticReport:
-        # should validate document here probably
+        # clear old diagnostics and semantic tokens
+        self.diagnostics.clear()
+        self.semantic_tokens.clear()
+
+        # validate the document
         self.validate(server)
 
-        result_id = self.get_id()
+        result_id = self.get_diagnostics_id()
         if (previous_result_id is not None
             and previous_result_id == result_id):
             return types.UnchangedDocumentDiagnosticReport(result_id)
@@ -206,7 +223,7 @@ class Document:
     def on_workspace_diagnostics(self, server: 'ZedServer', previous_result_id: str | None) -> WorkspaceDiagnosticReport:
         self.validate(server)
 
-        result_id = self.get_id()
+        result_id = self.get_diagnostics_id()
         if (previous_result_id is not None
             and previous_result_id == result_id):
             return types.WorkspaceUnchangedDocumentDiagnosticReport(
@@ -223,6 +240,6 @@ class Document:
     def on_semantic_tokens(self) -> types.SemanticTokens:
         return types.SemanticTokens(
             data=self.semantic_tokens.to_lsp(),
-            result_id=self.get_id(), # useless since they don't send it back ?
+            result_id=self.get_tokens_id(), # useless since they don't send it back ?
         )
 

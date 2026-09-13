@@ -128,44 +128,49 @@ class SemanticTokenCollection(list[SemanticToken]):
 
         # just so we don't have a for loop when not in debug mode
         if IS_DEBUG:
+            logging.debug("Semantic tokens for document")
             max_token_length = 70
             for line, token in enumerate(semantic_tokens):
                 logging.debug(f"{str(token).ljust(max_token_length+2)} {lsp_tokens[line * 5: (line + 1) * 5]}")
 
         return lsp_tokens
 
+    def add(self, type: SemanticTokenType, location: TextRange):
+        """
+        Add a new semantic token to the collection.
 
-def build_syntactic_tokens(document: Document) -> SemanticTokenCollection:
+        Args:
+            type (SemanticTokenType): The type of the semantic token.
+            location (TextRange): The range in the document that the token covers.
+        """
+        self.append(SemanticToken(location, type))
+
+
+def build_syntactic_tokens(document: Document):
     """
     Builds tokens that can be inferred directly from the lexical tokens without further context.
     :param document:
     :return:
     """
-    semantic_tokens: SemanticTokenCollection = SemanticTokenCollection(document)
+    semantic_tokens = document.syntactic_semantic_tokens
+    semantic_tokens.clear() # reset syntactic semantic tokens
 
     # mark every typical lexical token with a corresponding semantic token
     for token in document.lexical_tokens:
         match token.type:
             case TokenType.ELEMENT_DELIMITER:
-                semantic_tokens.append(
-                    SemanticToken(
-                        TextRange(token.pos, token.end),
-                        SemanticTokenType.KEYWORD
-                    )
+                semantic_tokens.add(
+                    SemanticTokenType.KEYWORD,
+                    TextRange(token.pos, token.end),
                 )
             case TokenType.COMMENT:
-                semantic_tokens.append(
-                    SemanticToken(
-                        TextRange(token.pos, token.end),
-                        SemanticTokenType.COMMENT
-                    )
+                semantic_tokens.add(
+                    SemanticTokenType.COMMENT,
+                    TextRange(token.pos, token.end),
                 )
             case TokenType.PUNCTUATOR:
-                semantic_tokens.append(
-                    SemanticToken(
-                        TextRange(token.pos, token.end),
-                        SemanticTokenType.KEYWORD
-                    )
+                semantic_tokens.add(
+                    SemanticTokenType.KEYWORD,
+                    TextRange(token.pos, token.end),
                 )
-    return semantic_tokens
 
