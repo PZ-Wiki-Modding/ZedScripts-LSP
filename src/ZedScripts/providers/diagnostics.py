@@ -62,6 +62,9 @@ class DiagnosticCollection(list[DiagnosticInfo]):
     def to_lsp(self) -> list[types.Diagnostic]:
         """
         Converts the different diagnostic information into LSP-compatible diagnostics.
+
+        Returns:
+            list[types.Diagnostic]: A list of LSP-compatible diagnostic objects.
         """
         lsp_diagnostics: list[types.Diagnostic] = []
         for diagnostic in self:
@@ -86,5 +89,13 @@ class DiagnosticCollection(list[DiagnosticInfo]):
         return lsp_diagnostics
 
     def add(self, type: DiagnosticType, location: TextRange, args: dict[str, Any] = {}) -> None:
+        """
+        Adds a new diagnostic to the collection.
+
+        Args:
+            type (DiagnosticType): The type of the diagnostic.
+            location (TextRange): The location in the text where the diagnostic applies.
+            args (dict[str, Any], optional): Additional arguments for the diagnostic. Defaults to {}.
+        """
         self.append(DiagnosticInfo(type=type, location=location, args=args))
 

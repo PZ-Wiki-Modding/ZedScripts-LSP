@@ -120,6 +120,8 @@ class ScriptBlock(Block, Element["BlockNode"]):
     def validate(self, dataset: Dataset) -> bool:
         # validate self
         if not self.validate_block(dataset):
+            # don't validate the rest since they are dependent
+            # on the data of this block
             return False
 
         # validate key-values
