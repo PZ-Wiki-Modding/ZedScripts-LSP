@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 from importlib.resources import files
 
 if TYPE_CHECKING:
-    from .diagnostics import DiagnosticType
+    from ..enums.Diagnostic import DiagnosticType
 
 
 class Locale:

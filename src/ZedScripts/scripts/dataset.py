@@ -150,6 +150,15 @@ class Dataset:
         self.roots = {k: ScriptBlockData(v) for k, v in roots.items()}
 
     def test_for_root(self, path: Path) -> str | None:
+        """
+        Determine the root type for the given file path based on the dataset's root patterns.
+
+        Args:
+            path (Path): The file path to test against the dataset's root patterns.
+
+        Returns:
+            str | None: The name of the root type if a matching pattern is found, otherwise None.
+        """
         # the path is used to determine the root type
         # for that we need to resolve, normalize and use posix paths
         resolved_path = path.resolve().as_posix()
@@ -166,3 +175,14 @@ class Dataset:
                     return rootFile['name']
         return None
 
+    def is_script_block(self, type: str) -> bool:
+        """
+        Determine if the given type corresponds to a script block in the dataset.
+
+        Args:
+            type (str): The type to check against the dataset's script blocks.
+
+        Returns:
+            bool: True if the type corresponds to a script block, False otherwise.
+        """
+        return type.lower() in [k.lower() for k in self.blocks.keys()]

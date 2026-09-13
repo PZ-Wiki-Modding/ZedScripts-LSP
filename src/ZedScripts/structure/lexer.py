@@ -215,6 +215,11 @@ class TokenCollection(UserList[Token]):
 
         return token.pos_of(i - total_length)
 
+    def to_range(self) -> TextRange:
+        if not self.data:
+            return TextRange(TextPosition(0, 0), TextPosition(0, 0))
+        return TextRange(self.data[0].pos, self.data[-1].end)
+
     def strip(self) -> TokenCollection:
         # early return
         end = len(self.data)

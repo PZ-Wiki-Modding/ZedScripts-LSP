@@ -5,19 +5,19 @@ from pathlib import Path
 from lsprotocol import types
 
 from ..utils import path_to_uri
+from ..enums.Diagnostic import DiagnosticType
 from ..structure.lexer import Lexer, TokenCollection
 from ..structure.parser import parse_tokens, chunk_to_block
-from ..providers.diagnostics import DiagnosticInfo, DiagnosticType, DiagnosticReport, WorkspaceDiagnosticReport, DiagnosticCollection
+from ..providers.diagnostics import DiagnosticInfo, DiagnosticReport, WorkspaceDiagnosticReport, DiagnosticCollection
 from ..providers.notifications import ZedNotification, SetZedScriptsNotificationParams
 from ..providers.semantic_tokens import SemanticTokenCollection, build_syntactic_tokens
-from ..scripts.validate import validate
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
     from ..server import ZedServer
-    from ..structure.blocks import Block
+    from ..structure.blocks import Root
 
 class Document:
     documents: list['Document'] = []
@@ -26,7 +26,7 @@ class Document:
         self.path: Path = path
         self.text: str = text
         self.lexical_tokens: TokenCollection = TokenCollection()
-        self.body: Block | None = None
+        self.body: Root | None = None
         self.semantic_tokens: SemanticTokenCollection = SemanticTokenCollection(self)
 
         self.diagnostics: DiagnosticCollection = DiagnosticCollection()
@@ -157,6 +157,7 @@ class Document:
 # notification response
 
     def parse(self) -> None:
+        logging.debug("Parsing document: %s", self.get_uri())
         # tokenize and parse the document text
         self.lexical_tokens = Lexer.tokenize(self.text)
         result = parse_tokens(self.lexical_tokens)
@@ -174,25 +175,37 @@ class Document:
             )
 
         # reparse the document body into a block structure for easier diagnostics
-        self.body = chunk_to_block(result.chunk)
+        self.body = chunk_to_block(result.chunk, self.rootType)
         self.semantic_tokens = build_syntactic_tokens(self)
 
-    def validate(self) -> None:
-        validate(self)
+    def validate(self, server: 'ZedServer') -> None:
+        logging.debug("Validating document: %s", self.get_uri())
+        diagnostics = self.diagnostics
+        diagnostics.clear() # reset previous diagnostics
 
-    def on_document_diagnostics(self, previous_result_id: str | None) -> DiagnosticReport:
+        # retrieve the starting point for validation
+        body = self.body
+        assert body is not None, f"Document ({self.get_uri()}) body should not be None before validation"
+
+        # validate the root block, which will validate its children
+        body.validate(server.dataset, diagnostics)
+
+    def on_document_diagnostics(self, server: 'ZedServer', previous_result_id: str | None) -> DiagnosticReport:
+        # should validate document here probably
+        self.validate(server)
+
         result_id = self.get_id()
         if (previous_result_id is not None
             and previous_result_id == result_id):
             return types.UnchangedDocumentDiagnosticReport(result_id)
 
-        # should validate document here probably
-
         return types.FullDocumentDiagnosticReport(
             items=self.get_lsp_diagnostics(),
             result_id=result_id)
 
-    def on_workspace_diagnostics(self, previous_result_id: str | None) -> WorkspaceDiagnosticReport:
+    def on_workspace_diagnostics(self, server: 'ZedServer', previous_result_id: str | None) -> WorkspaceDiagnosticReport:
+        self.validate(server)
+
         result_id = self.get_id()
         if (previous_result_id is not None
             and previous_result_id == result_id):
@@ -200,8 +213,6 @@ class Document:
                 uri=self.get_uri(),
                 result_id=result_id,
             )
-
-        # should validate document here probably
 
         return types.WorkspaceFullDocumentDiagnosticReport(
             uri=self.get_uri(),

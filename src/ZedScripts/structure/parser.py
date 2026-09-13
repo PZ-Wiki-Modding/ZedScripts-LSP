@@ -1,7 +1,8 @@
 import enum
 import re
 
-from .blocks import Block, Value
+from ..enums.SyntaxErrorType import SyntaxErrorType
+from .blocks import Block, ScriptBlock, Root, Value
 from .lexer import (
     Lexer, 
     TokenType, Token, TokenCollection, 
@@ -9,13 +10,6 @@ from .lexer import (
     ELEMENTS_DELIMITERS
 )
 from .ast import Node, Chunk, BlockNode, ValueNode
-
-
-class SyntaxErrorType(enum.Enum):
-    TOO_MANY_CLOSING_BRACKETS = enum.auto()
-    BLOCK_MISSING_TYPE = enum.auto()
-    BLOCK_NOT_CLOSED = enum.auto()
-
 
 class SyntaxError:
     def __init__(self, type: SyntaxErrorType, location: TextRange) -> None:
@@ -186,49 +180,49 @@ def ast_to_comment(node: Node, start: TextPosition) -> str:
 
 
 def ast_to_value(node: ValueNode) -> Value:
-    value = Value(
-        str(node.tokens).strip()
-    )
-    value.node = node
     tokens = node.tokens.strip()
-
     if len(tokens) > 0:
-        value.comment = ast_to_comment(node, tokens[0].pos)
+        comment = ast_to_comment(node, tokens[0].pos)
     else:
-        value.comment = ""
+        comment = ""
+
+    value = Value(
+        str(node.tokens).strip(),
+        node,
+        comment
+    )
 
     return value
 
+def ast_to_block(node: BlockNode, parent: Block) -> ScriptBlock:
+    if node.type is None:
+        type = ""
+    else:
+        type = str(node.type)
+    
+    if node.id is not None:
+        id = str(node.id)
+    else:
+        id = ""
 
-def ast_to_any(parent: Block):
+    comment = ast_to_comment(node, node.open_bracket.pos)
+    block = ScriptBlock(type, id, node, parent, comment)
+    ast_to_any(block)
+
+    return block
+
+
+def ast_to_any(parent: ScriptBlock | Root):
     if parent.node is None:
         raise RuntimeError("Parent block has no associated AST node.")
     for child in parent.node.children:
         if isinstance(child, ValueNode):
             parent.values.append(ast_to_value(child))
         elif isinstance(child, BlockNode):
-            parent.children.append(ast_to_block(child))
+            parent.children.append(ast_to_block(child, parent))
 
 
-def ast_to_block(node: BlockNode) -> Block:
-    if node.type is None:
-        type = ""
-    else:
-        type = str(node.type)
-
-    block = Block(type)
-    block.node = node
-    if node.id is not None:
-        block.id = str(node.id)
-    ast_to_any(block)
-
-    block.comment = ast_to_comment(node, node.open_bracket.pos)
-
-    return block
-
-
-def chunk_to_block(chunk: Chunk) -> Block:
-    root = Block("")
-    root.node = chunk
+def chunk_to_block(chunk: Chunk, rootType: str) -> Root:
+    root = Root(rootType, chunk, "")
     ast_to_any(root)
     return root

@@ -86,7 +86,6 @@ class ZedServer(LanguageServer):
             return
 
         document.parse()
-        # document.validate()
 
     def on_document_deleted(self, path: Path) -> None:
         Document.delete(path)
@@ -160,7 +159,7 @@ def diagnostic(server: ZedServer, params: types.DocumentDiagnosticParams) -> Dia
     document = Document.find(path)
     if document is None:
         return None
-    return document.on_document_diagnostics(params.previous_result_id)
+    return document.on_document_diagnostics(server, params.previous_result_id)
 
 
 # sadly I'm not sure that implementation works as expected because the client constantly
