@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Iterator, TypeVar, Generic
 
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.lexer import TextRange
-from ..providers.semantic_tokens import SemanticTokenType
+from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifiers
 
 if TYPE_CHECKING:
     from .ast import ValueNode, BlockNode, Chunk
@@ -113,8 +113,8 @@ class ScriptBlock(Block, Element["BlockNode"]):
     def add_diagnostic(self, type: DiagnosticType, location: TextRange, args: dict[str, Any] = {}) -> None:
         self.document.diagnostics.add(type=type, location=location, args=args)
 
-    def add_semantic_token(self, type: SemanticTokenType, location: TextRange) -> None:
-        self.document.semantic_tokens.add(type=type, location=location)
+    def add_semantic_token(self, type: SemanticTokenType, location: TextRange, modifiers: list[SemanticTokenModifiers] = []) -> None:
+        self.document.semantic_tokens.add(type=type, location=location, modifiers=modifiers)
 
 
     def validate(self, dataset: Dataset) -> bool:
@@ -189,7 +189,8 @@ class ScriptBlock(Block, Element["BlockNode"]):
             # that the ID is valid or not
             self.add_semantic_token(
                 SemanticTokenType.LABEL,
-                node_id.to_range()
+                node_id.to_range(),
+                [SemanticTokenModifiers.DECLARATION]
             )
 
             # there shouldn't be an ID

@@ -46,15 +46,25 @@ class SemanticTokenType(enum.IntEnum):
 
 class SemanticTokenModifiers(enum.IntFlag):
     DECLARATION = enum.auto()
+    """declaration site of a symbol"""
     DEFINITION = enum.auto()
+    """definition (vs. just a declaration)"""
     READONLY = enum.auto()
+    """symbol can't be reassigned (e.g. a constant)"""
     STATIC = enum.auto()
+    """static member/variable"""
     DEPRECATED = enum.auto()
+    """symbol is deprecated, editors often show strikethrough"""
     ABSTRACT = enum.auto()
+    """abstract method/class"""
     ASYNC = enum.auto()
+    """async function/method"""
     MODIFICATION = enum.auto()
+    """token is a write/assignment to the symbol, not just a read"""
     DOCUMENTATION = enum.auto()
+    """token appears inside documentation"""
     DEFAULT_LIBRARY = enum.auto()
+    """symbol comes from a built-in/default library"""
 
 def get_tokens() -> tuple[list[str], list[str]]:
     """
@@ -135,7 +145,7 @@ class SemanticTokenCollection(list[SemanticToken]):
 
         return lsp_tokens
 
-    def add(self, type: SemanticTokenType, location: TextRange):
+    def add(self, type: SemanticTokenType, location: TextRange, modifiers: list[SemanticTokenModifiers] = []):
         """
         Add a new semantic token to the collection.
 
@@ -143,7 +153,10 @@ class SemanticTokenCollection(list[SemanticToken]):
             type (SemanticTokenType): The type of the semantic token.
             location (TextRange): The range in the document that the token covers.
         """
-        self.append(SemanticToken(location, type))
+        combined_modifiers = SemanticTokenModifiers(0)
+        for modifier in modifiers:
+            combined_modifiers |= modifier
+        self.append(SemanticToken(location, type, combined_modifiers))
 
 
 def build_syntactic_tokens(document: Document):
