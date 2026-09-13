@@ -108,7 +108,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
         # validate the type of the block
         if not dataset.is_script_block(type):
             self.add_diagnostic(
-                DiagnosticType.SCHEMA_UNKNOWN_BLOCK,
+                DiagnosticType.BLOCK_UNKNOWN_BLOCK,
                 node.type.to_range(),
                 {"type": type}
             )
@@ -150,7 +150,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
             # there shouldn't be an ID
             if ID_data is None:
                 self.add_diagnostic(
-                    DiagnosticType.SCHEMA_UNEXPECTED_ID,
+                    DiagnosticType.BLOCK_UNEXPECTED_ID,
                     node_id.to_range(),
                     {"type": type, "id": id}
                 )
@@ -179,7 +179,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
         if not has_ID:
             if should_have_id_from_parent:
                 self.add_diagnostic(
-                    DiagnosticType.SCHEMA_MISSING_ID,
+                    DiagnosticType.BLOCK_MISSING_ID,
                     node.type.to_range(),
                     {"id": ID_data}
                 )
@@ -190,7 +190,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
             if not should_have_id_from_parent:
                 assert parents_without is not None, "parents_without should not be None when checking for unexpected ID with specific parent"
                 self.add_diagnostic(
-                    DiagnosticType.SCHEMA_HAS_ID_IN_PARENT,
+                    DiagnosticType.BLOCK_HAS_ID_IN_PARENT,
                     node.type.to_range(),
                     {"type": type, "parentType": self.parent.type, "invalidBlocks": parents_without}
                 )
@@ -200,7 +200,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
             can_have_spaces = ID_data.get('canHaveSpace', False)
             if not can_have_spaces and " " in id:
                 self.add_diagnostic(
-                    DiagnosticType.SCHEMA_ID_CANNOT_CONTAIN_SPACES,
+                    DiagnosticType.BLOCK_ID_CANNOT_CONTAIN_SPACES,
                     node.type.to_range(),
                     {"type": type, "id": id}
                 )
@@ -211,7 +211,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
             if valid_IDs is not None:
                 if id not in valid_IDs:
                     self.add_diagnostic(
-                        DiagnosticType.SCHEMA_INVALID_ID,
+                        DiagnosticType.BLOCK_INVALID_ID,
                         node.type.to_range(),
                         {"type": type, "id": id, "validIDs": valid_IDs}
                     )
@@ -230,7 +230,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
             if forbidden_IDs is not None:
                 if id in forbidden_IDs:
                     self.add_diagnostic(
-                        DiagnosticType.SCHEMA_FORBIDDEN_ID,
+                        DiagnosticType.BLOCK_FORBIDDEN_ID,
                         node.type.to_range(),
                         {"type": type, "id": id, "forbiddenIDs": forbidden_IDs}
                     )
