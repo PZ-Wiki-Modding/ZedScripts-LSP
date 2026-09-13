@@ -97,6 +97,31 @@ class TextRange:
     def __repr__(self) -> str:
         return f"<{repr(self.start)}-{repr(self.end)}>"
 
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, TextRange):
+            return False
+        return self.start == other.start and self.end == other.end
+
+    def __lt__(self, other: Any) -> bool:
+        if not isinstance(other, TextRange):
+            return NotImplemented
+        return (self.start, self.end) < (other.start, other.end)
+
+    def __le__(self, other: Any) -> bool:
+        if not isinstance(other, TextRange):
+            return NotImplemented
+        return (self.start, self.end) <= (other.start, other.end)
+
+    def __gt__(self, other: Any) -> bool:
+        if not isinstance(other, TextRange):
+            return NotImplemented
+        return (self.start, self.end) > (other.start, other.end)
+
+    def __ge__(self, other: Any) -> bool:
+        if not isinstance(other, TextRange):
+            return NotImplemented
+        return (self.start, self.end) >= (other.start, other.end)
+
 
 def chars_in_range(text: str, range: TextRange) -> str:
     """
