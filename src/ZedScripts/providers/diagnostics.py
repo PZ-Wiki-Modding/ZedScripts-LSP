@@ -85,6 +85,6 @@ class DiagnosticCollection(list[DiagnosticInfo]):
             )
         return lsp_diagnostics
 
-    def add(self, type: DiagnosticType, location: TextRange, args: dict[str, Any]) -> None:
+    def add(self, type: DiagnosticType, location: TextRange, args: dict[str, Any] = {}) -> None:
         self.append(DiagnosticInfo(type=type, location=location, args=args))
 
