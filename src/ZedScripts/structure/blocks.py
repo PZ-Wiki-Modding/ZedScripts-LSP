@@ -147,6 +147,16 @@ class Root(Block, Element["Chunk"]):
         self.node = node
         self.comment = comment
 
-    def validate_block(self, dataset: Dataset, diagnostics: DiagnosticCollection) -> bool:
-        """Root block is always considered valid."""
+    def validate(self, dataset: Dataset, diagnostics: DiagnosticCollection) -> bool:
+        # validate key-values
+        for value in self.values:
+            value.validate(dataset, diagnostics)
+
+        # validate children
+        self.validate_children(dataset, diagnostics)
         return True
+    
+    def validate_children(self, dataset: Dataset, diagnostics: DiagnosticCollection):
+        # validate all children blocks
+        for child in self.children:
+            child.validate(dataset, diagnostics)
