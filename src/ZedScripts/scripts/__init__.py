@@ -1,5 +1,5 @@
 import enum
-from typing import TypedDict, Optional, Literal
+from typing import TypedDict, Literal, NotRequired
 
 class ScriptBlockData(TypedDict):
     """
@@ -7,31 +7,31 @@ class ScriptBlockData(TypedDict):
     """
     name: str
     description: str
-    shortDescription: Optional[str]
-    needsChildren: Optional[list[str]]
+    shortDescription: NotRequired[str]
+    needsChildren: NotRequired[list[str]]
     parents: list[str]
-    ID: 'ScriptBlockID'
+    ID: NotRequired['ScriptBlockID']
     parameters: dict[str, 'ScriptBlockParameter']
     # properties: #TODO
-    variantOf: Optional[str]
+    variantOf: NotRequired[str]
     """if this block is a variant of another block, the name of the base block"""
 
     # those should basically be unused here now
-    isRoot: Optional[bool]
-    pattern: Optional[list[str]]
+    isRoot: NotRequired[bool]
+    pattern: NotRequired[list[str]]
     """to be used as regex patterns for identification"""
-    noComma: Optional[bool]
+    noComma: NotRequired[bool]
     """default is false"""
 
 class ScriptBlockID(TypedDict):
     """
     Provides information about the ID of the block.
     """
-    parentsWithout: Optional[list[str]]
-    values: Optional[list[str]]
-    asType: Optional[bool]
-    canHaveSpace: Optional[bool]
-    translation: Optional['TranslationProperties']
+    parentsWithout: NotRequired[list[str]]
+    values: NotRequired[list[str]]
+    asType: NotRequired[bool]
+    canHaveSpace: NotRequired[bool]
+    translation: NotRequired['TranslationProperties']
 
 
 ## key-value types
@@ -42,14 +42,14 @@ class ScriptBlockParameter(TypedDict):
     Represents a parameter of a script block.
     """
     name: str
-    description: Optional[str]
-    allowedDuplicate: Optional[bool]
-    canBeEmpty: Optional[bool]
-    default: Optional[ScriptBlockValue]
-    type: Optional['ParameterType']
-    deprecated: Optional['DeprecatedInfo']
-    values: Optional[list[ScriptBlockValue]]
-    needs: Optional['ScriptBlockNeeds']
+    description: NotRequired[str]
+    allowedDuplicate: NotRequired[bool]
+    canBeEmpty: NotRequired[bool]
+    default: NotRequired[ScriptBlockValue]
+    type: NotRequired['ParameterType']
+    deprecated: NotRequired['DeprecatedInfo']
+    values: NotRequired[list[ScriptBlockValue]]
+    needs: NotRequired['ScriptBlockNeeds']
 
 
 class ValueType(enum.StrEnum):
@@ -65,10 +65,10 @@ class ValueType(enum.StrEnum):
 
 class ParameterType(TypedDict):
     main: ValueType
-    array: Optional['ArrayType']
-    object: Optional['ObjectType']
-    block: Optional['BlockType']
-    translation: Optional['TranslationProperties']
+    array: NotRequired['ArrayType']
+    object: NotRequired['ObjectType']
+    block: NotRequired['BlockType']
+    translation: NotRequired['TranslationProperties']
 
 class ArrayType(TypedDict):
     separator: str
@@ -85,27 +85,27 @@ class ObjectType(TypedDict):
 class BlockType(TypedDict):
     name: str
     """the block type (e.g. "sound", "item", "model"...)"""
-    fullType: Optional[bool]
+    fullType: NotRequired[bool]
     """if true, this should use the module to reference the block"""
-    noAutoImport: Optional[bool]
+    noAutoImport: NotRequired[bool]
     """if true, the will not automatically check its own parent block module when fullType is set to true"""
 
 
 class ScriptBlockNeeds(TypedDict):
     name: str
     """the dependent parameter"""
-    values: Optional[list[ScriptBlockValue]]
+    values: NotRequired[list[ScriptBlockValue]]
     """list of possible values for the dependent parameter"""
-    valueToType: Optional[dict[str, str]]
+    valueToType: NotRequired[dict[str, str]]
     """mapping from dependent parameter values to their types
     (for dynamic typing based on other parameter's value)"""
 
 ## extra metadata
 
 class DeprecatedInfo(TypedDict):
-    replacedBy: Optional[str]
-    description: Optional[str]
-    version: Optional[str]
+    replacedBy: NotRequired[str]
+    description: NotRequired[str]
+    version: NotRequired[str]
 
 class TranslationProperties(TypedDict):
     """
