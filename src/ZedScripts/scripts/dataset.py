@@ -1,5 +1,7 @@
 import logging
-from typing import TypedDict
+import re
+from pathlib import Path
+from typing import TYPE_CHECKING, TypedDict
 from pprint import pformat
 
 from . import ScriptBlockData
@@ -147,5 +149,20 @@ class Dataset:
         self.blocks = {k: ScriptBlockData(v) for k, v in blocks.items()}
         self.roots = {k: ScriptBlockData(v) for k, v in roots.items()}
 
+    def test_for_root(self, path: Path) -> str | None:
+        # the path is used to determine the root type
+        # for that we need to resolve, normalize and use posix paths
+        resolved_path = path.resolve().as_posix()
 
+        # for each rootFile type, we test their identification patterns
+        # to determine if the document is a zedscript doc
+        logging.debug(f"Resolved path for testing: {resolved_path}")
+        for rootFile in self.roots.values():
+            patterns = rootFile['pattern'] or []
+            for pattern in patterns:
+                regex = re.compile(pattern)
+                logging.debug(f"Testing pattern {pattern}")
+                if regex.search(resolved_path) is not None:
+                    return rootFile['name']
+        return None
 

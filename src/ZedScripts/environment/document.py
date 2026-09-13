@@ -21,7 +21,8 @@ if TYPE_CHECKING:
 
 class Document:
     documents: list['Document'] = []
-    def __init__(self, path: Path, text: str) -> None:
+    def __init__(self, path: Path, text: str, rootType: str) -> None:
+        self.rootType: str = rootType
         self.path: Path = path
         self.text: str = text
         self.lexical_tokens: TokenCollection = TokenCollection()
@@ -70,14 +71,24 @@ class Document:
         return None
 
     @staticmethod
-    def make(server: 'ZedServer', path: Path, text: str) -> 'Document':
-        document = Document(path, text)
+    def make(server: 'ZedServer', path: Path, text: str) -> 'Document | None':
+        # find the rootType of the document
+        rootType = server.dataset.test_for_root(path)
+        if rootType is None:
+            return None
+
+        # if it is a valid ZedScripts document, create a new Document instance
+        logging.debug(f"Found valid ZedScripts root for {path}: {rootType}")
+        document = Document(path, text, rootType)
         document.make_zedscripts(server)
         Document.documents.append(document)
+
         return document
 
     @staticmethod
-    def make_or_find(server: 'ZedServer', path: Path, text: str) -> 'Document':
+    def find_or_make(server: 'ZedServer', path: Path, text: str) -> 'Document | None':
+        # if we find one, we don't have to verify it is a ZedScripts file
+        # bcs it means the document didn't move
         document = Document.find(path)
         if document is None:
             document = Document.make(server, path, text)
@@ -121,9 +132,11 @@ class Document:
 # notification response
 
     def parse(self) -> None:
+        # tokenize and parse the document text
         self.lexical_tokens = Lexer.tokenize(self.text)
         result = parse_tokens(self.lexical_tokens)
 
+        # set new syntactic diagnostics
         syntactic_diagnostics = self.syntactic_diagnostics
         syntactic_diagnostics.clear() # reset previous syntactic diagnostics
         for error in result.errors:
@@ -135,6 +148,7 @@ class Document:
                 )
             )
 
+        # reparse the document body into a block structure for easier diagnostics
         self.body = chunk_to_block(result.chunk)
         self.semantic_tokens = build_syntactic_tokens(self)
 
