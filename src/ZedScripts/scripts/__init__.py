@@ -1,5 +1,12 @@
 import enum
-from typing import TypedDict, Literal, NotRequired
+from typing import (TYPE_CHECKING, 
+                    TypedDict, Literal, NotRequired, 
+                    TypeVar, Generic)
+
+if TYPE_CHECKING:
+    from ..structure.ast import ValueNode, BlockNode, Chunk
+
+
 
 class ScriptBlockData(TypedDict):
     """
@@ -114,3 +121,16 @@ class TranslationProperties(TypedDict):
     """
     keyPattern: str
     sourceFile: str
+
+
+## block and values base classes
+
+
+NodeT = TypeVar("NodeT")
+
+
+class Element(Generic[NodeT]):
+    def __init__(self) -> None:
+        super().__init__()
+        self.node: NodeT
+        """AST node of the element."""

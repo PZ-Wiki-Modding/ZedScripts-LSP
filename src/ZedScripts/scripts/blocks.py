@@ -1,67 +1,15 @@
-from __future__ import annotations
+from typing import TYPE_CHECKING, Any, Iterator
 
-import logging
-from typing import TYPE_CHECKING, Any, Iterator, TypeVar, Generic
-
+from . import Element
 from ..enums.Diagnostic import DiagnosticType
+from ..structure.ast import BlockNode, Chunk
 from ..structure.lexer import TextRange
 from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifiers
 
 if TYPE_CHECKING:
-    from .ast import ValueNode, BlockNode, Chunk
+    from .value import Value
     from ..scripts.dataset import Dataset
     from ..environment.document import Document
-
-NodeT = TypeVar("NodeT")
-
-
-class Element(Generic[NodeT]):
-    def __init__(self) -> None:
-        super().__init__()
-        self.node: NodeT
-        """AST node of the element."""
-
-
-class Value(Element["ValueNode"]):
-    def __init__(self, string: str, node: ValueNode, comment: str) -> None:
-        super().__init__()
-        self.string: str = string
-        """
-        Includes any whitespace preceding the value, including before any preceding comments.
-        This sucks, but it's how the game parses them, so potentially needed for 1:1 behaviour.
-        """
-        self.node: ValueNode = node
-        self.comment: str = comment
-
-    def is_key_value(self) -> bool:
-        return "=" in self.string
-
-    def key(self) -> str:
-        """
-        Returns the stripped text before the first ``=`` in the value.
-        Not all values take the form of key-value pairs.
-        :return:
-        """
-        assert self.is_key_value()
-        return self.string.split("=", 1)[0].strip()
-
-    def value(self) -> str:
-        """
-        Returns the stripped text after the first ``=`` in the value.
-        Not all values take the form of key-value pairs.
-        :return:
-        """
-        if self.is_key_value():
-            return self.string.split("=", 1)[1].strip()
-        return self.string.strip()
-
-    def __str__(self) -> str:
-        return self.string
-
-    def validate(self, dataset: Dataset) -> bool:
-        #TODO: to implement
-        return True
-
 
 class Block:
     def __init__(self, document: 'Document', type: str):
@@ -72,15 +20,15 @@ class Block:
         All blocks must have an explicit type, except the root block of a file, which is given an empty string.
         If the block was created from AST, the type may be empty for non-root blocks, but this is ill-formed.
         """
-        self.children: list[ScriptBlock] = []
-        self.values: list[Value] = []
+        self.children: list['ScriptBlock'] = []
+        self.values: list['Value'] = []
 
-    def __iter__(self) -> Iterator[ScriptBlock]:
+    def __iter__(self) -> Iterator['ScriptBlock']:
         return iter(self.children)
 
-    def validate(self, dataset: Dataset) -> bool: ...
-    def validate_block(self, dataset: Dataset) -> bool: ...
-    def validate_children(self, dataset: Dataset): ...
+    def validate(self, dataset: 'Dataset') -> bool: ...
+    def validate_block(self, dataset: 'Dataset') -> bool: ...
+    def validate_children(self, dataset: 'Dataset'): ...
 
 
 
@@ -117,7 +65,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
         self.document.semantic_tokens.add(type=type, location=location, modifiers=modifiers)
 
 
-    def validate(self, dataset: Dataset) -> bool:
+    def validate(self, dataset: 'Dataset') -> bool:
         # validate self
         if not self.validate_block(dataset):
             # don't validate the rest since they are dependent
@@ -133,7 +81,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
         
         return True
 
-    def validate_block(self, dataset: Dataset) -> bool:
+    def validate_block(self, dataset: 'Dataset') -> bool:
         """
         Validate the block itself, without considering its children or key-values.
         This includes:
@@ -172,7 +120,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
 
         return True
 
-    def validate_id(self, dataset: Dataset) -> bool:
+    def validate_id(self, dataset: 'Dataset') -> bool:
         type = self.type
         node = self.node
         if node.type is None or type == "":
@@ -294,7 +242,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
         return True
 
 
-    def validate_children(self, dataset: Dataset):
+    def validate_children(self, dataset: 'Dataset'):
         # validate all children blocks
         for child in self.children:
             child.validate(dataset)
@@ -307,7 +255,7 @@ class Root(Block, Element["Chunk"]):
         self.node = node
         self.comment = comment
 
-    def validate(self, dataset: Dataset) -> bool:
+    def validate(self, dataset: 'Dataset') -> bool:
         # validate key-values
         for value in self.values:
             value.validate(dataset)
@@ -316,7 +264,7 @@ class Root(Block, Element["Chunk"]):
         self.validate_children(dataset)
         return True
     
-    def validate_children(self, dataset: Dataset):
+    def validate_children(self, dataset: 'Dataset'):
         # validate all children blocks
         for child in self.children:
             child.validate(dataset)
