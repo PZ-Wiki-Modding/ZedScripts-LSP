@@ -25,6 +25,7 @@
         "VALUE_INVALID_TYPE": "Type '{type}' of '{parameter}' is invalid for value '{value}'. Expected type is '{expected_type}'.",
         "VALUE_INVALID_OBJECT_FORMAT": "Values {values} for parameter '{parameter}' do not follow the expected 'key{key_value_separator}value' format.",
         "VALUE_INVALID_OBJECT_KEY_TYPE": "Key '{obj_key}' for parameter '{key}' is of invalid type '{actual_type}'. Expected type is '{expected_type}'.",
-        "VALUE_INVALID_OBJECT_VALUE_TYPE": "Value '{obj_value}' for parameter '{key}' is of invalid type '{actual_type}'. Expected type is '{expected_type}'."
+        "VALUE_INVALID_OBJECT_VALUE_TYPE": "Value '{obj_value}' for parameter '{key}' is of invalid type '{actual_type}'. Expected type is '{expected_type}'.",
+        "VALUE_WRONGLY_FORMATTED_KEY_VALUE_PAIR": "Parameter '{key}' in block '{type}' with value '{value}' is likely wrongly formatted. Verify you're not missing a comma or you're not using the '=' symbol incorrectly."
     }
 }

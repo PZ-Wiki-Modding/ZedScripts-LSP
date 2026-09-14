@@ -15,34 +15,35 @@ class DiagnosticType(enum.Enum):
         return None
 
     # syntax diagnostics
-    PARSER_TOO_MANY_CLOSING_BRACKETS =     enum.auto()
-    PARSER_BLOCK_MISSING_TYPE =            enum.auto()
-    PARSER_BLOCK_NOT_CLOSED =              enum.auto()
+    PARSER_TOO_MANY_CLOSING_BRACKETS =       enum.auto()
+    PARSER_BLOCK_MISSING_TYPE =              enum.auto()
+    PARSER_BLOCK_NOT_CLOSED =                enum.auto()
 
     # block diagnostics
-    BLOCK_UNKNOWN_BLOCK =                  enum.auto()
+    BLOCK_UNKNOWN_BLOCK =                    enum.auto()
 
     # ID related diagnostics
-    BLOCK_UNEXPECTED_ID =                  enum.auto()
-    BLOCK_MISSING_ID =                     enum.auto()
-    BLOCK_HAS_ID_IN_PARENT =               enum.auto()
-    BLOCK_ID_CANNOT_CONTAIN_SPACES =       enum.auto()
-    BLOCK_INVALID_ID =                     enum.auto()
-    BLOCK_FORBIDDEN_ID =                   enum.auto()
+    BLOCK_UNEXPECTED_ID =                    enum.auto()
+    BLOCK_MISSING_ID =                       enum.auto()
+    BLOCK_HAS_ID_IN_PARENT =                 enum.auto()
+    BLOCK_ID_CANNOT_CONTAIN_SPACES =         enum.auto()
+    BLOCK_INVALID_ID =                       enum.auto()
+    BLOCK_FORBIDDEN_ID =                     enum.auto()
 
     # parameters diagnostics
-    VALUE_UNKNOWN_PARAMETER =              enum.auto()
-    VALUE_DEPRECATED_REPLACEMENT_VERSION = enum.auto()
-    VALUE_DEPRECATED_REPLACEMENT =         enum.auto()
-    VALUE_DEPRECATED_VERSION =             enum.auto()
-    VALUE_DEPRECATED =                     enum.auto()
-    VALUE_DUPLICATE =                      enum.auto()
-    VALUE_MISSING =                        enum.auto()
-    VALUE_FORBIDDEN =                      enum.auto()
-    VALUE_INVALID_TYPE =                   enum.auto()
-    VALUE_INVALID_OBJECT_FORMAT =          enum.auto()
-    VALUE_INVALID_OBJECT_KEY_TYPE =        enum.auto()
-    VALUE_INVALID_OBJECT_VALUE_TYPE =      enum.auto()
+    VALUE_UNKNOWN_PARAMETER =                enum.auto()
+    VALUE_DEPRECATED_REPLACEMENT_VERSION =   enum.auto()
+    VALUE_DEPRECATED_REPLACEMENT =           enum.auto()
+    VALUE_DEPRECATED_VERSION =               enum.auto()
+    VALUE_DEPRECATED =                       enum.auto()
+    VALUE_DUPLICATE =                        enum.auto()
+    VALUE_MISSING =                          enum.auto()
+    VALUE_FORBIDDEN =                        enum.auto()
+    VALUE_INVALID_TYPE =                     enum.auto()
+    VALUE_INVALID_OBJECT_FORMAT =            enum.auto()
+    VALUE_INVALID_OBJECT_KEY_TYPE =          enum.auto()
+    VALUE_INVALID_OBJECT_VALUE_TYPE =        enum.auto()
+    VALUE_WRONGLY_FORMATTED_KEY_VALUE_PAIR = enum.auto()
 
 
 # syntax diagnostics
@@ -119,10 +120,13 @@ DiagnosticDefinition(DiagnosticType.VALUE_INVALID_OBJECT_FORMAT,
                      args={"type": str, "key": str, "key_value_separator": str})
 DiagnosticDefinition(DiagnosticType.VALUE_INVALID_OBJECT_KEY_TYPE,
                      DiagnosticSeverity.Warning,
-                     args={"type": str, "key": str, "expected_type": str, "actual_type": str})
+                     args={"obj_key": str, "key": str, "expected_type": str, "actual_type": str})
 DiagnosticDefinition(DiagnosticType.VALUE_INVALID_OBJECT_VALUE_TYPE,
                      DiagnosticSeverity.Warning,
-                     args={"type": str, "key": str, "expected_type": str, "actual_type": str})
+                     args={"obj_value": str, "key": str, "expected_type": str, "actual_type": str})
+DiagnosticDefinition(DiagnosticType.VALUE_WRONGLY_FORMATTED_KEY_VALUE_PAIR,
+                     DiagnosticSeverity.Warning,
+                     args={"type": str, "key": str, "value": str})
 
 
 # ensure that all diagnostic types have a corresponding definition

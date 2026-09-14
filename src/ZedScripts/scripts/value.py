@@ -241,6 +241,11 @@ class Value(Element["ValueNode"]):
                 )
                 return False
 
+        # init key_value_separator
+        # if it is equal to "=", we need to ignore the diagnostic of extra = signs
+        # possibly marking a wrongly formatted key-value pair
+        key_value_separator = None
+
         # verify the type
         type_data = param_data.get('type')
         value_type = dataset.get_parameter_type(value, param_data)
@@ -318,6 +323,16 @@ class Value(Element["ValueNode"]):
             elif expected_type == ValueType.BLOCK:
                 # TODO: verify the block reference if any
                 pass
+
+        # diagnostic possibly wrongly formatted key-value pair
+        if key_value_separator != "=":
+            if "=" in value:
+                self.parent.add_diagnostic(
+                    type=DiagnosticType.VALUE_WRONGLY_FORMATTED_KEY_VALUE_PAIR,
+                    location=node.tokens.strip().to_range(),
+                    args={"type": parent_type, "key": key, "value": value}
+                )
+                return False
 
         # TODO: need to validate dependent parameters (needs)
 
