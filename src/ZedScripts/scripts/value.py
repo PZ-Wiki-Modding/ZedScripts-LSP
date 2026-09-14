@@ -285,9 +285,9 @@ class Value(Element["ValueNode"]):
                 failed = False
                 for v in values:
                     # we test each key and value for a type
-                    key, val = v.split(key_value_separator, 1)
-                    key_type_result = dataset.test_for_type(obj_key_type, key)
-                    value_type_result = dataset.test_for_type(obj_value_type, val)
+                    obj_key, obj_value = v.split(key_value_separator, 1)
+                    key_type_result = dataset.test_for_type(obj_key_type, obj_key)
+                    value_type_result = dataset.test_for_type(obj_value_type, obj_value)
 
                     # if the expected type and actual type doesn't correspond, then something
                     # is wrong and we need to report a diagnostic
@@ -295,7 +295,7 @@ class Value(Element["ValueNode"]):
                         self.parent.add_diagnostic(
                             type=DiagnosticType.VALUE_INVALID_OBJECT_KEY_TYPE,
                             location=value_node.to_range(),
-                            args={"type": parent_type, "key": key, 
+                            args={"obj_key": obj_key, "key": key, 
                                   "expected_type": obj_key_type, 
                                   "actual_type": key_type_result}
                         )
@@ -304,7 +304,7 @@ class Value(Element["ValueNode"]):
                         self.parent.add_diagnostic(
                             type=DiagnosticType.VALUE_INVALID_OBJECT_VALUE_TYPE,
                             location=value_node.to_range(),
-                            args={"type": parent_type, "key": key, 
+                            args={"obj_value": obj_value, "key": key, 
                                   "expected_type": obj_value_type, 
                                   "actual_type": value_type_result}
                         )
