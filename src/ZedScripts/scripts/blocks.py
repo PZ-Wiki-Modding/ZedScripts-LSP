@@ -152,7 +152,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
             # add semantic token for the ID
             # that the ID is valid or not
             self.add_semantic_token(
-                SemanticTokenType.LABEL,
+                SemanticTokenType.CLASS,
                 node_id.to_range(),
                 [SemanticTokenModifiers.DECLARATION]
             )
