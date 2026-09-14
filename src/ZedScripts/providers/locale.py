@@ -52,7 +52,7 @@ class Localizer:
 
                 # format based on the type
                 if isinstance(args_def[k], list):
-                    args_formatted[k] = ", ".join(str(item) for item in v)
+                    args_formatted[k] = ", ".join(f"'{item}'" for item in v)
                 else:
                     args_formatted[k] = str(v)
             return string.format(**args_formatted)
