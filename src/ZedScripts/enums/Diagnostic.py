@@ -114,7 +114,7 @@ DiagnosticDefinition(DiagnosticType.VALUE_FORBIDDEN,
                      args={"type": str, "key": str, "forbidden_values": list, "accepted_values": list})
 DiagnosticDefinition(DiagnosticType.VALUE_INVALID_TYPE,
                      DiagnosticSeverity.Warning,
-                     args={"type": str, "key": str, "expected_type": str, "actual_type": str})
+                     args={"key": str, "expected_type": str, "actual_type": str})
 DiagnosticDefinition(DiagnosticType.VALUE_INVALID_OBJECT_FORMAT,
                      DiagnosticSeverity.Warning,
                      args={"type": str, "key": str, "key_value_separator": str})

@@ -258,7 +258,7 @@ class Value(Element["ValueNode"]):
                 self.parent.add_diagnostic(
                     type=DiagnosticType.VALUE_INVALID_TYPE,
                     location=value_node.strip().to_range(),
-                    args={"type": parent_type, "key": key, "expected_type": expected_type, "actual_type": value_type}
+                    args={"key": key, "expected_type": expected_type, "actual_type": value_type}
                 )
                 return False
 
