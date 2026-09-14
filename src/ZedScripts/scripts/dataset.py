@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 from pprint import pformat
 
-from . import ScriptBlockData, ScriptBlockParameter
+from . import ScriptBlockData, ScriptBlockParameter, ValueType
 from .. import SCRIPTS_DATA_MANIFEST
 from ..providers.http import load_json
 
@@ -231,3 +231,77 @@ class Dataset:
         assert block_data is not None, f"{type} block should be validated before retrieving parameter data"
         parameters = block_data.get('parameters', {})
         return parameters[parameter.lower()]
+
+
+    def get_parameter_type(self, value: str, parameter_data: ScriptBlockParameter) -> ValueType:
+        """
+        Determine the type of a parameter value based on its content and 
+        the expected type specified in the parameter data.
+
+        Args:
+            value (str): The value of the parameter to determine the type for.
+            parameter_data (ScriptBlockParameter): The metadata describing the expected type of the parameter.
+
+        Raises:
+            ValueError: If the expected type is an unsupported type from the dataset.
+
+        Returns:
+            ValueType: The determined type of the parameter value.
+        """
+        type_data = parameter_data.get('type')
+
+        # default to string in any case
+        if type_data is None:
+            return ValueType.STRING
+
+        expected_type = type_data['main']
+
+        # assert type is something we know about
+        if expected_type not in ValueType:
+            raise ValueError(f"Unknown parameter type '{expected_type}'")
+
+        # return early types we can't really determine from the value itself
+        match expected_type:
+            case ValueType.STRING:
+                return ValueType.STRING
+            case ValueType.ARRAY:
+                return ValueType.ARRAY
+            case ValueType.OBJECT:
+                return ValueType.OBJECT
+            case ValueType.BLOCK:
+                return ValueType.BLOCK
+            case ValueType.CALLBACK:
+                return ValueType.CALLBACK
+            case ValueType.TRANSLATION:
+                return ValueType.TRANSLATION
+
+        # check if boolean
+        if value.lower() in ["true", "false"]:
+            return ValueType.BOOLEAN
+
+        # check if int
+        elif value.isdigit():
+            return ValueType.INTEGER
+
+        # check if float
+        try:
+            float(value) # try to convert it
+
+            # it means that our value is a float
+            if "." in value:
+                return ValueType.FLOAT
+
+            # if the expected type is float
+            elif expected_type == ValueType.FLOAT:
+                return ValueType.FLOAT
+
+            # else then we are simply an integer number
+            return ValueType.INTEGER
+        except ValueError:
+            pass
+
+        # default to string if no other type matches
+        return ValueType.STRING
+
+
+        

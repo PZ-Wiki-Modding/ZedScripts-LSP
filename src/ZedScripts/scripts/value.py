@@ -3,11 +3,11 @@ from typing import TYPE_CHECKING, Any
 from . import Element
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.ast import ValueNode
-from ..structure.lexer import TextRange
+from ..structure.lexer import TextRange, TokenCollection
 from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifiers
+from ..scripts import DeprecatedInfo, ScriptBlockParameter, ValueType
 
 if TYPE_CHECKING:
-    from ..scripts import DeprecatedInfo
     from ..scripts.dataset import Dataset
     from ..scripts.blocks import Block
 
@@ -78,9 +78,78 @@ class Value(Element["ValueNode"]):
             return self.string.split("=", 1)[1].strip()
         return self.string.strip()
 
+    def get_values(self, dataset: 'Dataset', value: str, param_data: 'ScriptBlockParameter') -> list[str]:
+        value_type = dataset.get_parameter_type(value, param_data)
+
+        # handle array case
+        if value_type == ValueType.ARRAY:
+            # we'll want to split by the array data
+
+            # retrieve array related data first
+            type_data = param_data.get('type')
+            assert type_data
+            array_data = type_data.get('array')
+            assert array_data
+
+            # split by the separator
+            separator = array_data['separator']
+            return [v.strip() for v in self.value().split(separator)]
+
+        # handle object case
+        elif value_type == ValueType.OBJECT:
+            # we simply split by the object's pairs separator
+
+            # retrieve object related data first
+            type_data = param_data.get('type')
+            assert type_data
+            object_data = type_data.get('object')
+            assert object_data
+
+            pairs_separator = object_data['pairsSeparator']
+            return [v.strip() for v in self.value().split(pairs_separator)]
+
+        # else if we have a value, then it's a single value
+        elif value != "":
+            return [value]
+
+        return []
+
     def __str__(self) -> str:
         return self.string
 
+
+## semantic tokens
+
+    def add_value_type_semantic_tokens(self, actual_type: ValueType, param_data: 'ScriptBlockParameter', value_node: 'TokenCollection') -> None:
+        match actual_type:
+            case ValueType.STRING:
+                # self.parent.add_semantic_token(
+                #     type=SemanticTokenType.STRING,
+                #     location=value_node.to_range()
+                # )
+                # no special type for string
+                pass
+            # case ValueType.FLOAT:
+            #     self.parent.add_semantic_token(
+            #         type=SemanticTokenType.NUMBER,
+            #         location=value_node.to_range()
+            #     )
+            # case ValueType.INTEGER:
+            #     self.parent.add_semantic_token(
+            #         type=SemanticTokenType.NUMBER,
+            #         location=value_node.to_range()
+            #     )
+            # case ValueType.BOOLEAN:
+            #     self.parent.add_semantic_token(
+            #         type=SemanticTokenType.VARIABLE,
+            #         location=value_node.to_range()
+            #     )
+
+        # the rest is either already handled via the texmate 
+        # grammar or shouldn't get specific semantic tokens
+
+
+## diagnostics
 
     def validate(self, dataset: 'Dataset') -> bool:
         if self.is_key_value():
@@ -151,6 +220,66 @@ class Value(Element["ValueNode"]):
             )
             return False
 
-        
+        # we retrieve the list of values
+        values = self.get_values(dataset, value, param_data)
+
+        # check forbidden values
+        # that is values that are not allowed for this parameter
+        accepted_values = param_data.get('values', None)
+        if accepted_values is not None:
+            # forbidden values are the ones not present in the accepted values list
+            forbidden_values = [v for v in values if v not in accepted_values]
+
+            # if the list is not empty, then we have forbidden values for this parameter
+            if forbidden_values:
+                self.parent.add_diagnostic(
+                    type=DiagnosticType.VALUE_FORBIDDEN,
+                    location=value_node.to_range(),
+                    args={"type": parent_type, "key": key, 
+                          "forbidden_values": forbidden_values, 
+                          "accepted_values": accepted_values}
+                )
+                return False
+
+        # verify the type
+        type_data = param_data.get('type')
+        value_type = dataset.get_parameter_type(value, param_data)
+        self.add_value_type_semantic_tokens(value_type, param_data, value_node)
+        if value_type is not None and type_data is not None:
+            # first we verify that the expected type and the actual 
+            # type of the value correspond
+            expected_type = type_data['main']
+            if value_type != expected_type:
+                self.parent.add_diagnostic(
+                    type=DiagnosticType.VALUE_INVALID_TYPE,
+                    location=value_node.strip().to_range(),
+                    args={"type": parent_type, "key": key, "expected_type": expected_type, "actual_type": value_type}
+                )
+                return False
+
+            # if it's a translation type, then we need to verify it
+            if expected_type == ValueType.TRANSLATION:
+                # TODO: needs to implement
+                pass
+
+            # if it's an object, then we verify the object composition
+            if expected_type == ValueType.OBJECT:
+                # retrieve the object data
+                object_data = type_data.get('object')
+                assert object_data is not None
+
+                # first make sure that each pairs contain the key-value separator
+                key_value_separator = object_data['keyValueSep']
+                for v in values:
+                    if key_value_separator not in v:
+                        self.parent.add_diagnostic(
+                            type=DiagnosticType.VALUE_INVALID_OBJECT_FORMAT,
+                            location=value_node.to_range(),
+                            args={"type": parent_type, "key": key, "key_value_separator": key_value_separator}
+                        )
+                        return False
+
+                # then check if the key and values have the right format
+
 
         return True
