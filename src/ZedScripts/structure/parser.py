@@ -134,6 +134,7 @@ def parse_tokens(tokens: TokenCollection) -> ParseResult:
                     case ",":
                         value = ValueNode(
                             TokenCollection(unparsed_tokens),
+                            token, # comma token
                             comments=unassigned_comments
                         )
                         parser.add_value(value)

@@ -64,10 +64,14 @@ class ValueNode(Node):
     """
     Zedscript value.
     """
-    def __init__(self, tokens: TokenCollection, *, comments: Optional[list[Token]] = None) -> None:
+    def __init__(self, tokens: TokenCollection, comma: Token, *, comments: Optional[list[Token]] = None) -> None:
         super().__init__(comments=comments)
         self.tokens: TokenCollection = tokens
         """Tokens comprising the value."""
+        self.comma: Token = comma
+        """
+        Comma token following the value.
+        """
 
     def is_key_value(self) -> bool:
         return "=" in str(self.tokens)
