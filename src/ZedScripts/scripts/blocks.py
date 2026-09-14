@@ -30,13 +30,32 @@ class Block:
     def validate_block(self, dataset: 'Dataset') -> bool: ...
     def validate_children(self, dataset: 'Dataset') -> None: ...
 
-    def check_for_duplicates(self, key: str) -> bool:
-        duplicate_count = 0
+    def get_keys(self) -> list[str]:
+        """
+        Get all the keys from the block's key-value pairs.
+
+        Returns:
+            list[str]: A list of all keys in the block's key-value pairs, converted to lowercase.
+        """
+        keys = []
         for value in self.values:
-            if not value.is_key_value():
-                continue
-            if value.key().lower() == key.lower():
-                duplicate_count += 1
+            if value.is_key_value():
+                keys.append(value.key().lower())
+        return keys
+
+    def check_for_duplicates(self, key: str) -> bool:
+        """
+        Check if the given key has duplicates within the block's key-value pairs.
+        A key is considered a duplicate if it appears more than once in the block's key-value pairs.
+
+        Args:
+            key (str): The key to check for duplicates.
+
+        Returns:
+            bool: True if the key has duplicates, False otherwise.
+        """
+        keys = self.get_keys()
+        duplicate_count = len([k for k in keys if k == key.lower()])
         return duplicate_count > 1 # > 1 bcs there's itself in the list
 
     def add_diagnostic(self, type: DiagnosticType, location: TextRange, args: dict[str, Any] = {}) -> None:

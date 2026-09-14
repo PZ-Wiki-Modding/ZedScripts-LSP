@@ -263,7 +263,7 @@ class Value(Element["ValueNode"]):
                 pass
 
             # if it's an object, then we verify the object composition
-            if expected_type == ValueType.OBJECT:
+            elif expected_type == ValueType.OBJECT:
                 # retrieve the object data
                 object_data = type_data.get('object')
                 assert object_data is not None
@@ -280,6 +280,45 @@ class Value(Element["ValueNode"]):
                         return False
 
                 # then check if the key and values have the right format
+                obj_key_type = object_data['keyType']
+                obj_value_type = object_data['valueType']
+                failed = False
+                for v in values:
+                    # we test each key and value for a type
+                    key, val = v.split(key_value_separator, 1)
+                    key_type_result = dataset.test_for_type(obj_key_type, key)
+                    value_type_result = dataset.test_for_type(obj_value_type, val)
 
+                    # if the expected type and actual type doesn't correspond, then something
+                    # is wrong and we need to report a diagnostic
+                    if key_type_result != obj_key_type:
+                        self.parent.add_diagnostic(
+                            type=DiagnosticType.VALUE_INVALID_OBJECT_KEY_TYPE,
+                            location=value_node.to_range(),
+                            args={"type": parent_type, "key": key, 
+                                  "expected_type": obj_key_type, 
+                                  "actual_type": key_type_result}
+                        )
+                        failed = True
+                    if value_type_result != obj_value_type:
+                        self.parent.add_diagnostic(
+                            type=DiagnosticType.VALUE_INVALID_OBJECT_VALUE_TYPE,
+                            location=value_node.to_range(),
+                            args={"type": parent_type, "key": key, 
+                                  "expected_type": obj_value_type, 
+                                  "actual_type": value_type_result}
+                        )
+                        failed = True
+
+                # if at least one failed, then the entire object is considered invalid
+                if failed:
+                    return False
+
+            # if it's a block type, then it needs to reference another block
+            elif expected_type == ValueType.BLOCK:
+                # TODO: verify the block reference if any
+                pass
+
+        # TODO: need to validate dependent parameters (needs)
 
         return True

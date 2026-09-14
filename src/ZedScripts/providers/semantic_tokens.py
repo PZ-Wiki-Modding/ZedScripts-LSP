@@ -137,11 +137,11 @@ class SemanticTokenCollection(list[SemanticToken]):
             last_pos = token.range.start if len(lines) == 1 else TextPosition(token.range.start.line + len(lines) - 1, 0)
 
         # just so we don't have a for loop when not in debug mode
-        if IS_DEBUG:
-            logging.debug("Semantic tokens for document")
-            max_token_length = 70
-            for line, token in enumerate(semantic_tokens):
-                logging.debug(f"{str(token).ljust(max_token_length+2)} {lsp_tokens[line * 5: (line + 1) * 5]}")
+        # if IS_DEBUG:
+        #     logging.debug("Semantic tokens for document")
+        #     max_token_length = 70
+        #     for line, token in enumerate(semantic_tokens):
+        #         logging.debug(f"{str(token).ljust(max_token_length+2)} {lsp_tokens[line * 5: (line + 1) * 5]}")
 
         return lsp_tokens
 

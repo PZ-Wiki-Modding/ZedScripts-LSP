@@ -40,7 +40,9 @@ class DiagnosticType(enum.Enum):
     VALUE_MISSING =                        enum.auto()
     VALUE_FORBIDDEN =                      enum.auto()
     VALUE_INVALID_TYPE =                   enum.auto()
-    VALUE_INVALID_OBJECT_FORMAT =            enum.auto()
+    VALUE_INVALID_OBJECT_FORMAT =          enum.auto()
+    VALUE_INVALID_OBJECT_KEY_TYPE =        enum.auto()
+    VALUE_INVALID_OBJECT_VALUE_TYPE =      enum.auto()
 
 
 # syntax diagnostics
@@ -115,7 +117,12 @@ DiagnosticDefinition(DiagnosticType.VALUE_INVALID_TYPE,
 DiagnosticDefinition(DiagnosticType.VALUE_INVALID_OBJECT_FORMAT,
                      DiagnosticSeverity.Warning,
                      args={"type": str, "key": str, "key_value_separator": str})
-
+DiagnosticDefinition(DiagnosticType.VALUE_INVALID_OBJECT_KEY_TYPE,
+                     DiagnosticSeverity.Warning,
+                     args={"type": str, "key": str, "expected_type": str, "actual_type": str})
+DiagnosticDefinition(DiagnosticType.VALUE_INVALID_OBJECT_VALUE_TYPE,
+                     DiagnosticSeverity.Warning,
+                     args={"type": str, "key": str, "expected_type": str, "actual_type": str})
 
 
 # ensure that all diagnostic types have a corresponding definition

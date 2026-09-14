@@ -260,7 +260,10 @@ class Dataset:
         if expected_type not in ValueType:
             raise ValueError(f"Unknown parameter type '{expected_type}'")
 
-        # return early types we can't really determine from the value itself
+        return self.test_for_type(expected_type, value)
+
+    def test_for_type(self, expected_type: ValueType, value: str) -> ValueType:
+        #   return early types we can't really determine from the value itself
         match expected_type:
             case ValueType.STRING:
                 return ValueType.STRING
