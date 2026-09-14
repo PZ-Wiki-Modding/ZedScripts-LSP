@@ -239,7 +239,7 @@ class Document:
 
     def on_semantic_tokens(self) -> types.SemanticTokens:
         return types.SemanticTokens(
-            data=self.semantic_tokens.to_lsp(),
+            data=SemanticTokenCollection(self, *(self.semantic_tokens + self.syntactic_semantic_tokens)).to_lsp(),
             result_id=self.get_tokens_id(), # useless since they don't send it back ?
         )
 
