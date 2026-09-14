@@ -9,7 +9,7 @@
 
         "BLOCK_UNEXPECTED_ID": "'{type}' block cannot have an ID ('{id}').",
         "BLOCK_MISSING_ID": "'{type}' block is missing an ID.",
-        "BLOCK_HAS_ID_IN_PARENT": "'{type}' block cannot have an ID when inside parent block '{parentType}', only for: {invalidBlocks}.",
+        "BLOCK_HAS_ID_IN_PARENT": "'{type}' block cannot have an ID when inside parent block '{parent_type}', only for: {invalid_blocks}.",
         "BLOCK_ID_CANNOT_CONTAIN_SPACES": "ID '{id}' for block '{type}' cannot contain spaces.",
         "BLOCK_INVALID_ID": "'{type}' block has an invalid ID '{id}'. Valid IDs are: {validIDs}.",
         "BLOCK_FORBIDDEN_ID": "'{type}' block has a forbidden ID '{id}'. Forbidden IDs are: {forbiddenIDs}.",
@@ -20,6 +20,9 @@
         "VALUE_DEPRECATED_VERSION": "This parameter is deprecated since version '{version}'. {description}",
         "VALUE_DEPRECATED": "This parameter is deprecated. {description}",
         "VALUE_DUPLICATE": "Duplicate parameter '{key}' in block '{type}'.",
-        "VALUE_MISSING": "Parameter '{key}' is missing a value in block '{type}'."
+        "VALUE_MISSING": "Parameter '{key}' is missing a value in block '{type}'.",
+        "VALUE_FORBIDDEN": "Parameter '{key}' in block '{type}' has forbidden values: {forbidden_values}. Allowed values are: {accepted_values}.",
+        "VALUE_INVALID_TYPE": "Type '{type}' of '{parameter}' is invalid for value '{value}'. Expected type is '{expected_type}'.",
+        "VALUE_INVALID_OBJECT_FORMAT": "Values {values} for parameter '{parameter}' do not follow the expected 'key{key_value_separator}value' format."
     }
 }

@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from ..server import ZedServer
-    from ..structure.blocks import Root
+    from ..scripts.blocks import Root
 
 class Document:
     documents: list['Document'] = []

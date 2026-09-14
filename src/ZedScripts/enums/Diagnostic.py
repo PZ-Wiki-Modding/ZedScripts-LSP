@@ -38,6 +38,9 @@ class DiagnosticType(enum.Enum):
     VALUE_DEPRECATED =                     enum.auto()
     VALUE_DUPLICATE =                      enum.auto()
     VALUE_MISSING =                        enum.auto()
+    VALUE_FORBIDDEN =                      enum.auto()
+    VALUE_INVALID_TYPE =                   enum.auto()
+    VALUE_INVALID_OBJECT_FORMAT =            enum.auto()
 
 
 # syntax diagnostics
@@ -64,7 +67,7 @@ DiagnosticDefinition(DiagnosticType.BLOCK_MISSING_ID,
                      args={"type": str, "id": str})
 DiagnosticDefinition(DiagnosticType.BLOCK_HAS_ID_IN_PARENT,
                      DiagnosticSeverity.Error,
-                     args={"type": str, "parentType": str, "invalidBlocks": list},
+                     args={"type": str, "parent_type": str, "invalid_blocks": list},
                      tags=[DiagnosticTag.Unnecessary])
 DiagnosticDefinition(DiagnosticType.BLOCK_ID_CANNOT_CONTAIN_SPACES,
                      DiagnosticSeverity.Error,
@@ -103,6 +106,15 @@ DiagnosticDefinition(DiagnosticType.VALUE_DUPLICATE,
 DiagnosticDefinition(DiagnosticType.VALUE_MISSING,
                      DiagnosticSeverity.Warning,
                      args={"type": str, "key": str})
+DiagnosticDefinition(DiagnosticType.VALUE_FORBIDDEN,
+                     DiagnosticSeverity.Warning,
+                     args={"type": str, "key": str, "forbidden_values": list, "accepted_values": list})
+DiagnosticDefinition(DiagnosticType.VALUE_INVALID_TYPE,
+                     DiagnosticSeverity.Warning,
+                     args={"type": str, "key": str, "expected_type": str, "actual_type": str})
+DiagnosticDefinition(DiagnosticType.VALUE_INVALID_OBJECT_FORMAT,
+                     DiagnosticSeverity.Warning,
+                     args={"type": str, "key": str, "key_value_separator": str})
 
 
 

@@ -202,7 +202,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
                 self.add_diagnostic(
                     DiagnosticType.BLOCK_HAS_ID_IN_PARENT,
                     node.type.to_range(),
-                    {"type": type, "parentType": self.parent.type, "invalidBlocks": parents_without}
+                    {"type": type, "parent_type": self.parent.type, "invalid_blocks": parents_without}
                 )
                 return False
 
