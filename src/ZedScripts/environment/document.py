@@ -193,8 +193,9 @@ class Document:
 
     def validate(self, server: 'ZedServer') -> None:
         logging.debug("Validating document: %s", self.get_uri())
-        diagnostics = self.diagnostics
-        diagnostics.clear() # reset previous diagnostics
+        # clear old diagnostics and semantic tokens
+        self.diagnostics.clear()
+        self.semantic_tokens.clear()
 
         # retrieve the starting point for validation
         body = self.body
@@ -204,10 +205,6 @@ class Document:
         body.validate(server.dataset)
 
     def on_document_diagnostics(self, server: 'ZedServer', previous_result_id: str | None) -> DiagnosticReport:
-        # clear old diagnostics and semantic tokens
-        self.diagnostics.clear()
-        self.semantic_tokens.clear()
-
         # validate the document
         self.validate(server)
 
