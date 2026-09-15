@@ -140,7 +140,12 @@ class Document:
         """
         self._version += 1
         self.mark_changed()
+
+        # reset all diagnostics and tokens
         self.diagnostics.clear()
+        self.syntactic_diagnostics.clear()
+        self.semantic_tokens.clear()
+        self.syntactic_semantic_tokens.clear()
 
     def get_diagnostics_id(self) -> str:
         """
@@ -203,6 +208,19 @@ class Document:
 
         # validate the root block, which will validate its children
         body.validate(server.dataset)
+
+
+
+    def on_document_changed(self, text: str) -> None:
+        self.update_text(text)
+
+        if not self.was_changed():
+            logging.debug("Document was not changed, skipping revalidation.")
+            return
+        self.clear_changed()
+
+        # reparse
+        self.parse()
 
     def on_document_diagnostics(self, server: 'ZedServer', previous_result_id: str | None) -> DiagnosticReport:
         # validate the document

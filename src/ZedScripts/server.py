@@ -79,13 +79,8 @@ class ZedServer(LanguageServer):
         if document is None:
             return
 
-        document.update_text(text)
-
-        if not document.was_changed():
-            logging.debug("Document was not changed, skipping revalidation.")
-            return
-
-        document.parse()
+        # update it
+        document.on_document_changed(text)
 
     def on_document_deleted(self, path: Path) -> None:
         Document.delete(path)
