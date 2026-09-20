@@ -170,7 +170,6 @@ class Dataset:
             patterns = rootFile.get('pattern', [])
             for pattern in patterns:
                 regex = re.compile(pattern)
-                logging.debug(f"Testing pattern {pattern}")
                 if regex.search(resolved_path) is not None:
                     return rootFile['name']
         return None

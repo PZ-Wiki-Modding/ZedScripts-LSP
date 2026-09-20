@@ -9,7 +9,7 @@ from .lexer import (
     ELEMENTS_DELIMITERS
 )
 from .ast import Node, Chunk, BlockNode, ValueNode
-from ..scripts.blocks import Block, ScriptBlock, Root
+from ..scripts.block import Block, ScriptBlock, Root
 from ..scripts.value import Value
 
 if TYPE_CHECKING:
