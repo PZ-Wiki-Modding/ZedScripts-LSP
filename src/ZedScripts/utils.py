@@ -7,7 +7,7 @@ from pygls.uris import from_fs_path, to_fs_path
 from .structure.lexer import TextRange, TextPosition
 
 
-def texrange_to_lsp(range: TextRange) -> types.Range:
+def textrange_to_lsp(range: TextRange) -> types.Range:
     return types.Range(
         types.Position(range.start.line, range.start.offset),
         types.Position(range.end.line, range.end.offset)

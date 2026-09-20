@@ -1,10 +1,13 @@
 from typing import TYPE_CHECKING, Any, Iterator
 
+from lsprotocol import types
+
 from . import Element
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.ast import BlockNode, Chunk
-from ..structure.lexer import TextRange
+from ..structure.lexer import TextRange, TextPosition
 from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifier
+from ..providers.hover import make_hover_information
 
 if TYPE_CHECKING:
     from .value import Value
@@ -28,6 +31,9 @@ class Block:
 
     def __iter__(self) -> Iterator['ScriptBlock']:
         return iter(self.children)
+
+    def get_description(self, dataset: 'Dataset') -> str:
+        return NotImplemented
 
     def validate(self, dataset: 'Dataset') -> bool: ...
     def validate_block(self, dataset: 'Dataset') -> bool: ...
@@ -67,6 +73,20 @@ class Block:
     def add_semantic_token(self, type: SemanticTokenType, location: TextRange, modifiers: list[SemanticTokenModifier] = []) -> None:
         self.document.semantic_tokens.add(type=type, location=location, modifiers=modifiers)
 
+    def get_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
+        # look through the values
+        for value in self.values:
+            result = value.get_hover_information(dataset, text_position)
+            if result:
+                return result
+
+        # not found in values, then we search in the children blocks
+        for child in self.children:
+            result = child.get_hover_information(dataset, text_position)
+            if result is not None:
+                return result
+
+        return None
 
 
 
@@ -93,6 +113,19 @@ class ScriptBlock(Block, Element["BlockNode"]):
         else:
             return "<" + self.type + " " + self.id + ">"
 
+
+## information
+
+    def get_description(self, dataset: 'Dataset') -> str:
+        if not dataset.is_script_block(self.type):
+            return ''
+        block_data = dataset.get_script_block_data(self.type)
+        return block_data.get('description', '')
+
+    def get_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
+        # TODO: check type hover info
+        # TODO: check ID hover info
+        return super().get_hover_information(dataset, text_position)
 
 
 ## validation

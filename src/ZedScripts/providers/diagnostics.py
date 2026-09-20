@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from lsprotocol import types
 
 import ZedScripts
-from ..utils import range_to_lsp
+from ..utils import textrange_to_lsp
 from ..enums.SyntaxErrorType import SyntaxErrorType
 from ..structure.lexer import TextRange
 from ..providers.locale import zedlocalizer
@@ -77,7 +77,7 @@ class DiagnosticCollection(list[DiagnosticInfo]):
 
             lsp_diagnostics.append(
                 types.Diagnostic(
-                    range=range_to_lsp(diagnostic.location),
+                    range=textrange_to_lsp(diagnostic.location),
                     message=zedlocalizer.localize_string(definition.type, definition,
                                                                 args=diagnostic.args),
                     severity=definition.severity,

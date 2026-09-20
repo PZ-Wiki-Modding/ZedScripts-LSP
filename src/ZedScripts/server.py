@@ -106,6 +106,17 @@ class ZedServer(LanguageServer):
             return None
         return document.on_document_diagnostics(self, previous_result_id)
 
+    def on_semantic_tokens(self, path: Path) -> types.SemanticTokens | None:
+        document = Document.find(path)
+        if document is None:
+            return None
+        return document.on_semantic_tokens()
+
+    def on_document_hover(self, path: Path, position: types.Position) -> types.Hover | None:
+        document = Document.find(path)
+        if document is None:
+            return None
+        return document.on_hover(self, position)
 
 
 zedserver = ZedServer()
@@ -217,11 +228,13 @@ token_types, token_modifiers = get_tokens()
     )
 def semantic_tokens(server: ZedServer, params: types.SemanticTokensParams):
     path = uri_to_path(params.text_document.uri)
-    document = Document.find(path)
-    if document is None:
-        return
-    return document.on_semantic_tokens()
+    return server.on_semantic_tokens(path)
 
+
+@zedserver.feature(types.TEXT_DOCUMENT_HOVER)
+def hover(server: ZedServer, params: types.HoverParams) -> types.Hover | None:
+    path = uri_to_path(params.text_document.uri)
+    return server.on_document_hover(path, params.position)
 
 
 

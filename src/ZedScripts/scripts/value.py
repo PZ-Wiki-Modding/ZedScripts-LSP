@@ -1,15 +1,18 @@
 from typing import TYPE_CHECKING, Any
 
+from lsprotocol import types
+
 from . import Element
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.ast import ValueNode
-from ..structure.lexer import TextRange, TokenCollection
+from ..structure.lexer import TextPosition, TokenCollection
 from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifier
+from ..providers.hover import make_hover_information
 from ..scripts import DeprecatedInfo, ScriptBlockParameter, ValueType
 
 if TYPE_CHECKING:
-    from ..scripts.dataset import Dataset
     from .block import Block
+    from ..scripts.dataset import Dataset
 
 
 def _get_deprecated_info(deprecated_data: 'DeprecatedInfo') -> tuple[DiagnosticType, dict[str, Any]]:
@@ -119,6 +122,28 @@ class Value(Element["ValueNode"]):
 
     def __str__(self) -> str:
         return self.string
+
+
+## information
+
+    def get_description(self, dataset: 'Dataset') -> str:
+        parent_type = self.parent.type
+        key = self.key()
+        if not dataset.can_block_have_parameter(parent_type, key):
+            return ''
+        param_data = dataset.get_parameter_data(parent_type, key)
+        return param_data.get('description', '') if param_data else ''
+
+
+    def get_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
+        node = self.node
+        key_node = node.key()
+        # value_node = node.value()
+
+        if key_node.to_range() == text_position:
+            return make_hover_information(self.get_description(dataset), key_node.to_range())
+
+        return None
 
 
 ## semantic tokens

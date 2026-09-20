@@ -6,11 +6,11 @@ from lsprotocol import types
 
 from . import VersionType
 from .version import Version
-from ..utils import path_to_uri
+from ..utils import path_to_uri, position_to_texposition
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.lexer import Lexer, TokenCollection
 from ..structure.parser import parse_tokens, chunk_to_root
-from ..providers.diagnostics import DiagnosticInfo, DiagnosticReport, WorkspaceDiagnosticReport, DiagnosticCollection
+from ..providers.diagnostics import DiagnosticReport, WorkspaceDiagnosticReport, DiagnosticCollection
 from ..providers.notifications import ZedNotification, SetZedScriptsNotificationParams
 from ..providers.semantic_tokens import SemanticTokenCollection, build_syntactic_tokens
 
@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
     from .workspace import Workspace
     from ..server import ZedServer
+    from ..scripts.dataset import Dataset
     from ..scripts.block import Root
 
 class Document:
@@ -297,6 +298,8 @@ class Document:
     def on_workspace_diagnostics(self, server: 'ZedServer', previous_result_id: str | None) -> WorkspaceDiagnosticReport:
         self.validate(server)
 
+        # verify that the diagnostics didn't move
+        # and if they didn't then send an unchanged report
         result_id = self.get_diagnostics_id()
         if (previous_result_id is not None
             and previous_result_id == result_id):
@@ -317,3 +320,8 @@ class Document:
             result_id=self.get_semantic_tokens_id(), # useless since they don't send it back ?
         )
 
+    def on_hover(self, server: 'ZedServer', position: types.Position) -> types.Hover | None:
+        text_position = position_to_texposition(position)
+        if self.body is None:
+            return None
+        return self.body.get_hover_information(server.dataset, text_position)
