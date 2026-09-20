@@ -115,7 +115,7 @@ class SemanticTokenCollection(list[SemanticToken]):
             else:
                 offset_delta = token.range.start.offset
 
-            characters = chars_in_range(self.document.text, token.range)
+            characters = chars_in_range(self.document.get_text(), token.range)
             if characters == "":
                 continue
 

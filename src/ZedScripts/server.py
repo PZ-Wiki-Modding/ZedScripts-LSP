@@ -6,11 +6,14 @@ from pprint import pformat
 
 from lsprotocol import types
 from pygls.lsp.server import LanguageServer
+from pygls.protocol import LanguageServerProtocol
 from pygls.uris import from_fs_path, to_fs_path
 
 from .__about__ import __version__
 from .utils import uri_to_path
+from .environment import WorkspaceType
 from .environment.document import Document
+from .environment.workspace import Workspace
 from .providers.diagnostics import DiagnosticReport
 from .providers.semantic_tokens import get_tokens
 from .providers.locale import zedlocalizer
@@ -19,18 +22,27 @@ from .providers.notifications import ZedNotification, NotificationParams
 from .scripts.dataset import Dataset
 
 
+
+# for future implementation of custom protocol features
+class ZedLanguageProtocole(LanguageServerProtocol): ...
+
+
+
 class ZedServer(LanguageServer):
     def __init__(self):
-        super().__init__("zedserver", __version__)
+        super().__init__(name="zedserver", version=__version__, protocol_cls=ZedLanguageProtocole)
         self.documents: dict[Path, Document] = {}
         zedlocalizer.load_locale_files()
         self.dataset: Dataset = Dataset()
 
-    def send_notification(self, method: ZedNotification, params: NotificationParams) -> None:
+    def send_notification(self, method: ZedNotification, params: NotificationParams | None = None) -> None:
         self.protocol.notify(
             method,
             params
         )
+
+    # def send_request(self, method: str, )
+
 
     def wait_for_debug_client(self) -> None:
         import time
@@ -75,7 +87,7 @@ class ZedServer(LanguageServer):
         logging.debug("Document changed: %s\n%s", path, text)
 
         # first check if the file is a zedscripts file
-        document = Document.find_or_make(self, path)
+        document = Workspace.find_or_make(path)
         if document is None:
             return
 
@@ -113,6 +125,13 @@ def initialize(server: ZedServer, params: types.InitializeParams):
 
     # load the dataset
     server.dataset.load()
+
+    # TODO: implement workspace loading starting from this
+    logging.debug("Server workspace folders")
+    logging.debug(server.workspace.folders)
+    for folder in server.workspace.folders:
+        ws = Workspace(server, uri_to_path(folder), WorkspaceType.PROJECT)
+        ws.load()
 
     # from the above, we determine what the server capabilities should be
     return types.InitializeResult(
@@ -155,6 +174,7 @@ def diagnostic(server: ZedServer, params: types.DocumentDiagnosticParams) -> Dia
     if document is None:
         return None
     return document.on_document_diagnostics(server, params.previous_result_id)
+
 
 
 # sadly I'm not sure that implementation works as expected because the client constantly

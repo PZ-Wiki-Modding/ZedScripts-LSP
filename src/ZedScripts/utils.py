@@ -46,3 +46,15 @@ def sort_by_load_order(files: Iterable[Path]) -> Iterable[Path]:
     other.sort()
 
     return templates + other
+
+
+
+def glob_files_by_extensions(folder: Path, extensions: set[str]) -> Iterable[Path]:
+    """
+    Glob all files in the given folder and its subfolders 
+    that have one of the specified extensions.
+    https://stackoverflow.com/a/57054058/33113221
+    """
+    files = (p.resolve() for p in Path(folder).rglob("*") if p.suffix in extensions)
+    return files
+

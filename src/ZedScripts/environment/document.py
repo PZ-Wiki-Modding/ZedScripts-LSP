@@ -4,6 +4,8 @@ from pathlib import Path
 
 from lsprotocol import types
 
+from . import VersionType
+from .version import Version
 from ..utils import path_to_uri
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.lexer import Lexer, TokenCollection
@@ -16,25 +18,52 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from .workspace import Workspace
     from ..server import ZedServer
     from ..scripts.block import Root
 
 class Document:
     documents: list['Document'] = []
-    def __init__(self, path: Path, rootType: str) -> None:
+    def __init__(self, path: Path, rootType: str, workspace: 'Workspace', version: 'Version') -> None:
         self.rootType: str = rootType
+        """The type of the root block of the document. If the document is not identified as a ZedScripts file,
+        then this class should not be instantiated."""
         self.path: Path = path
+        """The file system path to the document."""
         self.lexical_tokens: TokenCollection = TokenCollection()
+        """Holds the lexical tokens of the document after lexing. That is, the raw tokens generated from the source text."""
         self.body: Root | None = None
+        """Holds the root block of the document after parsing. None until properly parsed."""
+        self.workspace: 'Workspace' = workspace
+        """The workspace the document belongs to."""
+        self.version: 'Version' = version
+        """Holds the version type the document belongs to (versioning or common folder, base game etc)."""
 
         self.semantic_tokens: SemanticTokenCollection = SemanticTokenCollection(self)
+        """Holds semantic tokens for general highlighting. Populated from the validation process.
+        
+        Without the validation process, this collection will not be populated so users
+        will not receive any syntax highlights besides syntactic ones."""
         self.syntactic_semantic_tokens: SemanticTokenCollection = SemanticTokenCollection(self)
+        """Holds semantic tokens for syntax highlighting, that is things like `{`, `}` and `,`.
+        
+        This is used to not repopulate this list everytime we revalidate the document."""
 
         self.diagnostics: DiagnosticCollection = DiagnosticCollection()
+        """Holds general diagnostics for the document after validation."""
         self.syntactic_diagnostics: DiagnosticCollection = DiagnosticCollection()
+        """Holds syntactic diagnostics for the document after parsing."""
 
-        self._version: int = 0
+        self._validation_version: int = 0
+        """Simple identifier to keep track of the version of the document for validation purposes.
+        Incremented anytime the document content changed."""
         self._needs_validation: bool = True
+        """Indicates whether the document needs to be revalidated. If set to False,
+        then the document doesn't have any reasons to be revalidated as its diagnostics and
+        semantic tokens are up-to-date."""
+
+        # cache document instance
+        Document.documents.append(self)
 
     def make_zedscripts(self, server: 'ZedServer') -> None:
         server.send_notification(
@@ -64,6 +93,10 @@ class Document:
 # document management
 
     @staticmethod
+    def get_by_workspace() -> dict['Document', 'Workspace']:
+        return {document: document.workspace for document in Document.documents}
+
+    @staticmethod
     def get_documents() -> list['Document']:
         return Document.documents
 
@@ -75,27 +108,32 @@ class Document:
         return None
 
     @staticmethod
-    def make(server: 'ZedServer', path: Path) -> 'Document | None':
+    def make(server: 'ZedServer', path: Path, workspace: 'Workspace') -> 'Document | None':
         # find the rootType of the document
         rootType = server.dataset.test_for_root(path)
         if rootType is None:
             return None
 
+        # find the version and skip if pre 42
+        # since we don't validate that
+        version = Version.find_or_make_version(path)
+        if version.type == VersionType.PRE_42:
+            return None
+
         # if it is a valid ZedScripts document, create a new Document instance
-        logging.debug(f"Found valid ZedScripts root for {path}: {rootType}")
-        document = Document(path, rootType)
+        document = Document(path, rootType, workspace, version)
         document.make_zedscripts(server)
         Document.documents.append(document)
 
         return document
 
     @staticmethod
-    def find_or_make(server: 'ZedServer', path: Path) -> 'Document | None':
+    def find_or_make(server: 'ZedServer', path: Path, workspace: 'Workspace') -> 'Document | None':
         # if we find one, we don't have to verify it is a ZedScripts file
         # bcs it means the document didn't move
         document = Document.find(path)
         if document is None:
-            document = Document.make(server, path)
+            document = Document.make(server, path, workspace)
         return document
 
     @staticmethod
@@ -140,7 +178,7 @@ class Document:
         Increment the document version and mark it as needing validation.
         This version is used as an identifier for the diagnostic reports.
         """
-        self._version += 1
+        self._validation_version += 1
         self.mark_changed()
 
         # reset all diagnostics and tokens
