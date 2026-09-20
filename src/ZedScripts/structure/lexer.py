@@ -98,29 +98,41 @@ class TextRange:
         return f"<{repr(self.start)}-{repr(self.end)}>"
 
     def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, TextRange):
-            return False
-        return self.start == other.start and self.end == other.end
+        """When comparing with another TextRange, check for equality. If comparing with a 
+        TextPosition, check if the position is within the start and end range."""
+        if isinstance(other, TextRange):
+            return self.start == other.start and self.end == other.end
+        elif isinstance(other, TextPosition):
+            return self.start <= other and self.end >= other
+        return False
 
     def __lt__(self, other: Any) -> bool:
-        if not isinstance(other, TextRange):
-            return NotImplemented
-        return (self.start, self.end) < (other.start, other.end)
+        if isinstance(other, TextRange):
+            return (self.start, self.end) < (other.start, other.end)
+        elif isinstance(other, TextPosition):
+            return (self.start, self.end) < (other, other)
+        return NotImplemented
 
     def __le__(self, other: Any) -> bool:
-        if not isinstance(other, TextRange):
-            return NotImplemented
-        return (self.start, self.end) <= (other.start, other.end)
+        if isinstance(other, TextRange):
+            return (self.start, self.end) <= (other.start, other.end)
+        elif isinstance(other, TextPosition):
+            return (self.start, self.end) <= (other, other)
+        return NotImplemented
 
     def __gt__(self, other: Any) -> bool:
-        if not isinstance(other, TextRange):
-            return NotImplemented
-        return (self.start, self.end) > (other.start, other.end)
+        if isinstance(other, TextRange):
+            return (self.start, self.end) > (other.start, other.end)
+        elif isinstance(other, TextPosition):
+            return (self.start, self.end) > (other, other)
+        return NotImplemented
 
     def __ge__(self, other: Any) -> bool:
-        if not isinstance(other, TextRange):
-            return NotImplemented
-        return (self.start, self.end) >= (other.start, other.end)
+        if isinstance(other, TextRange):
+            return (self.start, self.end) >= (other.start, other.end)
+        elif isinstance(other, TextPosition):
+            return (self.start, self.end) >= (other, other)
+        return NotImplemented
 
 
 def chars_in_range(text: str, range: TextRange) -> str:

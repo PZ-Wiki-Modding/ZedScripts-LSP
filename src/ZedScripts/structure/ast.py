@@ -1,7 +1,9 @@
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from .lexer import Token, TokenCollection
 
+if TYPE_CHECKING:
+    from .lexer import TextPosition
 
 class BlockBody:
     def __init__(self) -> None:
@@ -114,6 +116,9 @@ class ValueNode(Node):
             if token.text == "=":
                 return token
         raise RuntimeError("Couldn't find equals token")
+
+    def contains_position(self, text_position: 'TextPosition') -> bool:
+        return self.tokens.to_range() == text_position
 
 
 class Chunk(BlockBody):
