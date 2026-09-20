@@ -43,6 +43,9 @@ class Version:
         self.version: str = Version.key_format.format(type=type, major=major, minor=minor)
         Version.version_map[self.version] = self
 
+    def __repr__(self) -> str:
+        return f"Version(source={self.source}, type={self.type}, major={self.major}, minor={self.minor})"
+
     @staticmethod
     def get_type(source: str) -> tuple[VersionType, int, int]:
         # TODO: implement
@@ -87,7 +90,7 @@ class Version:
         # other values after minor are ignored by the game
         # so no need to retrieve those
 
-        return VersionType.COMMON, major, minor
+        return VersionType.POST_42, major, minor
 
     @staticmethod
     def from_string(version_str: str) -> 'Version':
