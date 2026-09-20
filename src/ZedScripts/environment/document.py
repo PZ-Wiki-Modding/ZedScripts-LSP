@@ -38,6 +38,9 @@ class Document:
         """The workspace the document belongs to."""
         self.version: 'Version' = version
         """Holds the version type the document belongs to (versioning or common folder, base game etc)."""
+        self.text: str | None = None
+        """Holds the raw text content of the document. None until the text is read from the file
+        or passed through Document.update_text."""
 
         self.semantic_tokens: SemanticTokenCollection = SemanticTokenCollection(self)
         """Holds semantic tokens for general highlighting. Populated from the validation process.
@@ -74,11 +77,14 @@ class Document:
         )
 
     def get_text(self) -> str:
-        return self.path.read_text()
+        if self.text is None:
+            self.text = self.path.read_text()
+        return self.text
 
     def update_text(self, text: str) -> None:
         """Bump the version if it has changed."""
         if self.get_text() != text:
+            self.text = text
             self.bump()
 
     def get_uri(self) -> str:
@@ -173,7 +179,9 @@ class Document:
     def clear_changed(self) -> None:
         self._needs_validation = False
     def has_changed(self) -> bool:
-        return self._needs_validation
+        if self._needs_validation:
+            return True
+        return self.body is None
 
     def bump(self) -> None:
         """
@@ -189,6 +197,8 @@ class Document:
         self.semantic_tokens.clear()
         self.syntactic_semantic_tokens.clear()
 
+        logging.debug("Bumped document version to %d", self._validation_version)
+
     def get_diagnostics_id(self) -> str:
         """
         Generate a result ID based on the hash of the diagnostics.
@@ -202,7 +212,7 @@ class Document:
         ]))
         return hashlib.md5(diagnostics_str.encode()).hexdigest()
 
-    def get_tokens_id(self) -> str:
+    def get_semantic_tokens_id(self) -> str:
         """
         Generate a result ID based on the hash of the semantic tokens.
         This ensures that if tokens don't change (even if text changes),
@@ -220,6 +230,12 @@ class Document:
 # notification response
 
     def parse(self) -> None:
+        """
+        Parse the new document text and update its syntactic structure and diagnostics.
+
+        Args:
+            text (str): The new text content of the document.
+        """
         logging.debug("Parsing document: %s", self.get_uri())
         # tokenize and parse the document text
         self.lexical_tokens = Lexer.tokenize(self.get_text())
@@ -262,6 +278,7 @@ class Document:
         self.clear_changed()
 
         # reparse
+        logging.debug("Reparsing document: %s", self.get_uri())
         self.parse()
 
     def on_document_diagnostics(self, server: 'ZedServer', previous_result_id: str | None) -> DiagnosticReport:
@@ -297,6 +314,6 @@ class Document:
     def on_semantic_tokens(self) -> types.SemanticTokens:
         return types.SemanticTokens(
             data=SemanticTokenCollection(self, *(self.semantic_tokens + self.syntactic_semantic_tokens)).to_lsp(),
-            result_id=self.get_tokens_id(), # useless since they don't send it back ?
+            result_id=self.get_semantic_tokens_id(), # useless since they don't send it back ?
         )
 

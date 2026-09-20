@@ -50,11 +50,22 @@ class Workspace:
         return document
 
     @staticmethod
-    def find_or_make(path: Path) -> Document | None:
+    def find_workspace(path: Path) -> 'Workspace | None':
+        for workspace_type, workspaces in Workspace.workspaceCache.items():
+            for folder, workspace in workspaces.items():
+                if folder in path.parents:
+                    return workspace
+        return None
+
+    @staticmethod
+    def find_or_make(server: 'ZedServer', path: Path) -> Document | None:
         # find the document with the associated path
         docs = Document.get_by_workspace()
         for doc in docs.keys():
             if doc.path == path:
                 return doc
 
-        
+        workspace = Workspace.find_workspace(path)
+        if workspace is not None:
+            return workspace.load_document(path)
+        return None

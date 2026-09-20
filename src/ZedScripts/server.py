@@ -84,12 +84,12 @@ class ZedServer(LanguageServer):
 
 
     def on_document_changed(self, path: Path, text: str) -> None:
-        logging.debug("Document changed: %s\n%s", path, text)
-
         # first check if the file is a zedscripts file
-        document = Workspace.find_or_make(path)
+        document = Workspace.find_or_make(self, path)
         if document is None:
             return
+        
+        logging.debug("Document changed: %s\n%s", path, text)
 
         # update it
         document.on_document_changed(text)
@@ -99,6 +99,12 @@ class ZedServer(LanguageServer):
 
     def on_document_renamed(self, old_file: Path, new_file: Path) -> None:
         Document.rename(self, old_file, new_file)
+
+    def on_document_diagnostics(self, path: Path, previous_result_id: str | None) -> DiagnosticReport | None:
+        document = Workspace.find_or_make(self, path)
+        if document is None:
+            return None
+        return document.on_document_diagnostics(self, previous_result_id)
 
 
 
@@ -170,10 +176,7 @@ def workspace_did_rename_files(server: ZedServer, params: types.RenameFilesParam
 @zedserver.feature(types.TEXT_DOCUMENT_DIAGNOSTIC)
 def diagnostic(server: ZedServer, params: types.DocumentDiagnosticParams) -> DiagnosticReport | None:
     path = uri_to_path(params.text_document.uri)
-    document = Document.find(path)
-    if document is None:
-        return None
-    return document.on_document_diagnostics(server, params.previous_result_id)
+    return server.on_document_diagnostics(path, params.previous_result_id)
 
 
 
