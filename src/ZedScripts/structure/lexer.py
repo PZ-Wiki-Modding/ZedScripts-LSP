@@ -66,12 +66,12 @@ class TextPosition:
     def __lt__(self, other: Any) -> bool:
         if not isinstance(other, TextPosition):
             return NotImplemented
-        return not other >= self
+        return other > self
 
     def __le__(self, other: Any) -> bool:
         if not isinstance(other, TextPosition):
             return NotImplemented
-        return not other > self
+        return other >= self
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, TextPosition):
