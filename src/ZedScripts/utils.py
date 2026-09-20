@@ -4,14 +4,16 @@ from typing import Iterable
 from lsprotocol import types
 from pygls.uris import from_fs_path, to_fs_path
 
-from .structure.lexer import TextRange
+from .structure.lexer import TextRange, TextPosition
 
 
-def range_to_lsp(range: TextRange) -> types.Range:
+def texrange_to_lsp(range: TextRange) -> types.Range:
     return types.Range(
         types.Position(range.start.line, range.start.offset),
         types.Position(range.end.line, range.end.offset)
     )
+def position_to_texposition(position: types.Position) -> TextPosition:
+    return TextPosition(position.line, position.character)
 
 def uri_to_path(uri: str) -> Path:
     fs_path = to_fs_path(uri)
