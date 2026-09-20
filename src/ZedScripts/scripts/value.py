@@ -9,7 +9,7 @@ from ..scripts import DeprecatedInfo, ScriptBlockParameter, ValueType
 
 if TYPE_CHECKING:
     from ..scripts.dataset import Dataset
-    from ..scripts.blocks import Block
+    from .block import Block
 
 
 def _get_deprecated_info(deprecated_data: 'DeprecatedInfo') -> tuple[DiagnosticType, dict[str, Any]]:

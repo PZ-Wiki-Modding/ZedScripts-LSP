@@ -81,13 +81,20 @@ class ValueNode(Node):
             return self.tokens.strip()
         value = TokenCollection()
 
-        for token in reversed(self.tokens):
-            if token.text == "=":
-                break
+        # for token in reversed(self.tokens):
+        found_equal = False
+        for token in self.tokens:
+            if not found_equal:
+                if token.text == "=":
+                    found_equal = True
+                continue
+            # if token.text == "=":
+            #     found_equal = True
+            #     break
             value.append(token)
 
         # since we looped backwards, they've been inserted backwards
-        value.reverse()
+        # value.reverse()
         return value.strip()
 
     def key(self) -> TokenCollection:
