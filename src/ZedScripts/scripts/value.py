@@ -126,6 +126,10 @@ class Value(Element["ValueNode"]):
 
 ## information
 
+    def get_tree(self) -> str:
+        block_tree = self.parent.get_tree(True)
+        return f"{block_tree} → **{self.key()}**"
+
     def get_description(self, dataset: 'Dataset') -> str:
         parent_type = self.parent.type
         key = self.key()
@@ -141,7 +145,10 @@ class Value(Element["ValueNode"]):
         # value_node = node.value()
 
         if key_node.to_range() == text_position:
-            return make_hover_information(self.get_description(dataset), key_node.to_range())
+            tree = self.get_tree()
+            desc = self.get_description(dataset)
+            txt = f"{tree}\n\n---\n\n{desc}\n\nkeywords.namespace"
+            return make_hover_information(txt, key_node.to_range())
 
         return None
 

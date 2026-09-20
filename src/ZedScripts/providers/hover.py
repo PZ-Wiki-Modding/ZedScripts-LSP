@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from ..scripts.block import Block
     from ..scripts.value import Value
 
-def make_hover_information(description: str, range: 'TextRange | None') -> types.Hover:
+def make_hover_information(description: str, range: 'TextRange | None' = None) -> types.Hover:
     return types.Hover(
         contents=types.MarkupContent(
             kind=types.MarkupKind.Markdown,

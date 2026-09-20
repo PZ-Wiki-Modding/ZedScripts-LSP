@@ -32,8 +32,37 @@ class Block:
     def __iter__(self) -> Iterator['ScriptBlock']:
         return iter(self.children)
 
+    def get_tree(self, children: bool = False) -> str:
+        type = self.type
+        if not children:
+            type = f"**{self.type}**"
+
+        parents: list[str] = [type]
+        current = self
+        while isinstance(current, ScriptBlock) and current.parent is not None:
+            parents.insert(0, current.parent.type)
+            current = current.parent
+
+        return " → ".join(parents)
+
+
     def get_description(self, dataset: 'Dataset') -> str:
         return NotImplemented
+
+    def get_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
+        # look through the values
+        for value in self.values:
+            result = value.get_hover_information(dataset, text_position)
+            if result:
+                return result
+
+        # not found in values, then we search in the children blocks
+        for child in self.children:
+            result = child.get_hover_information(dataset, text_position)
+            if result is not None:
+                return result
+
+        return None
 
     def validate(self, dataset: 'Dataset') -> bool: ...
     def validate_block(self, dataset: 'Dataset') -> bool: ...
@@ -73,21 +102,6 @@ class Block:
     def add_semantic_token(self, type: SemanticTokenType, location: TextRange, modifiers: list[SemanticTokenModifier] = []) -> None:
         self.document.semantic_tokens.add(type=type, location=location, modifiers=modifiers)
 
-    def get_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
-        # look through the values
-        for value in self.values:
-            result = value.get_hover_information(dataset, text_position)
-            if result:
-                return result
-
-        # not found in values, then we search in the children blocks
-        for child in self.children:
-            result = child.get_hover_information(dataset, text_position)
-            if result is not None:
-                return result
-
-        return None
-
 
 
 class ScriptBlock(Block, Element["BlockNode"]):
@@ -102,10 +116,10 @@ class ScriptBlock(Block, Element["BlockNode"]):
         Blocks are not required to have an ID: this is represented by None.
         """
 
-        self.node = node
+        self.node: BlockNode = node
         self.comment: str = comment
 
-        self.parent = parent
+        self.parent: Block = parent
 
     def __repr__(self) -> str:
         if self.id is None:
@@ -123,8 +137,21 @@ class ScriptBlock(Block, Element["BlockNode"]):
         return block_data.get('description', '')
 
     def get_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
-        # TODO: check type hover info
-        # TODO: check ID hover info
+        if dataset.is_script_block(self.type):
+            node = self.node
+            type_node = node.type
+            if type_node is not None and type_node.strip().to_range() == text_position:
+                # retrieve block info
+                block_data = dataset.get_script_block_data(self.type)
+                tree = self.get_tree()
+                desc = block_data.get('description', '')
+                txt = f"{tree}\n\n---\n\n{desc}"
+
+                return make_hover_information(
+                    txt,
+                    range=self.node.type.to_range() if self.node.type is not None else None,
+                )
+            # TODO: check ID hover info
         return super().get_hover_information(dataset, text_position)
 
 
