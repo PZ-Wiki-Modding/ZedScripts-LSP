@@ -291,8 +291,8 @@ class Lexer:
         self.line: int = 0
         self.offset: int = 0
 
-    def has_next(self) -> bool:
-        return self.pos + 1 < len(self.text)
+    def has_next(self, num_characters: int = 1) -> bool:
+        return self.pos + num_characters < len(self.text)
 
     def next(self) -> str:
         assert self.has_next()
@@ -306,7 +306,17 @@ class Lexer:
         return char
 
     def peek(self, num_characters: int = 1) -> str:
-        assert self.pos + num_characters < len(self.text)
+        """
+        Peek ahead in the text by the specified number of characters without advancing the current position.
+        `num_characters = 0` would be the current character.
+
+        Args:
+            num_characters (int, optional): The number of characters to peek ahead. Defaults to 1.
+
+        Returns:
+            str: The character at the specified lookahead position.
+        """
+        assert self.pos + num_characters < len(self.text), f"Peek position out of range (pos: {self.pos}, num_characters: {num_characters}, len: {len(self.text)})"
         return self.text[self.pos + num_characters]
 
     def start_token(self, type: TokenType) -> TokenBuilder:
@@ -334,14 +344,29 @@ class Lexer:
         )
 
     def check_comment(self) -> bool:
-        return self.peek() == "/" and self.peek(2) == "*"
+        """True if the current position in the text indicates the start of a comment."""
+        return (self.peek(1) == "/"
+            and self.has_next(2)
+            and self.peek(2) == "*")
+
+    def tokenize_punctuator(self) -> None:
+        token = self.start_token(TokenType.PUNCTUATOR)
+        token.add(self.next())
+        self.source.tokens.append(
+            token.build(
+                TextPosition(self.line, self.offset)
+            )
+        )
 
     def tokenize_text(self) -> None:
         token = self.start_token(TokenType.TEXT)
 
         while self.has_next():
             char = self.peek()
-            if self.check_comment() or char in ELEMENTS_DELIMITERS or char in string.whitespace:
+            if (self.check_comment() 
+                or char in ELEMENTS_DELIMITERS 
+                or char in string.whitespace
+                or char in PUNCTUATORS):
                 break
             token.add(self.next())
 
@@ -373,6 +398,9 @@ class Lexer:
             char = lexer.peek()
             if lexer.check_comment():
                 lexer.tokenize_comment()
+                continue
+            elif char in PUNCTUATORS:
+                lexer.tokenize_punctuator()
                 continue
             elif char in ELEMENTS_DELIMITERS:
                 token = lexer.start_token(TokenType.ELEMENT_DELIMITER)
