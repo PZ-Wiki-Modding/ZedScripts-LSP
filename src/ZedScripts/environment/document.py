@@ -21,10 +21,9 @@ if TYPE_CHECKING:
 
 class Document:
     documents: list['Document'] = []
-    def __init__(self, path: Path, text: str, rootType: str) -> None:
+    def __init__(self, path: Path, rootType: str) -> None:
         self.rootType: str = rootType
         self.path: Path = path
-        self.text: str = text
         self.lexical_tokens: TokenCollection = TokenCollection()
         self.body: Root | None = None
 
@@ -45,12 +44,15 @@ class Document:
             )
         )
 
+    def get_text(self) -> str:
+        return self.path.read_text()
+
     def update_text(self, text: str) -> None:
-        if self.text != text:
-            self.text = text
+        """Bump the version if it has changed."""
+        if self.get_text() != text:
             self.bump()
 
-    def get_uri(self):
+    def get_uri(self) -> str:
         return path_to_uri(self.path)
     
     def get_lsp_diagnostics(self) -> list[types.Diagnostic]:
@@ -73,7 +75,7 @@ class Document:
         return None
 
     @staticmethod
-    def make(server: 'ZedServer', path: Path, text: str) -> 'Document | None':
+    def make(server: 'ZedServer', path: Path) -> 'Document | None':
         # find the rootType of the document
         rootType = server.dataset.test_for_root(path)
         if rootType is None:
@@ -81,19 +83,19 @@ class Document:
 
         # if it is a valid ZedScripts document, create a new Document instance
         logging.debug(f"Found valid ZedScripts root for {path}: {rootType}")
-        document = Document(path, text, rootType)
+        document = Document(path, rootType)
         document.make_zedscripts(server)
         Document.documents.append(document)
 
         return document
 
     @staticmethod
-    def find_or_make(server: 'ZedServer', path: Path, text: str) -> 'Document | None':
+    def find_or_make(server: 'ZedServer', path: Path) -> 'Document | None':
         # if we find one, we don't have to verify it is a ZedScripts file
         # bcs it means the document didn't move
         document = Document.find(path)
         if document is None:
-            document = Document.make(server, path, text)
+            document = Document.make(server, path)
         return document
 
     @staticmethod
@@ -130,7 +132,7 @@ class Document:
         self._needs_validation = True
     def clear_changed(self) -> None:
         self._needs_validation = False
-    def was_changed(self) -> bool:
+    def has_changed(self) -> bool:
         return self._needs_validation
 
     def bump(self) -> None:
@@ -180,7 +182,7 @@ class Document:
     def parse(self) -> None:
         logging.debug("Parsing document: %s", self.get_uri())
         # tokenize and parse the document text
-        self.lexical_tokens = Lexer.tokenize(self.text)
+        self.lexical_tokens = Lexer.tokenize(self.get_text())
         result = parse_tokens(self.lexical_tokens)
 
         # set new syntactic diagnostics
@@ -214,7 +216,7 @@ class Document:
     def on_document_changed(self, text: str) -> None:
         self.update_text(text)
 
-        if not self.was_changed():
+        if not self.has_changed():
             logging.debug("Document was not changed, skipping revalidation.")
             return
         self.clear_changed()

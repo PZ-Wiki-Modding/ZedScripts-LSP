@@ -75,7 +75,7 @@ class ZedServer(LanguageServer):
         logging.debug("Document changed: %s\n%s", path, text)
 
         # first check if the file is a zedscripts file
-        document = Document.find_or_make(self, path, text)
+        document = Document.find_or_make(self, path)
         if document is None:
             return
 
