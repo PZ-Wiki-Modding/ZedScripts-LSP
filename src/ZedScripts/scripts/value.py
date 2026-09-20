@@ -132,21 +132,21 @@ class Value(Element["ValueNode"]):
                 # )
                 # no special type for string
                 pass
-            # case ValueType.FLOAT:
-            #     self.parent.add_semantic_token(
-            #         type=SemanticTokenType.NUMBER,
-            #         location=value_node.to_range()
-            #     )
-            # case ValueType.INTEGER:
-            #     self.parent.add_semantic_token(
-            #         type=SemanticTokenType.NUMBER,
-            #         location=value_node.to_range()
-            #     )
-            # case ValueType.BOOLEAN:
-            #     self.parent.add_semantic_token(
-            #         type=SemanticTokenType.VARIABLE,
-            #         location=value_node.to_range()
-            #     )
+            case ValueType.FLOAT:
+                self.parent.add_semantic_token(
+                    type=SemanticTokenType.NUMBER,
+                    location=value_node.to_range()
+                )
+            case ValueType.INTEGER:
+                self.parent.add_semantic_token(
+                    type=SemanticTokenType.NUMBER,
+                    location=value_node.to_range()
+                )
+            case ValueType.BOOLEAN:
+                self.parent.add_semantic_token(
+                    type=SemanticTokenType.VARIABLE,
+                    location=value_node.to_range()
+                )
 
         # the rest is either already handled via the texmate 
         # grammar or shouldn't get specific semantic tokens
@@ -191,6 +191,12 @@ class Value(Element["ValueNode"]):
             return False
 
         param_data = dataset.get_parameter_data(parent_type, key)
+
+        # do the type highlight before anything else
+        # so we highlight by type even if the value is otherwise invalid
+        type_data = param_data.get('type')
+        value_type = dataset.get_parameter_type(value, param_data)
+        self.add_value_type_semantic_tokens(value_type, param_data, value_node)
 
         # check if value has a newline, which is usually not normal
         if "\n" in value:
@@ -260,9 +266,6 @@ class Value(Element["ValueNode"]):
         key_value_separator = None
 
         # verify the type
-        type_data = param_data.get('type')
-        value_type = dataset.get_parameter_type(value, param_data)
-        self.add_value_type_semantic_tokens(value_type, param_data, value_node)
         if value_type is not None and type_data is not None:
             # first we verify that the expected type and the actual 
             # type of the value correspond
