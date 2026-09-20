@@ -44,7 +44,7 @@ class SemanticTokenType(enum.IntEnum):
     LABEL = 23
 
 
-class SemanticTokenModifiers(enum.IntFlag):
+class SemanticTokenModifier(enum.IntFlag):
     DECLARATION = enum.auto()
     """declaration site of a symbol"""
     DEFINITION = enum.auto()
@@ -70,7 +70,7 @@ def get_tokens() -> tuple[list[str], list[str]]:
     """
     Returns the list of semantic token types and modifiers as strings.
     """
-    return [t.name.lower() for t in SemanticTokenType], [cast(str, m.name).lower() for m in SemanticTokenModifiers]
+    return [t.name.lower() for t in SemanticTokenType], [cast(str, m.name).lower() for m in SemanticTokenModifier]
 
 
 
@@ -79,13 +79,13 @@ def get_tokens() -> tuple[list[str], list[str]]:
 
 class SemanticToken:
     def __init__(
-            self, range: TextRange, type: SemanticTokenType, modifiers: SemanticTokenModifiers | None = None
+            self, range: TextRange, type: SemanticTokenType, modifiers: SemanticTokenModifier | None = None
     ) -> None:
         if modifiers is None:
-            modifiers = SemanticTokenModifiers(0)
+            modifiers = SemanticTokenModifier(0)
         self.range: TextRange = range
         self.type: SemanticTokenType = type
-        self.modifiers: SemanticTokenModifiers = modifiers
+        self.modifiers: SemanticTokenModifier = modifiers
 
     def __repr__(self) -> str:
         return f"SemanticToken(range={self.range}, type={self.type.name}[{self.type}], modifiers={self.modifiers})"
@@ -145,7 +145,7 @@ class SemanticTokenCollection(list[SemanticToken]):
 
         return lsp_tokens
 
-    def add(self, type: SemanticTokenType, location: TextRange, modifiers: list[SemanticTokenModifiers] = []):
+    def add(self, type: SemanticTokenType, location: TextRange, modifiers: list[SemanticTokenModifier] = []):
         """
         Add a new semantic token to the collection.
 
@@ -153,7 +153,7 @@ class SemanticTokenCollection(list[SemanticToken]):
             type (SemanticTokenType): The type of the semantic token.
             location (TextRange): The range in the document that the token covers.
         """
-        combined_modifiers = SemanticTokenModifiers(0)
+        combined_modifiers = SemanticTokenModifier(0)
         for modifier in modifiers:
             combined_modifiers |= modifier
         self.append(SemanticToken(location, type, combined_modifiers))

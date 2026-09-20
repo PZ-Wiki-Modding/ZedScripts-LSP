@@ -4,7 +4,7 @@ from . import Element
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.ast import ValueNode
 from ..structure.lexer import TextRange, TokenCollection
-from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifiers
+from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifier
 from ..scripts import DeprecatedInfo, ScriptBlockParameter, ValueType
 
 if TYPE_CHECKING:
@@ -125,13 +125,6 @@ class Value(Element["ValueNode"]):
 
     def add_value_type_semantic_tokens(self, actual_type: ValueType, param_data: 'ScriptBlockParameter', value_node: 'TokenCollection') -> None:
         match actual_type:
-            case ValueType.STRING:
-                # self.parent.add_semantic_token(
-                #     type=SemanticTokenType.STRING,
-                #     location=value_node.to_range()
-                # )
-                # no special type for string
-                pass
             case ValueType.FLOAT:
                 self.parent.add_semantic_token(
                     type=SemanticTokenType.NUMBER,
@@ -146,6 +139,12 @@ class Value(Element["ValueNode"]):
                 self.parent.add_semantic_token(
                     type=SemanticTokenType.VARIABLE,
                     location=value_node.to_range()
+                )
+            case ValueType.BLOCK:
+                self.parent.add_semantic_token(
+                    type=SemanticTokenType.CLASS,
+                    location=value_node.to_range(),
+                    modifiers=[SemanticTokenModifier.DEFINITION]
                 )
 
         # the rest is either already handled via the texmate 

@@ -4,7 +4,7 @@ from . import Element
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.ast import BlockNode, Chunk
 from ..structure.lexer import TextRange
-from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifiers
+from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifier
 
 if TYPE_CHECKING:
     from .value import Value
@@ -64,7 +64,7 @@ class Block:
     def add_diagnostic(self, type: DiagnosticType, location: TextRange, args: dict[str, Any] = {}) -> None:
         self.document.diagnostics.add(type=type, location=location, args=args)
 
-    def add_semantic_token(self, type: SemanticTokenType, location: TextRange, modifiers: list[SemanticTokenModifiers] = []) -> None:
+    def add_semantic_token(self, type: SemanticTokenType, location: TextRange, modifiers: list[SemanticTokenModifier] = []) -> None:
         self.document.semantic_tokens.add(type=type, location=location, modifiers=modifiers)
 
 
@@ -176,7 +176,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
             self.add_semantic_token(
                 SemanticTokenType.CLASS,
                 node_id.to_range(),
-                [SemanticTokenModifiers.DECLARATION]
+                [SemanticTokenModifier.DECLARATION]
             )
 
             # there shouldn't be an ID
