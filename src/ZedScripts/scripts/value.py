@@ -52,6 +52,9 @@ class Value(Element["ValueNode"]):
         self.parent: 'Block' = parent
         self.comment: str = comment
 
+    def __repr__(self) -> str:
+        return f"Value(string={self.string}, parent={self.parent}, comment={self.comment})"
+
     def is_key_value(self) -> bool:
         return "=" in self.string
 

@@ -67,6 +67,9 @@ class Manifest:
         self.releases:     dict[GameVersion, Release] = releases
         self.stable:       DataVersion                = stable
 
+    def __repr__(self) -> str:
+        return f"Manifest(latest_build={self.latest_build}, releases={len(self.releases)}, stable={self.stable})"
+
     @staticmethod
     def from_dict(data: dict) -> "Manifest":
         return Manifest(
@@ -124,6 +127,9 @@ class Dataset:
         self.blocks: dict[str, ScriptBlockData]
         self.roots: dict[str, ScriptBlockData]
 
+    def __repr__(self) -> str:
+        return f"Dataset(manifest={self.manifest}, blocks={len(self.blocks)}, roots={len(self.roots)})"
+
     def load_manifest(self) -> Manifest:
         logging.info("Loading manifest...")
         manifest_data = load_json(SCRIPTS_DATA_MANIFEST)
@@ -165,7 +171,6 @@ class Dataset:
 
         # for each rootFile type, we test their identification patterns
         # to determine if the document is a zedscript doc
-        logging.debug(f"Resolved path for testing: {resolved_path}")
         for rootFile in self.roots.values():
             patterns = rootFile.get('pattern', [])
             for pattern in patterns:

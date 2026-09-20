@@ -120,6 +120,8 @@ class Document:
         if version.type == VersionType.PRE_42:
             return None
 
+        logging.debug(f"Creating document for path: {path}, rootType: {rootType}, version: {version}")
+
         # if it is a valid ZedScripts document, create a new Document instance
         document = Document(path, rootType, workspace, version)
         document.make_zedscripts(server)

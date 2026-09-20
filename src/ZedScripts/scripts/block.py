@@ -23,6 +23,9 @@ class Block:
         self.children: list['ScriptBlock'] = []
         self.values: list['Value'] = []
 
+    def __repr__(self) -> str:
+        return f"Block(type={self.type}, children={len(self.children)}, values={len(self.values)})"
+
     def __iter__(self) -> Iterator['ScriptBlock']:
         return iter(self.children)
 
