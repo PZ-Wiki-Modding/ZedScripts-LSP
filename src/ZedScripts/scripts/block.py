@@ -8,7 +8,7 @@ from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifier
 
 if TYPE_CHECKING:
     from .value import Value
-    from ..scripts.dataset import Dataset
+    from .dataset import Dataset
     from ..environment.document import Document
 
 class Block:
