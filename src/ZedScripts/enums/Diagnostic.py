@@ -44,6 +44,7 @@ class DiagnosticType(enum.Enum):
     VALUE_INVALID_OBJECT_KEY_TYPE =          enum.auto()
     VALUE_INVALID_OBJECT_VALUE_TYPE =        enum.auto()
     VALUE_WRONGLY_FORMATTED_KEY_VALUE_PAIR = enum.auto()
+    VALUE_WITH_NEWLINE =                     enum.auto()
 
 
 # syntax diagnostics
@@ -113,19 +114,22 @@ DiagnosticDefinition(DiagnosticType.VALUE_FORBIDDEN,
                      DiagnosticSeverity.Warning,
                      args={"type": str, "key": str, "forbidden_values": list, "accepted_values": list})
 DiagnosticDefinition(DiagnosticType.VALUE_INVALID_TYPE,
-                     DiagnosticSeverity.Warning,
+                     DiagnosticSeverity.Error,
                      args={"key": str, "value": str, "expected_type": str, "actual_type": str})
 DiagnosticDefinition(DiagnosticType.VALUE_INVALID_OBJECT_FORMAT,
-                     DiagnosticSeverity.Warning,
+                     DiagnosticSeverity.Error,
                      args={"type": str, "key": str, "key_value_separator": str})
 DiagnosticDefinition(DiagnosticType.VALUE_INVALID_OBJECT_KEY_TYPE,
-                     DiagnosticSeverity.Warning,
+                     DiagnosticSeverity.Error,
                      args={"obj_key": str, "key": str, "expected_type": str, "actual_type": str})
 DiagnosticDefinition(DiagnosticType.VALUE_INVALID_OBJECT_VALUE_TYPE,
-                     DiagnosticSeverity.Warning,
+                     DiagnosticSeverity.Error,
                      args={"obj_value": str, "key": str, "expected_type": str, "actual_type": str})
 DiagnosticDefinition(DiagnosticType.VALUE_WRONGLY_FORMATTED_KEY_VALUE_PAIR,
                      DiagnosticSeverity.Warning,
+                     args={"type": str, "key": str, "value": str})
+DiagnosticDefinition(DiagnosticType.VALUE_WITH_NEWLINE,
+                     DiagnosticSeverity.Information,
                      args={"type": str, "key": str, "value": str})
 
 

@@ -189,13 +189,23 @@ class Value(Element["ValueNode"]):
 
         param_data = dataset.get_parameter_data(parent_type, key)
 
+        # check if value has a newline, which is usually not normal
+        if "\n" in value:
+            self.parent.add_diagnostic(
+                type=DiagnosticType.VALUE_WITH_NEWLINE,
+                location=value_node.strip().to_range(),
+                args={"type": parent_type, "key": key, "value": value}
+            )
+            # no return, bcs technically still valid for the game
+            # so this may be normal
+
         # verify whenever the parameter is deprecated
         deprecated_data = param_data.get('deprecated', None)
         if deprecated_data is not None:
             depr_type, param = _get_deprecated_info(deprecated_data)
             self.parent.add_diagnostic(
                 type=depr_type,
-                location=key_node.to_range(),
+                location=key_node.strip().to_range(),
                 args=param
             )
             return False
