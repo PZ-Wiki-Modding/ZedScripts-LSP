@@ -224,6 +224,28 @@ class Dataset:
             return self.roots[type.lower()]
         raise ValueError(f"Script block data for type '{type}' not found")
 
+    def get_block_tree(self, type: str) -> list[str]:
+        """
+        Retrieve the variantOf tree of the specified script block type.
+
+        Args:
+            type (str): The type of the script block to retrieve the tree for.
+
+        Returns:
+            list[str]: A list representing the hierarchical tree of the script block type.
+        """
+        block_data = self.get_script_block_data(type)
+        assert block_data is not None, f"{type} block should be validated before retrieving its tree"
+
+        # if it's a variant of another block then include that 
+        # block's tree before the current block's type in the tree
+        variant_of = block_data.get('variantOf')
+        variant_tree = [type]
+        if variant_of is not None:
+            variant_tree = self.get_block_tree(variant_of) + variant_tree
+
+        return variant_tree            
+
     def can_block_have_parameter(self, type: str, parameter: str) -> bool:
         block_data = self.get_script_block_data(type)
         assert block_data is not None, f"{type} block should be validated before validating parameters"

@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Any, Iterator
 
 from lsprotocol import types
 
+from .. import SCRIPTSDOCS_LINK
 from . import Element
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.ast import BlockNode, Chunk
@@ -48,6 +49,9 @@ class Block:
 
     def get_description(self, dataset: 'Dataset') -> str:
         return NotImplemented
+
+    def get_scriptsdocs_url(self, tree: list[str]) -> str:
+        return SCRIPTSDOCS_LINK + "/".join(tree).replace(" ", "-").lower()
 
     def get_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
         # look through the values
@@ -141,11 +145,19 @@ class ScriptBlock(Block, Element["BlockNode"]):
             node = self.node
             type_node = node.type
             if type_node is not None and type_node.strip().to_range() == text_position:
-                # retrieve block info
-                block_data = dataset.get_script_block_data(self.type)
+                # show a tree hierarchy of the parameter
                 tree = self.get_tree()
-                desc = block_data.get('description', '')
-                txt = f"{tree}\n\n---\n\n{desc}"
+                desc = self.get_description(dataset)
+                if desc == "":
+                    txt = tree
+                else:
+                    txt = f"{tree}\n\n---\n\n{desc}"
+
+                # show link to ScriptsDocs
+                if dataset.is_script_block(self.type):
+                    variant_tree = dataset.get_block_tree(self.type)
+                    url = self.get_scriptsdocs_url(variant_tree)
+                    txt += f"\n\n[Documentation]({url})"
 
                 return make_hover_information(
                     txt,

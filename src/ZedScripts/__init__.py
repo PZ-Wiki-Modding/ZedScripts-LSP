@@ -29,3 +29,5 @@ SOURCE = IDENTIFIER
 SCRIPTS_DATA_MANIFEST = "https://raw.githubusercontent.com/PZ-Wiki-Modding/pz-scripts-data/refs/heads/main/manifest.json"
 SCRIPTS_BLOCKS_DATA_LINK = "https://raw.githubusercontent.com/pz-wiki-modding/pz-scripts-data/refs/heads/main/out/scriptsBlocks.json"
 ROOTS_DATA_LINK = "https://raw.githubusercontent.com/pz-wiki-modding/pz-scripts-data/refs/heads/main/out/roots.json"
+
+SCRIPTSDOCS_LINK = "https://pz-wiki-modding.github.io/PZ-API-Docs/scripts/"

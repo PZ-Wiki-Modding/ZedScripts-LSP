@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Any
 
 from lsprotocol import types
 
+from .. import SCRIPTSDOCS_LINK
 from . import Element
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.ast import ValueNode
@@ -138,6 +139,8 @@ class Value(Element["ValueNode"]):
         param_data = dataset.get_parameter_data(parent_type, key)
         return param_data.get('description', '') if param_data else ''
 
+    def get_scriptsdocs_url(self, tree: list[str]) -> str | None:
+        return self.parent.get_scriptsdocs_url(tree) + f"#scripts-{self.parent.type}-{self.key()}".replace(' ', '-').lower()
 
     def get_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
         node = self.node
@@ -145,9 +148,20 @@ class Value(Element["ValueNode"]):
         # value_node = node.value()
 
         if key_node.to_range() == text_position:
+            # show a tree hierarchy of the parameter
             tree = self.get_tree()
             desc = self.get_description(dataset)
-            txt = f"{tree}\n\n---\n\n{desc}\n\nkeywords.namespace"
+            if desc == "":
+                txt = tree
+            else:
+                txt = f"{tree}\n\n---\n\n{desc}"
+
+            # show link to ScriptsDocs
+            if dataset.is_script_block(self.parent.type):
+                variant_tree = dataset.get_block_tree(self.parent.type)
+                url = self.get_scriptsdocs_url(variant_tree)
+                txt += f"\n\n[Documentation]({url})"
+
             return make_hover_information(txt, key_node.to_range())
 
         return None
