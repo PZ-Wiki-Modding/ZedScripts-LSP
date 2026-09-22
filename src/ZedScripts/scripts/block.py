@@ -8,7 +8,7 @@ from ..enums.Diagnostic import DiagnosticType
 from ..structure.ast import BlockNode, Chunk
 from ..structure.lexer import TextRange, TextPosition
 from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifier
-from ..providers.hover import make_hover_information
+from ..providers.hover import make_hover_information, format_tree
 
 if TYPE_CHECKING:
     from .value import Value
@@ -33,10 +33,8 @@ class Block:
     def __iter__(self) -> Iterator['ScriptBlock']:
         return iter(self.children)
 
-    def get_tree(self, children: bool = False) -> str:
+    def get_tree(self) -> str:
         type = self.type
-        if not children:
-            type = f"**{self.type}**"
 
         parents: list[str] = [type]
         current = self
@@ -146,7 +144,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
             type_node = node.type
             if type_node is not None and type_node.strip().to_range() == text_position:
                 # show a tree hierarchy of the parameter
-                tree = self.get_tree()
+                tree = format_tree(self.get_tree())
                 desc = self.get_description(dataset)
                 if desc == "":
                     txt = tree

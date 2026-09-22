@@ -16,6 +16,9 @@ def make_hover_information(description: str, range: 'TextRange | None' = None) -
         range=textrange_to_lsp(range) if range is not None else None
     )
 
+def format_tree(tree: str) -> str:
+    return f"```zedserver\n{tree}\n```"
+
 # TODO: this could possibly not work in other IDEs
 def _format_description(description: str) -> str:
     """

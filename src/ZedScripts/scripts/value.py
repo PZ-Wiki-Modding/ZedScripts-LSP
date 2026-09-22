@@ -8,7 +8,7 @@ from ..enums.Diagnostic import DiagnosticType
 from ..structure.ast import ValueNode
 from ..structure.lexer import TextPosition, TokenCollection
 from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifier
-from ..providers.hover import make_hover_information
+from ..providers.hover import make_hover_information, format_tree
 from ..scripts import DeprecatedInfo, ScriptBlockParameter, ValueType
 
 if TYPE_CHECKING:
@@ -128,8 +128,8 @@ class Value(Element["ValueNode"]):
 ## information
 
     def get_tree(self) -> str:
-        block_tree = self.parent.get_tree(True)
-        return f"{block_tree} → **{self.key()}**"
+        block_tree = self.parent.get_tree()
+        return f"{block_tree} # {self.key()}"
 
     def get_description(self, dataset: 'Dataset') -> str:
         parent_type = self.parent.type
@@ -142,14 +142,14 @@ class Value(Element["ValueNode"]):
     def get_scriptsdocs_url(self, tree: list[str]) -> str | None:
         return self.parent.get_scriptsdocs_url(tree) + f"#scripts-{self.parent.type}-{self.key()}".replace(' ', '-').lower()
 
-    def get_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
+    def get_key_value_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
         node = self.node
         key_node = node.key()
         # value_node = node.value()
 
         if key_node.to_range() == text_position:
-            # show a tree hierarchy of the parameter
-            tree = self.get_tree()
+            # show a tree hierarchy of the parameter and description
+            tree = format_tree(self.get_tree())
             desc = self.get_description(dataset)
             if desc == "":
                 txt = tree
@@ -163,7 +163,14 @@ class Value(Element["ValueNode"]):
                 txt += f"\n\n[Documentation]({url})"
 
             return make_hover_information(txt, key_node.to_range())
+        return None
 
+
+    def get_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
+        # hover for key-value
+        if self.is_key_value():
+            return self.get_key_value_hover_information(dataset, text_position)
+        # TODO: hover for non key-value
         return None
 
 
