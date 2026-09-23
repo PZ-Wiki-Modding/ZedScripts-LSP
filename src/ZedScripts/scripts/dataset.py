@@ -308,19 +308,18 @@ class Dataset:
         if value.lower() in ["true", "false"]:
             return ValueType.BOOLEAN
 
-        # check if int
-        elif value.isdigit():
-            return ValueType.INTEGER
-
-        # check if float
+        # check if float or integer
         try:
             float(value) # try to convert it
 
-            # it means that our value is a float
+            # it means that our value is a float or an integer
+            # so we need to distinguish between float and integer
             if "." in value:
                 return ValueType.FLOAT
 
-            # if the expected type is float
+            # if the expected type is float, then it's a float
+            # because floats are allowed to not contain dots 
+            # (simply representing whole numbers)
             elif expected_type == ValueType.FLOAT:
                 return ValueType.FLOAT
 
