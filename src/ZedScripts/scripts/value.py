@@ -331,66 +331,67 @@ class Value(Element["ValueNode"]):
                 return False
 
             # if it's a translation type, then we need to verify it
-            if expected_type == ValueType.TRANSLATION:
+            match expected_type:
+                case ValueType.TRANSLATION:
                 # TODO: needs to implement
-                pass
+                    pass
 
             # if it's an object, then we verify the object composition
-            elif expected_type == ValueType.OBJECT:
-                # retrieve the object data
-                object_data = type_data.get('object')
-                assert object_data is not None
+                case ValueType.OBJECT:
+                    # retrieve the object data
+                    object_data = type_data.get('object')
+                    assert object_data is not None
 
-                # first make sure that each pairs contain the key-value separator
-                key_value_separator = object_data['keyValueSep']
-                for v in values:
-                    if key_value_separator not in v:
-                        self.parent.add_diagnostic(
-                            type=DiagnosticType.VALUE_INVALID_OBJECT_FORMAT,
-                            location=value_node.to_range(),
-                            args={"type": parent_type, "key": key, "key_value_separator": key_value_separator}
-                        )
+                    # first make sure that each pairs contain the key-value separator
+                    key_value_separator = object_data['keyValueSep']
+                    for v in values:
+                        if key_value_separator not in v:
+                            self.parent.add_diagnostic(
+                                type=DiagnosticType.VALUE_INVALID_OBJECT_FORMAT,
+                                location=value_node.to_range(),
+                                args={"type": parent_type, "key": key, "key_value_separator": key_value_separator}
+                            )
+                            return False
+
+                    # then check if the key and values have the right format
+                    obj_key_type = object_data['keyType']
+                    obj_value_type = object_data['valueType']
+                    failed = False
+                    for v in values:
+                        # we test each key and value for a type
+                        obj_key, obj_value = v.split(key_value_separator, 1)
+                        key_type_result = dataset.test_for_type(obj_key_type, obj_key)
+                        value_type_result = dataset.test_for_type(obj_value_type, obj_value)
+
+                        # if the expected type and actual type doesn't correspond, then something
+                        # is wrong and we need to report a diagnostic
+                        if key_type_result != obj_key_type:
+                            self.parent.add_diagnostic(
+                                type=DiagnosticType.VALUE_INVALID_OBJECT_KEY_TYPE,
+                                location=value_node.to_range(),
+                                args={"obj_key": obj_key, "key": key, 
+                                    "expected_type": obj_key_type, 
+                                    "actual_type": key_type_result}
+                            )
+                            failed = True
+                        if value_type_result != obj_value_type:
+                            self.parent.add_diagnostic(
+                                type=DiagnosticType.VALUE_INVALID_OBJECT_VALUE_TYPE,
+                                location=value_node.to_range(),
+                                args={"obj_value": obj_value, "key": key, 
+                                    "expected_type": obj_value_type, 
+                                    "actual_type": value_type_result}
+                            )
+                            failed = True
+
+                    # if at least one failed, then the entire object is considered invalid
+                    if failed:
                         return False
 
-                # then check if the key and values have the right format
-                obj_key_type = object_data['keyType']
-                obj_value_type = object_data['valueType']
-                failed = False
-                for v in values:
-                    # we test each key and value for a type
-                    obj_key, obj_value = v.split(key_value_separator, 1)
-                    key_type_result = dataset.test_for_type(obj_key_type, obj_key)
-                    value_type_result = dataset.test_for_type(obj_value_type, obj_value)
-
-                    # if the expected type and actual type doesn't correspond, then something
-                    # is wrong and we need to report a diagnostic
-                    if key_type_result != obj_key_type:
-                        self.parent.add_diagnostic(
-                            type=DiagnosticType.VALUE_INVALID_OBJECT_KEY_TYPE,
-                            location=value_node.to_range(),
-                            args={"obj_key": obj_key, "key": key, 
-                                  "expected_type": obj_key_type, 
-                                  "actual_type": key_type_result}
-                        )
-                        failed = True
-                    if value_type_result != obj_value_type:
-                        self.parent.add_diagnostic(
-                            type=DiagnosticType.VALUE_INVALID_OBJECT_VALUE_TYPE,
-                            location=value_node.to_range(),
-                            args={"obj_value": obj_value, "key": key, 
-                                  "expected_type": obj_value_type, 
-                                  "actual_type": value_type_result}
-                        )
-                        failed = True
-
-                # if at least one failed, then the entire object is considered invalid
-                if failed:
-                    return False
-
-            # if it's a block type, then it needs to reference another block
-            elif expected_type == ValueType.BLOCK:
-                # TODO: verify the block reference if any
-                pass
+                # if it's a block type, then it needs to reference another block
+                case ValueType.BLOCK:
+                    # TODO: verify the block reference if any
+                    pass
 
         # diagnostic possibly wrongly formatted key-value pair
         if key_value_separator != "=":
