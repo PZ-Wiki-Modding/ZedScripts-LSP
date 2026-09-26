@@ -3,13 +3,15 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 
-from . import WorkspaceType
+from . import WorkspaceType, VersionType
 from .document import Document
+from .mod import Mod, ModCollection
+from .version import Version
 from ..utils import glob_files_by_extensions
 
 if TYPE_CHECKING:
-    from ZedScripts.server import ZedServer
-
+    from ..server import ZedServer
+    from ..scripts.block import Block
 
 
 
@@ -24,6 +26,8 @@ class Workspace:
         self.workspace_type = workspace_type
         self.documents: dict[Path, Document] = {}
 
+        self.mods: ModCollection = ModCollection()
+
         # cache workspace
         Workspace.workspaceCache.setdefault(workspace_type, {})[folder] = self
 
@@ -31,17 +35,40 @@ class Workspace:
         """
         Retrieve every script files and cache them as Document instances.
         """
-
         logging.info(f"Loading workspace: {self.folder}")
+        self.load_mods()
+        self.load_documents()
+
+    def load_documents(self) -> None:
         # glob .txt and .info files
         for file in glob_files_by_extensions(self.folder, {".txt", ".info"}):
             # try to find or create a Document instance for this file
             # if it's not detected as a valid ZedScripts document then it will return None
             self.load_document(file)
 
+    def load_mods(self) -> None:
+        logging.info(f"Loading mods for workspace: {self.folder}")
+        # look for mod.info files
+        # one or more of these files are associated to a specific mod
+        for file in self.folder.rglob("mod.info"):
+            # only consider versioning and common folders
+            version = Version.find_or_make_version(file)
+            if version.type in {VersionType.VERSIONING, VersionType.COMMON}:
+                mod = Mod.find_or_make_mod(file.parent.parent, self)
+                mod.add_mod_info_file(file, version)
+                self.mods[file] = mod
+                continue
+
+            # if it's OTHER, then it's probably not a mod file
+            # TODO: should we handle those ?
+
+
     def load_document(self, path: Path) -> Document | None:
         document = Document.find_or_make(self.server, path, self)
         if document is not None:
+            mod = Mod.find_or_make_mod(path.parent, self)
+            if mod is not None:
+                document.set_mod(mod)
             self.documents[path] = document
         return document
 

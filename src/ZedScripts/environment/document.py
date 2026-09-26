@@ -19,9 +19,9 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from .workspace import Workspace
+    from .mod import Mod
     from ..server import ZedServer
-    from ..scripts.dataset import Dataset
-    from ..scripts.block import Root
+    from ..scripts.block import Block, Root
 
 class Document:
     documents: list['Document'] = []
@@ -42,6 +42,9 @@ class Document:
         self.text: str | None = None
         """Holds the raw text content of the document. None until the text is read from the file
         or passed through Document.update_text."""
+
+        self.mod: 'Mod | None' = None
+        """The mod this document belongs to, if any."""
 
         self.semantic_tokens: SemanticTokenCollection = SemanticTokenCollection(self)
         """Holds semantic tokens for general highlighting. Populated from the validation process.
@@ -68,6 +71,9 @@ class Document:
 
         # cache document instance
         Document.documents.append(self)
+
+    def set_mod(self, mod: 'Mod') -> None:
+        self.mod = mod
 
     def make_zedscripts(self, server: 'ZedServer') -> None:
         server.send_notification(
