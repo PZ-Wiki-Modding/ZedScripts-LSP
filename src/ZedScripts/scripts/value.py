@@ -10,6 +10,7 @@ from ..structure.lexer import TextPosition, TokenCollection
 from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifier
 from ..providers.hover import make_hover_information, format_tree
 from ..scripts import DeprecatedInfo, ScriptBlockParameter, ValueType
+from ..environment.workspace import Workspace
 
 if TYPE_CHECKING:
     from .block import Block
@@ -330,13 +331,14 @@ class Value(Element["ValueNode"]):
                 )
                 return False
 
-            # if it's a translation type, then we need to verify it
+            # verify based on type
             match expected_type:
+                # if it's a translation type, then we need to verify it
                 case ValueType.TRANSLATION:
                 # TODO: needs to implement
                     pass
 
-            # if it's an object, then we verify the object composition
+                # if it's an object, then we verify the object composition
                 case ValueType.OBJECT:
                     # retrieve the object data
                     object_data = type_data.get('object')
@@ -384,14 +386,17 @@ class Value(Element["ValueNode"]):
                             )
                             failed = True
 
+                        # verify by
+
                     # if at least one failed, then the entire object is considered invalid
                     if failed:
                         return False
 
                 # if it's a block type, then it needs to reference another block
                 case ValueType.BLOCK:
-                    # TODO: verify the block reference if any
-                    pass
+                    passed = self.validate_block_ref(value, param_data, value_node)
+                    if not passed:
+                        return False
 
         # diagnostic possibly wrongly formatted key-value pair
         if key_value_separator != "=":
@@ -404,5 +409,105 @@ class Value(Element["ValueNode"]):
                 return False
 
         # TODO: need to validate dependent parameters (needs)
+
+        return True
+
+    # TODO: need to implement this function usage
+    # def validate_type(self, dataset: Dataset, value: str, expected_type: ValueType, node: TokenCollection, block_type_data: BlockType | None = None) -> bool:
+    #     # test for type the value
+    #     value_type = dataset.test_for_type(expected_type, value)
+    #     if value_type != expected_type:
+    #         return False
+
+    #     # if it expects a block reference, then validate that
+    #     if (expected_type == ValueType.BLOCK
+    #         and block_type_data is not None 
+    #         and not self.validate_block_ref(value, block_type_data, node)):
+    #         return False
+
+    #     return True
+
+    def block_ref_to_fulltype(self, value: str) -> tuple[str | None, str] | None:
+        module = None
+        block = None
+
+        parts = value.split(".")
+        match len(parts):
+            case 2:
+                module, block = parts
+                return module, block
+            case 1:
+                block = parts[0]
+                return None, block
+            case _:
+                return None # invalid format
+
+    def validate_block_ref(self, value: str, param_data: ScriptBlockParameter, node: TokenCollection) -> bool:
+        type_data = param_data.get('type')
+        assert type_data is not None, "Type data must be provided in the parameter data"
+        block_type_data = type_data.get('block')
+        assert block_type_data is not None, "Block type data must be provided in the type data"
+
+        can_be_empty = block_type_data.get('canBeEmpty', False)
+
+        # retrieve the full type elements
+        fulltype = self.block_ref_to_fulltype(value)
+        if fulltype is None:
+            self.parent.add_diagnostic(
+                type=DiagnosticType.VALUE_INVALID_BLOCK_REFERENCE,
+                location=node.strip().to_range(),
+                args={"value": value}
+            )
+            return False
+
+        module = fulltype[0]
+        block = fulltype[1]
+
+        # check that a module can be provided
+        can_full_type = block_type_data.get('fullType', False)
+        if not can_full_type and module is not None:
+            self.parent.add_diagnostic(
+                type=DiagnosticType.VALUE_CANNOT_PROVIDE_MODULE,
+                location=node.strip().to_range(),
+                args={"value": value, "module": module}
+            )
+            return False
+
+        # check whenever the block can be empty
+        if block == "":
+            if can_be_empty:
+                return True
+            self.parent.add_diagnostic(
+                type=DiagnosticType.VALUE_BLOCK_REF_CANNOT_BE_EMPTY,
+                location=node.strip().to_range(),
+                args={"value": value}
+            )
+            return False
+
+        # TODO: look for the source block
+
+        root = self.parent.get_root()
+
+        # retrieve imports
+        searchable_modules: list[str]
+        if module is None:
+            searchable_modules = []
+        else:
+            searchable_modules = root.get_imports()
+
+            # the used module is searched into too
+            searchable_modules.append(module)
+
+        # if allowed, auto import the parent module block
+        if not block_type_data.get('noAutoImport', False):
+            module_block = root.get_module()
+            if (module_block is not None
+                and module_block.id is not None
+                and module_block.id not in searchable_modules):
+                searchable_modules.append(module_block.id)
+
+        # search the block reference in the searchable modules
+        ref_type = block_type_data['name']
+        refs = Workspace.search_for_block_references(root.document.version, searchable_modules, block, ref_type)
 
         return True

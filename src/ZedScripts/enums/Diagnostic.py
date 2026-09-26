@@ -45,6 +45,9 @@ class DiagnosticType(enum.Enum):
     VALUE_INVALID_OBJECT_VALUE_TYPE =        enum.auto()
     VALUE_WRONGLY_FORMATTED_KEY_VALUE_PAIR = enum.auto()
     VALUE_WITH_NEWLINE =                     enum.auto()
+    VALUE_INVALID_BLOCK_REFERENCE =          enum.auto()
+    VALUE_CANNOT_PROVIDE_MODULE =            enum.auto()
+    VALUE_BLOCK_REF_CANNOT_BE_EMPTY =        enum.auto()
 
 
 # syntax diagnostics
@@ -131,6 +134,15 @@ DiagnosticDefinition(DiagnosticType.VALUE_WRONGLY_FORMATTED_KEY_VALUE_PAIR,
 DiagnosticDefinition(DiagnosticType.VALUE_WITH_NEWLINE,
                      DiagnosticSeverity.Information,
                      args={"type": str, "key": str, "value": str})
+DiagnosticDefinition(DiagnosticType.VALUE_INVALID_BLOCK_REFERENCE,
+                     DiagnosticSeverity.Error,
+                     args={"value": str})
+DiagnosticDefinition(DiagnosticType.VALUE_CANNOT_PROVIDE_MODULE,
+                     DiagnosticSeverity.Error,
+                     args={"value": str, "module": str})
+DiagnosticDefinition(DiagnosticType.VALUE_BLOCK_REF_CANNOT_BE_EMPTY,
+                     DiagnosticSeverity.Error,
+                     args={"value": str})
 
 
 # ensure that all diagnostic types have a corresponding definition

@@ -65,3 +65,30 @@ class Workspace:
         if workspace is not None:
             return workspace.load_document(path)
         return None
+
+
+# searches
+
+    @staticmethod
+    def search_for_block_references(version: Version, modules: list[str], block: str, block_type: str) -> list['Block']:
+        """_summary_
+
+        Args:
+            version (Version): The version context for the search.
+            modules (list[str]): List of module names to search within.
+            block (str): Name of the block to search for.
+            block_type (str): Expected type of the block to search for.
+
+        Returns:
+            list[Block]: List of blocks that match the search criteria.
+        """
+        result: list['Block'] = []
+
+        # skip search for pre B42 versions
+        if version == Version.PRE_42:
+            return result
+
+        # iterate over each workspace, and look for the closest version setup
+        # to the version we are looking into
+
+        return NotImplemented

@@ -27,6 +27,9 @@
         "VALUE_INVALID_OBJECT_KEY_TYPE": "Key '{obj_key}' for parameter '{key}' is of invalid type '{actual_type}'. Expected type is '{expected_type}'.",
         "VALUE_INVALID_OBJECT_VALUE_TYPE": "Value '{obj_value}' for parameter '{key}' is of invalid type '{actual_type}'. Expected type is '{expected_type}'.",
         "VALUE_WRONGLY_FORMATTED_KEY_VALUE_PAIR": "Parameter '{key}' in block '{type}' with value '{value}' is likely wrongly formatted. Verify you're not missing a comma or you're not using the '=' symbol incorrectly.",
-        "VALUE_WITH_NEWLINE": "Parameter '{key}' in block '{type}' has a newline in its value '{value}'. This is usually the symptom of a missing comma."
+        "VALUE_WITH_NEWLINE": "Parameter '{key}' in block '{type}' has a newline in its value '{value}'. This is usually the symptom of a missing comma.",
+        "VALUE_INVALID_BLOCK_REFERENCE": "Value '{value}' has a wrongly formatted block reference. Expected format is 'module.block' or 'block'.",
+        "VALUE_CANNOT_PROVIDE_MODULE": "Value '{value}' cannot contain a module '{module}' reference, only direct block references are allowed.",
+        "VALUE_BLOCK_REF_CANNOT_BE_EMPTY": "Value '{value}' has an empty block reference, which is not allowed."
     }
 }

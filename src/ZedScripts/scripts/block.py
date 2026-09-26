@@ -44,6 +44,14 @@ class Block:
 
         return " → ".join(parents)
 
+    def get_root(self) -> 'Root': 
+        """
+        Find the root block of the whole block hierarchy.
+
+        Returns:
+            Root: The root block of the whole tree.
+        """
+        return NotImplemented
 
     def get_description(self, dataset: 'Dataset') -> str:
         return NotImplemented
@@ -131,6 +139,15 @@ class ScriptBlock(Block, Element["BlockNode"]):
 
 
 ## information
+
+    def get_root(self) -> 'Root':
+        current: Block = self
+        i = 0
+        while isinstance(current, ScriptBlock) and i < 1000:
+            current = current.parent
+            i += 1
+        assert isinstance(current, Root), "reached iteration limit without finding root"
+        return current
 
     def get_description(self, dataset: 'Dataset') -> str:
         if not dataset.is_script_block(self.type):
@@ -357,6 +374,9 @@ class Root(Block, Element["Chunk"]):
         self.node = node
         self.comment = comment
 
+    def get_root(self) -> 'Root': 
+        return self
+
     def validate(self, dataset: 'Dataset') -> bool:
         # validate key-values
         for value in self.values:
@@ -370,3 +390,35 @@ class Root(Block, Element["Chunk"]):
         # validate all children blocks
         for child in self.children:
             child.validate(dataset)
+
+    # TODO: this only supports one module block rn
+    # but can multiple ones be used by the game ?
+    def get_module(self) -> 'ScriptBlock | None':
+        """
+        Retrieves the module block within the current root block, if it exists.
+        """
+        for child in self:
+            if child.type == "module":
+                return child
+        return None
+
+    def get_imports(self) -> list[str]:
+        """
+        Retrieves all the imports of the current module block.
+        """
+        imports: list[str] = ["Base"]
+
+        # find the module block
+        module = self.get_module()
+        if module is None:
+            return imports
+
+        # search for import statements within the module block
+        for child in module:
+            if child.type != "import":
+                continue
+            # retrieve all the values
+            for value in child.values:
+                if not value.is_key_value():
+                    imports.append(value.value())
+        return imports
