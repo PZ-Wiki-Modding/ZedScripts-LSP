@@ -85,7 +85,7 @@ class ZedServer(LanguageServer):
 
     def on_document_changed(self, path: Path, text: str) -> None:
         # first check if the file is a zedscripts file
-        document = Workspace.find_or_make(self, path)
+        document = Workspace.find_or_make(path)
         if document is None:
             return
         
@@ -101,7 +101,7 @@ class ZedServer(LanguageServer):
         Document.rename(self, old_file, new_file)
 
     def on_document_diagnostics(self, path: Path, previous_result_id: str | None) -> DiagnosticReport | None:
-        document = Workspace.find_or_make(self, path)
+        document = Workspace.find_or_make(path)
         if document is None:
             return None
         return document.on_document_diagnostics(self, previous_result_id)

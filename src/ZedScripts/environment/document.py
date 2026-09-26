@@ -100,7 +100,7 @@ class Document:
 # document management
 
     @staticmethod
-    def get_by_workspace() -> dict['Document', 'Workspace']:
+    def list_by_workspace() -> dict['Document', 'Workspace']:
         return {document: document.workspace for document in Document.documents}
 
     @staticmethod

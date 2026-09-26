@@ -27,8 +27,6 @@ class Workspace:
         # cache workspace
         Workspace.workspaceCache.setdefault(workspace_type, {})[folder] = self
 
-
-
     def load(self) -> None:
         """
         Retrieve every script files and cache them as Document instances.
@@ -37,8 +35,6 @@ class Workspace:
         logging.info(f"Loading workspace: {self.folder}")
         # glob .txt and .info files
         for file in glob_files_by_extensions(self.folder, {".txt", ".info"}):
-            logging.info(f"Found script file: {file}")
-
             # try to find or create a Document instance for this file
             # if it's not detected as a valid ZedScripts document then it will return None
             self.load_document(file)
@@ -58,9 +54,9 @@ class Workspace:
         return None
 
     @staticmethod
-    def find_or_make(server: 'ZedServer', path: Path) -> Document | None:
+    def find_or_make(path: Path) -> Document | None:
         # find the document with the associated path
-        docs = Document.get_by_workspace()
+        docs = Document.list_by_workspace()
         for doc in docs.keys():
             if doc.path == path:
                 return doc
