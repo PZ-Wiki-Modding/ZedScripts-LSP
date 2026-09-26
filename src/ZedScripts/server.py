@@ -6,14 +6,13 @@ from pprint import pformat
 
 from lsprotocol import types
 from pygls.lsp.server import LanguageServer
-from pygls.protocol import LanguageServerProtocol
+from pygls.protocol.language_server import LanguageServerProtocol
 from pygls.uris import from_fs_path, to_fs_path
 
 from .__about__ import __version__
 from .utils import uri_to_path
 from .environment import WorkspaceType
-from .environment.document import Document
-from .environment.workspace import Workspace
+from .environment.workspace import Workspace, Document
 from .providers.diagnostics import DiagnosticReport
 from .providers.semantic_tokens import get_tokens
 from .providers.locale import zedlocalizer

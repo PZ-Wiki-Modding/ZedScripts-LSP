@@ -10,16 +10,17 @@ authors = [
   { name = "SimKDT" },
 ]
 dependencies = [
+    "lsprotocol",
     "pygls",
     "requests-cache",
 ]
 
 [project.optional-dependencies]
 build = [
-  "pyinstaller"
+    "pyinstaller"
 ]
 debug = [
-  "debugpy"
+    "debugpy"
 ]
 
 # used to load locale JSON files
@@ -29,5 +30,5 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.package-data]
 ZedScripts = [
-  "locale/*.json"
+    "locale/*.json"
 ]
