@@ -10,7 +10,6 @@ from ..structure.lexer import TextPosition, TokenCollection
 from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifier
 from ..providers.hover import make_hover_information, format_tree
 from ..scripts import DeprecatedInfo, ScriptBlockParameter, ValueType
-from ..environment.workspace import Workspace
 
 if TYPE_CHECKING:
     from .block import Block
@@ -508,6 +507,8 @@ class Value(Element["ValueNode"]):
 
         # search the block reference in the searchable modules
         ref_type = block_type_data['name']
-        refs = Workspace.search_for_block_references(root.document.version, searchable_modules, block, ref_type)
+        # FIXME: this is calling a static function as an instance method, not sure that's correct to do that
+        # but it had to be done due to circular dependency issues
+        refs = self.parent.document.workspace.search_for_block_references(root.document.version, searchable_modules, block, ref_type)
 
         return True
