@@ -40,11 +40,16 @@ class Version:
         self.major: int = major
         self.minor: int = minor
 
-        self.version: str = Version.key_format.format(type=type, major=major, minor=minor)
+        self.version: str = Version.format_version(type, major, minor)
         Version.version_map[self.version] = self
 
     def __repr__(self) -> str:
         return f"Version(source={self.source}, type={self.type}, major={self.major}, minor={self.minor})"
+
+    @staticmethod
+    def format_version(type: VersionType, major: int, minor: int) -> str:
+        """Format a version string for easy comparison and storage."""
+        return Version.key_format.format(type=type, major=major, minor=minor)
 
     @staticmethod
     def get_type(source: str) -> tuple[VersionType, int, int]:
@@ -90,7 +95,7 @@ class Version:
         # other values after minor are ignored by the game
         # so no need to retrieve those
 
-        return VersionType.POST_42, major, minor
+        return VersionType.VERSIONING, major, minor
 
     @staticmethod
     def from_string(version_str: str) -> 'Version':
@@ -108,7 +113,7 @@ class Version:
             Version: The Version instance corresponding to the given version string.
         """
         type, major, minor = Version.get_type(version_str)
-        key = Version.key_format.format(type=type, major=major, minor=minor)
+        key = Version.format_version(type, major, minor)
         if key in Version.version_map:
             return Version.version_map[key]
         return Version(version_str)

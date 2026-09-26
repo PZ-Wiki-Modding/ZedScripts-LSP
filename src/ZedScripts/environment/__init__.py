@@ -18,7 +18,7 @@ class VersionType(enum.StrEnum):
     """Represents different version types the workspace folders follow."""
     PRE_42 = enum.auto()
     """Modded pre-42 folder structure."""
-    POST_42 = enum.auto()
+    VERSIONING = enum.auto()
     """Modded versioning folder.
     
     https://pzwiki.net/wiki/Mod_structure#Common_and_versioning_folders"""
