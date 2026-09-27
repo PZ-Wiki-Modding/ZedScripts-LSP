@@ -133,7 +133,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
 
     def __repr__(self) -> str:
         if self.id is None:
-            return "<" + self.type + ">"
+            return "ScriptBlock<" + self.type + ">"
         else:
             return "ScriptBlock<" + self.type + " " + self.id + ">"
 
