@@ -1,3 +1,4 @@
+import logging
 from typing import TYPE_CHECKING, Any
 
 from lsprotocol import types
@@ -13,6 +14,7 @@ from ..scripts import DeprecatedInfo, ScriptBlockParameter, ValueType
 
 if TYPE_CHECKING:
     from .block import Block, ScriptBlock
+    from ..structure.lexer import TextRange
     from ..scripts.dataset import Dataset
 
 
@@ -199,6 +201,26 @@ class Value(Element["ValueNode"]):
             return self.get_key_value_hover_information(dataset, text_position)
         # TODO: hover for non key-value
         return None
+
+
+## actions
+
+    def get_ref_id_range(self) -> 'TextRange':
+        return self.node.value().split()[-1].to_range()
+
+    def get_linked_editing_ranges(self, text_position: TextPosition) -> list['TextRange'] | None:
+        if len(self.refs) == 0:
+            return None
+        ranges: list['TextRange'] = []
+
+        # add the range of the value itself
+        ranges.append(self.get_ref_id_range())
+
+        # for each refs, gather their linked editing ranges
+        for ref in self.refs:
+            ranges.extend(ref.gather_linked_editing_ranges())
+
+        return ranges
 
 
 ## semantic tokens
@@ -539,6 +561,10 @@ class Value(Element["ValueNode"]):
         self.cleanup_references()
         refs = self.parent.document.workspace.search_for_block_references(root.document.version, searchable_modules, block, ref_type)
         self.refs = refs # cache result since that is used for other providers
+
+        # cache itself inside refs
+        for ref in refs:
+            ref.references.append(self)
 
         # diagnostics handling
         refs_len = len(refs)

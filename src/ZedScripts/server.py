@@ -117,6 +117,12 @@ class ZedServer(LanguageServer):
             return None
         return document.on_hover(self, position)
 
+    def on_linked_editing_range(self, path: Path, position: types.Position) -> types.LinkedEditingRanges | None:
+        document = Document.find(path)
+        if document is None:
+            return None
+        return document.on_linked_editing_range(position)
+
 
 zedserver = ZedServer()
 
@@ -235,6 +241,10 @@ def hover(server: ZedServer, params: types.HoverParams) -> types.Hover | None:
     path = uri_to_path(params.text_document.uri)
     return server.on_document_hover(path, params.position)
 
+@zedserver.feature(types.TEXT_DOCUMENT_LINKED_EDITING_RANGE)
+def linked_editing_range(server: ZedServer, params: types.LinkedEditingRangeParams) -> types.LinkedEditingRanges | None:
+    path = uri_to_path(params.text_document.uri)
+    return server.on_linked_editing_range(path, params.position)
 
 
 

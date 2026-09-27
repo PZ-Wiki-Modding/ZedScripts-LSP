@@ -13,6 +13,7 @@ from ..structure.parser import parse_tokens, chunk_to_root
 from ..providers.diagnostics import DiagnosticReport, WorkspaceDiagnosticReport, DiagnosticCollection
 from ..providers.notifications import ZedNotification, SetZedScriptsNotificationParams
 from ..providers.semantic_tokens import SemanticTokenCollection, build_syntactic_tokens
+from ..providers.actions import make_linked_editing_ranges
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -336,3 +337,16 @@ class Document:
         if self.body is None:
             return None
         return self.body.get_hover_information(server.dataset, text_position)
+
+    def on_linked_editing_range(self, position: types.Position) -> types.LinkedEditingRanges | None:
+        text_position = position_to_texposition(position)
+        if self.body is None:
+            return None
+        root = self.body
+        element = root.get_element_at(text_position)
+        if element is not None:
+            ranges = element.get_linked_editing_ranges(text_position)
+            if ranges is None:
+                return None
+            return make_linked_editing_ranges(ranges)
+        return None

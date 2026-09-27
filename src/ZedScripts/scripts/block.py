@@ -1,3 +1,4 @@
+import logging
 from typing import TYPE_CHECKING, Any, Iterable, Iterator
 
 from lsprotocol import types
@@ -205,6 +206,36 @@ class ScriptBlock(Block, Element["BlockNode"]):
             )
         # TODO: check ID hover info
         return super().get_hover_information(dataset, text_position)
+
+
+## actions
+
+    def gather_linked_editing_ranges(self) -> list[TextRange]:
+        assert self.node.id is not None, "Block must have an ID"
+        ranges: list[TextRange] = []
+
+        # add the ID node range
+        ranges.append(self.node.id.to_range())
+
+        # add ranges for all references to this block
+        for ref in self.references:
+            ranges.append(ref.get_ref_id_range())
+
+        return ranges
+
+
+
+    def get_linked_editing_ranges(self, text_position: TextPosition) -> list[TextRange] | None:
+        # TODO: if it's the ID of a module block
+        # we need to change specifically the module of the references only
+
+        # if we're editing its ID, then edit all occurrences of the ID in references to this block
+        node = self.node
+        id_node = node.id
+        if id_node is not None and id_node.to_range() == text_position:
+            # find all occurrences of this ID in references to this block
+            return self.gather_linked_editing_ranges()
+        return None
 
 
 ## validation
