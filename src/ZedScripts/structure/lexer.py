@@ -179,7 +179,7 @@ class TokenType(enum.Enum):
 
 
 ELEMENTS_DELIMITERS: set[str] = {"{", "}", ","}
-PUNCTUATORS: set[str] = {"=", ":", ";"}
+PUNCTUATORS: set[str] = {"=", ":", ";", "."}
 
 
 
@@ -286,6 +286,24 @@ class TokenCollection(UserList[Token]):
 
     def __str__(self) -> str:
         return str.join("", [token.text for token in self.data])
+
+    def split(self, separator: str = ".") -> list['TokenCollection']:
+        assert separator in PUNCTUATORS, f"Separator '{separator}' is not a recognized punctuator. Only {PUNCTUATORS} are allowed."
+        
+        result: list['TokenCollection'] = []
+
+        current_tokens: list[Token] = []
+        for token in self.data:
+            if token.text == separator:
+                if current_tokens:
+                    result.append(TokenCollection(current_tokens))
+                    current_tokens = []
+            else:
+                current_tokens.append(token)
+        if current_tokens:
+            result.append(TokenCollection(current_tokens))
+
+        return result
 
 
 # TODO: this class is kinda redundant after all
@@ -446,5 +464,13 @@ if __name__ == "__main__":
     raw = file.read_text()
     tokens = Lexer.tokenize(raw)
     for token in tokens:
-        print(str(token.type).ljust(25) + f'"{token}"')
-        print(token.pos, token.end)
+        print(str(token.type).ljust(25) + f'"{repr(str(token))}"' + f' ({token.pos}-{token.end})')
+
+    print()
+
+    tokens = Lexer.tokenize("Parameter = Base.Item")
+    splitted_tokens = tokens.split()
+    for i, split in enumerate(splitted_tokens):
+        print(f"Split {i}:")
+        for token in split:
+            print(str(token.type).ljust(25) + f'"{repr(str(token))}"' + f' ({token.pos}-{token.end})')
