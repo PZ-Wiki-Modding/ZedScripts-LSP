@@ -210,16 +210,30 @@ class ScriptBlock(Block, Element["BlockNode"]):
 
 ## actions
 
+    def get_ref_id_range(self) -> 'TextRange':
+        assert self.node.id is not None, "Block must have an ID"
+        return self.node.id.to_range()
+
+    def get_referenced_to_ranges(self, source_document: 'Document | None' = None) -> list['TextRange']:
+        ranges: list['TextRange'] = []
+        if source_document is None:
+            source_document = self.document
+
+        # add ranges for all references to this block
+        for ref in self.references:
+            # only apply editing ranges for values that are in the same document
+            if ref.parent.document != source_document:
+                continue
+            ranges.append(ref.get_ref_id_range())
+
+        return ranges
+
     def gather_linked_editing_ranges(self) -> list[TextRange]:
         assert self.node.id is not None, "Block must have an ID"
         ranges: list[TextRange] = []
 
-        # add the ID node range
-        ranges.append(self.node.id.to_range())
-
-        # add ranges for all references to this block
-        for ref in self.references:
-            ranges.append(ref.get_ref_id_range())
+        ranges.append(self.get_ref_id_range())
+        ranges.extend(self.get_referenced_to_ranges())
 
         return ranges
 

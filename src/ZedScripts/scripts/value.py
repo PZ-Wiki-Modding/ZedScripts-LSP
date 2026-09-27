@@ -217,8 +217,15 @@ class Value(Element["ValueNode"]):
         ranges.append(self.get_ref_id_range())
 
         # for each refs, gather their linked editing ranges
+        document = self.parent.document
         for ref in self.refs:
-            ranges.extend(ref.gather_linked_editing_ranges())
+            # gather the IDs of blocks that are in the same document only
+            if ref.document == document:
+                ranges.append(ref.get_ref_id_range())
+                continue
+
+            # we gather the referenced ranges from Values that are in the same document
+            ranges.extend(ref.get_referenced_to_ranges(self.parent.document))
 
         return ranges
 
