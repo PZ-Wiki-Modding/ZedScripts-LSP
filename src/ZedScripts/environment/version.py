@@ -122,8 +122,6 @@ class Version:
     @staticmethod
     def find_or_make_version(path: Path) -> 'Version':
         path_posix = path.as_posix()
-        if "media" not in path_posix:
-            return Version.OTHER
 
         # try to match the version pattern in the path
         m = re.compile(SCRIPT_FILE_VERSION_PATTERN).search(path_posix)
