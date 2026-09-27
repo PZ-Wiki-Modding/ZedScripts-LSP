@@ -61,6 +61,9 @@ class Value(Element["ValueNode"]):
     def __repr__(self) -> str:
         return f"Value(string={self.string}, parent={self.parent}, comment={self.comment})"
 
+    def __str__(self) -> str:
+        return self.string
+
     def is_key_value(self) -> bool:
         return "=" in self.string
 
@@ -123,9 +126,12 @@ class Value(Element["ValueNode"]):
 
         return []
 
-    def __str__(self) -> str:
-        return self.string
-
+    def cleanup_references(self) -> None:
+        """Remove itself from any list of references in the previous blocks it references."""
+        for ref in self.refs:
+            if self in ref.references:
+                ref.references.remove(self)
+        self.refs.clear()
 
 ## information
 
@@ -530,8 +536,9 @@ class Value(Element["ValueNode"]):
         ref_type = block_type_data['name']
         # FIXME: this is calling a static function as an instance method, not sure that's correct to do that
         # but it had to be done due to circular dependency issues
+        self.cleanup_references()
         refs = self.parent.document.workspace.search_for_block_references(root.document.version, searchable_modules, block, ref_type)
-        self.refs = refs # cache result since that can be useful
+        self.refs = refs # cache result since that is used for other providers
 
         # diagnostics handling
         refs_len = len(refs)

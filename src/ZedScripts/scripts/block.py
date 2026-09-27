@@ -138,6 +138,9 @@ class ScriptBlock(Block, Element["BlockNode"]):
 
         self.parent: Block = parent
 
+        self.references: list[Value] = []
+        """List of values that reference this block."""
+
     def __repr__(self) -> str:
         return f"ScriptBlock(type={self.type}, id={self.id})"
 
