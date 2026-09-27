@@ -7,7 +7,9 @@ from ..utils import textrange_to_lsp
 if TYPE_CHECKING:
     from ..structure.lexer import TextRange
 
-def make_hover_information(description: str, range: 'TextRange | None' = None) -> types.Hover:
+def make_hover_information(description: str, range: 'TextRange | None' = None) -> types.Hover | None:
+    if description == "":
+        return None
     return types.Hover(
         contents=types.MarkupContent(
             kind=types.MarkupKind.Markdown,
