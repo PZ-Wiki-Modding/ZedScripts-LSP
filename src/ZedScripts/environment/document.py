@@ -339,9 +339,9 @@ class Document:
         return self.body.get_hover_information(server.dataset, text_position)
 
     def on_linked_editing_range(self, position: types.Position) -> types.LinkedEditingRanges | None:
-        text_position = position_to_texposition(position)
         if self.body is None:
             return None
+        text_position = position_to_texposition(position)
         root = self.body
         element = root.get_element_at(text_position)
         if element is not None:
