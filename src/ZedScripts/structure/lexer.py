@@ -6,6 +6,8 @@ from typing import Any
 from collections import UserList
 # from warnings import deprecated
 
+from lsprotocol import types
+
 
 class TextPosition:
     """
@@ -81,6 +83,9 @@ class TextPosition:
     def __repr__(self) -> str:
         return f"<{str(self.line)}:{str(self.offset)}>"
 
+    def to_lsp(self) -> types.Position:
+        return types.Position(line=self.line, character=self.offset)
+
 
 class TextRange:
     """
@@ -133,6 +138,9 @@ class TextRange:
         elif isinstance(other, TextPosition):
             return (self.start, self.end) >= (other, other)
         return NotImplemented
+
+    def to_lsp(self) -> types.Range:
+        return types.Range(start=self.start.to_lsp(), end=self.end.to_lsp())
 
 
 def chars_in_range(text: str, range: TextRange) -> str:
