@@ -19,6 +19,9 @@ class TextPosition:
         self.line: int = line
         self.offset: int = offset
 
+    def __hash__(self) -> int:
+        return hash((self.line, self.offset))
+
     @staticmethod
     def from_index(text: str, i: int, offset: TextPosition | None = None) -> TextPosition:
         """
@@ -101,6 +104,9 @@ class TextRange:
 
     def __repr__(self) -> str:
         return f"<{repr(self.start)}-{repr(self.end)}>"
+
+    def __hash__(self) -> int:
+        return hash((self.start, self.end))
 
     def __eq__(self, other: Any) -> bool:
         """When comparing with another TextRange, check for equality. If comparing with a 
