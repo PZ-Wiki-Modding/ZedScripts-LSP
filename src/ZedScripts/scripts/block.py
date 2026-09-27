@@ -156,31 +156,30 @@ class ScriptBlock(Block, Element["BlockNode"]):
         return block_data.get('description', '')
 
     def get_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
-        if dataset.is_script_block(self.type):
-            node = self.node
-            type_node = node.type
-            if type_node is not None and type_node.strip().to_range() == text_position:
-                # show a tree hierarchy of the parameter
-                tree = format_tree(self.get_tree())
-                desc = self.get_description(dataset)
+        node = self.node
+        type_node = node.type
+        if type_node is not None and type_node.to_range() == text_position:
+            # show a tree hierarchy of the parameter
+            tree = format_tree(self.get_tree())
+            desc = self.get_description(dataset)
 
-                # show link to ScriptsDocs
-                if dataset.is_script_block(self.type):
-                    variant_tree = dataset.get_block_tree(self.type)
-                    url = self.get_scriptsdocs_url(variant_tree)
-                    tree += f"\n[Documentation]({url})"
+            # show link to ScriptsDocs
+            if dataset.is_script_block(self.type):
+                variant_tree = dataset.get_block_tree(self.type)
+                url = self.get_scriptsdocs_url(variant_tree)
+                tree += f"\n[Documentation]({url})"
 
-                # format the whole thing
-                if desc == "":
-                    txt = tree
-                else:
-                    txt = f"{tree}\n\n---\n\n{desc}"
+            # format the whole thing
+            if desc == "":
+                txt = tree
+            else:
+                txt = f"{tree}\n\n---\n\n{desc}"
 
-                return make_hover_information(
-                    txt,
-                    range=self.node.type.to_range() if self.node.type is not None else None,
-                )
-            # TODO: check ID hover info
+            return make_hover_information(
+                txt,
+                range=self.node.type.to_range() if self.node.type is not None else None,
+            )
+        # TODO: check ID hover info
         return super().get_hover_information(dataset, text_position)
 
 
