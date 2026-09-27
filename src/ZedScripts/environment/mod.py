@@ -54,4 +54,9 @@ class Mod:
         return by_version[closest_version]
 
 
-class ModCollection(dict[Path, Mod]): ...
+class ModCollection(dict[Path, Mod]):
+    def add_document(self, path: Path, document: 'Document') -> None:
+        for mod_path, mod in self.items():
+            if path.is_relative_to(mod_path):
+                mod.documents[path] = document
+                return

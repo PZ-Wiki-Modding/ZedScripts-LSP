@@ -69,9 +69,7 @@ class Workspace:
     def load_document(self, path: Path) -> Document | None:
         document = Document.find_or_make(self.server, path, self)
         if document is not None:
-            mod = Mod.find_or_make_mod(path.parent, self)
-            if mod is not None:
-                document.set_mod(mod)
+            self.mods.add_document(path, document)
             self.documents[path] = document
         return document
 
