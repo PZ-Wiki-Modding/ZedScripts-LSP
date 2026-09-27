@@ -56,9 +56,10 @@ class Workspace:
             # only consider versioning and common folders
             version = Version.find_or_make_version(file)
             if version.type in {VersionType.VERSIONING, VersionType.COMMON}:
-                mod = Mod.find_or_make_mod(file.parent.parent, self)
+                mod_folder = file.parent.parent
+                mod = Mod.find_or_make_mod(mod_folder, self)
                 mod.add_mod_info_file(file, version)
-                self.mods[file] = mod
+                self.mods[mod_folder] = mod
                 continue
 
             # if it's OTHER, then it's probably not a mod file
