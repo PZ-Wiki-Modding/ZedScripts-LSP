@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
 class Document:
     documents: list['Document'] = []
+    documents_by_version: dict['Version', list['Document']] = {}
     def __init__(self, path: Path, rootType: str, workspace: 'Workspace', version: 'Version') -> None:
         self.rootType: str = rootType
         """The type of the root block of the document. If the document is not identified as a ZedScripts file,
@@ -71,6 +72,7 @@ class Document:
 
         # cache document instance
         Document.documents.append(self)
+        Document.documents_by_version.setdefault(self.version, []).append(self)
 
     def set_mod(self, mod: 'Mod') -> None:
         self.mod = mod
