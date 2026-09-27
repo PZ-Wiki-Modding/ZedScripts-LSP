@@ -77,7 +77,7 @@ class Block:
 
     def get_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
         element = self.get_element_at(text_position)
-        if element is not None:
+        if element is not None and element is not self:
             return element.get_hover_information(dataset, text_position)
         return None
 
