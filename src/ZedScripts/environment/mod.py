@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 from pathlib import Path
 
+from . import VersionType
 from .version import Version
 
 if TYPE_CHECKING:
@@ -8,6 +9,11 @@ if TYPE_CHECKING:
     from .document import Document
 
 class Mod:
+    """Represents a mod inside a specific workspace.
+    
+    It is generally used to easily manage and retrieve files associated to a specific version.
+    Since different mod sources can have different versioning structure, we need to handle them
+    independently from each others when searching for block references."""
     mods: dict[Path, 'Mod'] = {}
     def __init__(self, folder: Path, workspace: 'Workspace'):
         self.folder: Path = folder
@@ -28,5 +34,24 @@ class Mod:
         Mod.mods[folder] = mod
         return mod
 
-class ModCollection(dict[Path, Mod]):
-    def load_documents(self) -> None: ...
+    def get_by_version(self) -> dict[Version, list['Document']]:
+        """Retrieve documents grouped by their version."""
+        result: dict[Version, list['Document']] = {}
+        for doc in self.documents.values():
+            result.setdefault(doc.version, []).append(doc)
+        return result
+
+    def get_closest_from_version(self, version: 'Version') -> list['Document']:
+        """Retrieve the documents of the closest version equal or below of the provided version."""
+        # only keep versions that use versioning
+        by_version = self.get_by_version()
+        versions = by_version.keys()
+        versions_filtered = [v for v in versions if v.type == VersionType.VERSIONING]
+        
+        closest_version = version.find_closest_below(versions_filtered)
+        if closest_version is None:
+            return []
+        return by_version[closest_version]
+
+
+class ModCollection(dict[Path, Mod]): ...
