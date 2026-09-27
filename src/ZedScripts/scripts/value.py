@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Any
 
 from lsprotocol import types
 
-from .. import SCRIPTSDOCS_LINK
+from .. import SCRIPTSDOCS_LINK, IS_DEBUG
 from . import Element
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.ast import ValueNode
@@ -147,8 +147,9 @@ class Value(Element["ValueNode"]):
     def get_key_value_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
         node = self.node
         key_node = node.key()
-        # value_node = node.value()
+        value_node = node.value()
 
+        # hovering the parameter, we show information about that
         if key_node.to_range() == text_position:
             # show a tree hierarchy of the parameter and description
             tree = format_tree(self.get_tree())
@@ -167,6 +168,18 @@ class Value(Element["ValueNode"]):
                 txt = f"{tree}\n\n---\n\n{desc}"
 
             return make_hover_information(txt, key_node.to_range())
+
+        # hovering the value, we could show information about the value itself
+        if value_node.to_range() == text_position:
+            # if its expected type is block, we can list referenced blocks
+            txt = ""
+
+            if IS_DEBUG:
+                txt += f"(debug)\n\n- Refs: {self.refs}"
+
+            return make_hover_information(txt, value_node.to_range())
+
+        
         return None
 
 
