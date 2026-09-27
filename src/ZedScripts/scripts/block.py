@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterable, Iterator
 
 from lsprotocol import types
 
@@ -423,3 +423,22 @@ class Root(Block, Element["Chunk"]):
                 if not value.is_key_value():
                     imports.append(value.value())
         return imports
+
+    def find_references(self, modules: Iterable[str], id: str, block_type: str) -> list['ScriptBlock']:
+        result: set['ScriptBlock'] = set()
+
+        # find the corresponding module block within the current root block
+        module: ScriptBlock | None = self.get_module()
+        if module is None:
+            return list(result)
+        module_id = module.id
+        if module_id is None or module_id not in modules:
+            return list(result)
+
+        # iterate over all children of the module block
+        # and find our block
+        for child in module:
+            if child.type == block_type and child.id == id:
+                result.add(child)
+
+        return list(result)

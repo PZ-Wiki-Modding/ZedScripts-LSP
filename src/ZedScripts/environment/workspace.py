@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 
 from . import WorkspaceType, VersionType
@@ -11,13 +11,12 @@ from ..utils import glob_files_by_extensions
 
 if TYPE_CHECKING:
     from ..server import ZedServer
-    from ..scripts.block import Block
+    from ..scripts.block import ScriptBlock
 
 
 
 
 class Workspace:
-
     workspaceCache: dict[WorkspaceType, dict[Path, 'Workspace']] = {}
 
     def __init__(self, server: 'ZedServer', folder: Path, workspace_type: WorkspaceType):
@@ -97,25 +96,39 @@ class Workspace:
 # searches
 
     @staticmethod
-    def search_for_block_references(version: Version, modules: list[str], block: str, block_type: str) -> list['Block']:
-        """_summary_
+    def search_for_block_references(version: Version, modules: Iterable[str], 
+                                    id: str, block_type: str) -> list['ScriptBlock']:
+        """Searches for block references within the specified modules and version context.
 
         Args:
             version (Version): The version context for the search.
-            modules (list[str]): List of module names to search within.
-            block (str): Name of the block to search for.
+            modules (Iterable[str]): List of module names to search within.
+            id (str): ID of the block to search for.
             block_type (str): Expected type of the block to search for.
-
-        Returns:
-            list[Block]: List of blocks that match the search criteria.
         """
-        result: list['Block'] = []
+        result: set['ScriptBlock'] = set()
 
         # skip search for pre B42 versions
         if version == Version.PRE_42:
-            return result
+            return list(result)
 
-        # iterate over each workspace, and look for the closest version setup
-        # to the version we are looking into
+        # search into documents with a version that is general
+        versions = [Version.COMMON, Version.BASE_GAME, Version.OTHER]
+        documents = [doc for v in versions for doc in Document.documents_by_version.get(v, [])]
+        for document in documents:
+            if document.body is None: continue
+            refs = document.body.find_references(modules, id, block_type)
+            result.update(refs)
 
-        return NotImplemented
+        # iterate over each mods, and look for the closest 
+        # version to the version we are looking into for each
+        # to look for references
+        for workspaces in Workspace.workspaceCache.values():
+            for workspace in workspaces.values():
+                for mod in workspace.mods.values():
+                    for document in mod.documents.values():
+                        if document.body is None: continue
+                        refs = document.body.find_references(modules, id, block_type)
+                        result.update(refs)
+
+        return list(result)

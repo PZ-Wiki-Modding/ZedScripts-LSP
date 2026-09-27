@@ -12,7 +12,7 @@ from ..providers.hover import make_hover_information, format_tree
 from ..scripts import DeprecatedInfo, ScriptBlockParameter, ValueType
 
 if TYPE_CHECKING:
-    from .block import Block
+    from .block import Block, ScriptBlock
     from ..scripts.dataset import Dataset
 
 
@@ -55,6 +55,8 @@ class Value(Element["ValueNode"]):
         self.node: ValueNode = node
         self.parent: 'Block' = parent
         self.comment: str = comment
+
+        self.refs: list['ScriptBlock'] = []
 
     def __repr__(self) -> str:
         return f"Value(string={self.string}, parent={self.parent}, comment={self.comment})"
@@ -512,5 +514,23 @@ class Value(Element["ValueNode"]):
         # FIXME: this is calling a static function as an instance method, not sure that's correct to do that
         # but it had to be done due to circular dependency issues
         refs = self.parent.document.workspace.search_for_block_references(root.document.version, searchable_modules, block, ref_type)
+        self.refs = refs # cache result since that can be useful
+
+        # diagnostics handling
+        refs_len = len(refs)
+        if refs_len == 0:
+            self.parent.add_diagnostic(
+                type=DiagnosticType.VALUE_UNMATCHED_BLOCK_REF,
+                location=node.strip().to_range(),
+                args={"value": value, "parameter": ref_type, "expected_block": block}
+            )
+            return False
+        if refs_len > 1:
+            self.parent.add_diagnostic(
+                type=DiagnosticType.VALUE_MULTIPLE_BLOCK_REFS,
+                location=node.strip().to_range(),
+                args={"value": value, "parameter": ref_type, "expected_block": block}
+            )
+            return False
 
         return True
