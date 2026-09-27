@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, Iterable, Iterator
 from lsprotocol import types
 
 from .. import SCRIPTSDOCS_LINK
+from ..utils import path_to_uri
 from . import Element
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.ast import BlockNode, Chunk
@@ -249,6 +250,39 @@ class ScriptBlock(Block, Element["BlockNode"]):
         if id_node is not None and id_node.to_range() == text_position:
             # find all occurrences of this ID in references to this block
             return self.gather_linked_editing_ranges()
+        return None
+
+
+## definition
+
+    def gather_id_definitions(self) -> list[types.LocationLink]:
+        # assert self.node.id is not None, "Block must have an ID"
+        # id_node = self.node.id
+        
+        result: list[types.LocationLink] = []
+
+        for ref in self.references:
+            ref_id_range = ref.get_ref_id_range().to_lsp()
+
+            location = types.LocationLink(
+                target_uri=path_to_uri(ref.parent.document.path),
+                target_range=ref_id_range,
+                target_selection_range=ref_id_range,
+            )
+            result.append(location)
+
+        return result
+
+
+        
+
+    def get_definition(self, text_position: 'TextPosition') -> list[types.LocationLink] | None:
+        # check if we're on the ID of the block
+        node = self.node
+        id_node = node.id
+        if id_node is not None and id_node.to_range() == text_position:
+            return self.gather_id_definitions()
+
         return None
 
 

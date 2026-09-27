@@ -342,6 +342,7 @@ class Document:
         if self.body is None:
             return None
         text_position = position_to_texposition(position)
+        
         root = self.body
         element = root.get_element_at(text_position)
         if element is not None:
@@ -349,4 +350,15 @@ class Document:
             if ranges is None:
                 return None
             return make_linked_editing_ranges(ranges)
+        return None
+
+    def on_definition(self, position: types.Position) -> list[types.LocationLink] | None:
+        if self.body is None:
+            return None
+        text_position = position_to_texposition(position)
+
+        root = self.body
+        element = root.get_element_at(text_position)
+        if element is not None:
+            return element.get_definition(text_position)
         return None

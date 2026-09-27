@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 from lsprotocol import types
 
 from .. import SCRIPTSDOCS_LINK, IS_DEBUG
+from ..utils import path_to_uri
 from . import Element
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.ast import ValueNode
@@ -228,6 +229,26 @@ class Value(Element["ValueNode"]):
             ranges.extend(ref.get_referenced_to_ranges(self.parent.document))
 
         return ranges
+
+
+## definition
+
+    def get_definition(self, text_position: TextPosition) -> list[types.LocationLink] | None:
+        if len(self.refs) == 0:
+            return None
+
+        result: list[types.LocationLink] = []
+        for ref in self.refs:
+            ref_id_range = ref.get_ref_id_range().to_lsp()
+
+            location = types.LocationLink(
+                target_uri=path_to_uri(ref.document.path),
+                target_range=ref_id_range,
+                target_selection_range=ref_id_range,
+            )
+            result.append(location)
+
+        return result
 
 
 ## semantic tokens
