@@ -59,19 +59,26 @@ class Block:
     def get_scriptsdocs_url(self, tree: list[str]) -> str:
         return SCRIPTSDOCS_LINK + "/".join(tree).replace(" ", "-").lower()
 
-    def get_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
-        # look through the values
+    def get_element_at(self, text_position: TextPosition) -> 'ScriptBlock | Value | None':
+        # first check the values
         for value in self.values:
-            result = value.get_hover_information(dataset, text_position)
-            if result:
-                return result
+            node = value.node
+            if node.contains_position(text_position):
+                return value
 
-        # not found in values, then we search in the children blocks
+        # then check the children blocks
         for child in self.children:
-            result = child.get_hover_information(dataset, text_position)
-            if result is not None:
-                return result
+            element = child.get_element_at(text_position)
+            if element is not None:
+                return element
 
+        return None
+
+
+    def get_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
+        element = self.get_element_at(text_position)
+        if element is not None:
+            return element.get_hover_information(dataset, text_position)
         return None
 
     def validate(self, dataset: 'Dataset') -> bool: ...
@@ -138,6 +145,18 @@ class ScriptBlock(Block, Element["BlockNode"]):
         if self.id is None:
             return f"{self.type}"
         return f"{self.type}:{self.id}"
+
+    def get_element_at(self, text_position: TextPosition) -> 'ScriptBlock | Value | None':
+        result = super().get_element_at(text_position)
+        if result is not None:
+            return result
+
+        # check if it's within itself
+        node = self.node
+        if node.contains_position(text_position):
+            return self
+
+        return None
 
 
 ## information

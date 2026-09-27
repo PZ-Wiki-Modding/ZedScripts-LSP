@@ -58,8 +58,23 @@ class BlockNode(Node, BlockBody):
         This will never be None in well formed Zedscript.
         """
 
+    @property
+    def tokens(self) -> TokenCollection:
+        result = TokenCollection()
+        if self.type is not None:
+            result.extend(self.type)
+        if self.id is not None:
+            result.extend(self.id)
+        result.append(self.open_bracket)
+        if self.close_bracket is not None:
+            result.append(self.close_bracket)
+        return result
+
     def well_formed(self) -> bool:
         return self.type is not None and self.close_bracket is not None
+
+    def contains_position(self, text_position: 'TextPosition') -> bool:
+        return self.tokens.to_range() == text_position
 
 
 class ValueNode(Node):
