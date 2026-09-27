@@ -48,6 +48,8 @@ class DiagnosticType(enum.Enum):
     VALUE_INVALID_BLOCK_REFERENCE =          enum.auto()
     VALUE_CANNOT_PROVIDE_MODULE =            enum.auto()
     VALUE_BLOCK_REF_CANNOT_BE_EMPTY =        enum.auto()
+    VALUE_UNMATCHED_BLOCK_REF =              enum.auto()
+    VALUE_MULTIPLE_BLOCK_REFS =              enum.auto()
 
 
 # syntax diagnostics
@@ -143,6 +145,12 @@ DiagnosticDefinition(DiagnosticType.VALUE_CANNOT_PROVIDE_MODULE,
 DiagnosticDefinition(DiagnosticType.VALUE_BLOCK_REF_CANNOT_BE_EMPTY,
                      DiagnosticSeverity.Error,
                      args={"value": str})
+DiagnosticDefinition(DiagnosticType.VALUE_UNMATCHED_BLOCK_REF,
+                     DiagnosticSeverity.Error,
+                     args={"value": str, "parameter": str, "expected_block": str})
+DiagnosticDefinition(DiagnosticType.VALUE_MULTIPLE_BLOCK_REFS,
+                     DiagnosticSeverity.Error,
+                     args={"value": str, "parameter": str, "expected_block": str})
 
 
 # ensure that all diagnostic types have a corresponding definition

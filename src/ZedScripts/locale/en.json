@@ -30,6 +30,8 @@
         "VALUE_WITH_NEWLINE": "Parameter '{key}' in block '{type}' has a newline in its value '{value}'. This is usually the symptom of a missing comma.",
         "VALUE_INVALID_BLOCK_REFERENCE": "Value '{value}' has a wrongly formatted block reference. Expected format is 'module.block' or 'block'.",
         "VALUE_CANNOT_PROVIDE_MODULE": "Value '{value}' cannot contain a module '{module}' reference, only direct block references are allowed.",
-        "VALUE_BLOCK_REF_CANNOT_BE_EMPTY": "Value '{value}' has an empty block reference, which is not allowed."
+        "VALUE_BLOCK_REF_CANNOT_BE_EMPTY": "Value '{value}' has an empty block reference, which is not allowed.",
+        "VALUE_UNMATCHED_BLOCK_REF": "Value '{value}' for parameter '{parameter}' does not match any existing block (expects '{expected_block}' block). Make sure the referenced block exists.",
+        "VALUE_MULTIPLE_BLOCK_REFS": "Multiple block references found for '{value}' for parameter '{parameter}' (expects '{expected_block}' block). Make sure duplicate block references are not present."
     }
 }
