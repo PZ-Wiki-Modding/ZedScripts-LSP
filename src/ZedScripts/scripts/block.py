@@ -132,10 +132,12 @@ class ScriptBlock(Block, Element["BlockNode"]):
         self.parent: Block = parent
 
     def __repr__(self) -> str:
+        return f"ScriptBlock(type={self.type}, id={self.id})"
+
+    def __str__(self) -> str:
         if self.id is None:
-            return "ScriptBlock<" + self.type + ">"
-        else:
-            return "ScriptBlock<" + self.type + " " + self.id + ">"
+            return f"{self.type}"
+        return f"{self.type}:{self.id}"
 
 
 ## information
