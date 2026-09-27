@@ -135,7 +135,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
         if self.id is None:
             return "<" + self.type + ">"
         else:
-            return "<" + self.type + " " + self.id + ">"
+            return "ScriptBlock<" + self.type + " " + self.id + ">"
 
 
 ## information

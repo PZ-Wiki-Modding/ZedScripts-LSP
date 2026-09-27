@@ -74,6 +74,9 @@ class Document:
         Document.documents.append(self)
         Document.documents_by_version.setdefault(self.version, []).append(self)
 
+    def __repr__(self) -> str:
+        return f"Document(version={self.version}, workspace={self.workspace}, mod={self.mod}, path={self.path})"
+
     def set_mod(self, mod: 'Mod') -> None:
         self.mod = mod
 

@@ -30,6 +30,9 @@ class Workspace:
         # cache workspace
         Workspace.workspaceCache.setdefault(workspace_type, {})[folder] = self
 
+    def __repr__(self) -> str:
+        return f"Workspace(type={self.workspace_type}, folder={self.folder})"
+
     def load(self) -> None:
         """
         Retrieve every script files and cache them as Document instances.
