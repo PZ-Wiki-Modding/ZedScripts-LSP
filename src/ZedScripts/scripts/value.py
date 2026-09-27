@@ -151,16 +151,18 @@ class Value(Element["ValueNode"]):
             # show a tree hierarchy of the parameter and description
             tree = format_tree(self.get_tree())
             desc = self.get_description(dataset)
-            if desc == "":
-                txt = tree
-            else:
-                txt = f"{tree}\n\n---\n\n{desc}"
 
             # show link to ScriptsDocs
             if dataset.is_script_block(self.parent.type):
                 variant_tree = dataset.get_block_tree(self.parent.type)
                 url = self.get_scriptsdocs_url(variant_tree)
-                txt += f"\n\n[Documentation]({url})"
+                tree += f"\n[Documentation]({url})"
+
+            # format the whole thing
+            if desc == "":
+                txt = tree
+            else:
+                txt = f"{tree}\n\n---\n\n{desc}"
 
             return make_hover_information(txt, key_node.to_range())
         return None
