@@ -156,8 +156,11 @@ class Value(Element["ValueNode"]):
             desc = self.get_description(dataset)
 
             # show link to ScriptsDocs
-            if dataset.is_script_block(self.parent.type):
-                variant_tree = dataset.get_block_tree(self.parent.type)
+            key = self.key()
+            parent_type = self.parent.type
+            if dataset.is_script_block(parent_type) \
+                and dataset.can_block_have_parameter(parent_type, key):
+                variant_tree = dataset.get_block_tree(parent_type)
                 url = self.get_scriptsdocs_url(variant_tree)
                 tree += f"\n[Documentation]({url})"
 
