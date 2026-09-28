@@ -72,7 +72,7 @@ class ZedServer(LanguageServer):
 
 
     def startup(self) -> None:
-        logging.info("ZedServer starting up.")
+        logging.info(f"ZedServer {__version__} starting up.")
 
         logging.debug("ZEDSCRIPTS_DEBUG_WAIT=%s", os.environ.get("ZEDSCRIPTS_DEBUG_WAIT"))
         if os.environ.get("ZEDSCRIPTS_DEBUG_WAIT") == "1":
