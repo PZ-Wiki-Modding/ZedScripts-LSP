@@ -9,6 +9,10 @@ ZEDSCRIPT_CACHE_DIR = Path.home() / ".zedscripts"
 Cache directory to hold various information related to ZedScripts.
 """
 
+# config files
+CONFIGURATION_FILE_NAME = ".zedscripts.json"
+GLOBAL_CONFIGURATION_FILE = (ZEDSCRIPT_CACHE_DIR / CONFIGURATION_FILE_NAME).resolve()
+
 # setup the logger
 log_file = ZEDSCRIPT_CACHE_DIR / "server.log"
 

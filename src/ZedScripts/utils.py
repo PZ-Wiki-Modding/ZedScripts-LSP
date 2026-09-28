@@ -1,5 +1,7 @@
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, TypeVar
+from pydantic import BaseModel
+from deepmerge import always_merger
 
 from lsprotocol import types
 from pygls.uris import from_fs_path, to_fs_path
@@ -60,3 +62,22 @@ def glob_files_by_extensions(folder: Path, extensions: set[str]) -> Iterable[Pat
     files = (p.resolve() for p in Path(folder).rglob("*") if p.suffix in extensions)
     return files
 
+
+T = TypeVar("T", bound=BaseModel)
+
+def merge_pydantic_models(base: T, nxt: T) -> T:
+    """Merge two Pydantic model instances.
+
+    The attributes of 'base' and 'nxt' that weren't explicitly set are dumped into dicts
+    using '.model_dump(exclude_unset=True)', which are then merged using 'deepmerge',
+    and the merged result is turned into a model instance using '.model_validate'.
+
+    For attributes set on both 'base' and 'nxt', the value from 'nxt' will be used in
+    the output result.
+
+    @source: https://github.com/pydantic/pydantic/discussions/3416#discussioncomment-12267413
+    """
+    base_dict = base.model_dump(exclude_unset=True)
+    nxt_dict = nxt.model_dump(exclude_unset=True)
+    merged_dict = always_merger.merge(base_dict, nxt_dict)
+    return base.model_validate(merged_dict)

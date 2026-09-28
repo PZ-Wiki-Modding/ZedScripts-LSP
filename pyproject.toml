@@ -13,6 +13,8 @@ dependencies = [
     "lsprotocol",
     "pygls",
     "requests-cache",
+    "pydantic",
+    "deepmerge",
 ]
 
 [project.optional-dependencies]

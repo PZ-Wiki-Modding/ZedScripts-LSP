@@ -83,6 +83,10 @@ class ZedServer(LanguageServer):
 
 
     def on_document_changed(self, path: Path, text: str) -> None:
+        # skip if it's a configuration file
+        if Workspace.update_configuration_file(path, text):
+            return
+
         # first check if the file is a zedscripts file
         document = Workspace.find_or_make(path)
         if document is None:
@@ -98,6 +102,19 @@ class ZedServer(LanguageServer):
 
     def on_document_renamed(self, old_file: Path, new_file: Path) -> None:
         Document.rename(self, old_file, new_file)
+
+    def on_did_change_watched_files(self, params: types.DidChangeWatchedFilesParams) -> None:
+        # we are only interested in handling the global configuration file changes
+        for change in params.changes:
+            path = uri_to_path(change.uri)
+            if not Workspace.is_global_configuration_file(path):
+                continue
+
+            logging.debug(f"Global configuration file changed. ({change.type})")
+
+            # update the global configuration
+            Workspace.update_global_configuration()
+
 
     def on_document_diagnostics(self, path: Path, previous_result_id: str | None) -> DiagnosticReport | None:
         document = Workspace.find_or_make(path)
@@ -255,3 +272,7 @@ def linked_editing_range(server: ZedServer, params: types.LinkedEditingRangePara
 def definition(server: ZedServer, params: types.DefinitionParams) -> types.DefinitionResult:
     path = uri_to_path(params.text_document.uri)
     return server.on_definition(path, params.position)
+
+@zedserver.feature(types.WORKSPACE_DID_CHANGE_WATCHED_FILES)
+def did_change_watched_files(server: ZedServer, params: types.DidChangeWatchedFilesParams) -> None:
+    return server.on_did_change_watched_files(params)

@@ -1,13 +1,16 @@
 import logging
+import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable
+from typing import Any, TYPE_CHECKING, Iterable
+from pydantic import ValidationError
 
 
-from . import WorkspaceType, VersionType
+from .. import CONFIGURATION_FILE_NAME, GLOBAL_CONFIGURATION_FILE
+from . import WorkspaceType, VersionType, ConfigurationModel
 from .document import Document
 from .mod import Mod, ModCollection
 from .version import Version
-from ..utils import glob_files_by_extensions
+from ..utils import glob_files_by_extensions, merge_pydantic_models
 
 if TYPE_CHECKING:
     from ..server import ZedServer
@@ -15,9 +18,9 @@ if TYPE_CHECKING:
 
 
 
-
 class Workspace:
-    workspaceCache: dict[WorkspaceType, dict[Path, 'Workspace']] = {}
+    workspace_cache: dict[WorkspaceType, dict[Path, 'Workspace']] = {}
+    global_configuration: ConfigurationModel | None = None
 
     def __init__(self, server: 'ZedServer', folder: Path, workspace_type: WorkspaceType):
         self.server = server
@@ -26,9 +29,10 @@ class Workspace:
         self.documents: dict[Path, Document] = {}
 
         self.mods: ModCollection = ModCollection()
+        self.configuration: ConfigurationModel | None = None
 
         # cache workspace
-        Workspace.workspaceCache.setdefault(workspace_type, {})[folder] = self
+        Workspace.workspace_cache.setdefault(workspace_type, {})[folder] = self
 
     def __repr__(self) -> str:
         return f"Workspace(type={self.workspace_type}, folder={self.folder})"
@@ -75,7 +79,7 @@ class Workspace:
 
     @staticmethod
     def find_workspace(path: Path) -> 'Workspace | None':
-        for workspace_type, workspaces in Workspace.workspaceCache.items():
+        for workspace_type, workspaces in Workspace.workspace_cache.items():
             for folder, workspace in workspaces.items():
                 if folder in path.parents:
                     return workspace
@@ -125,7 +129,7 @@ class Workspace:
         # iterate over each mods, and look for the closest 
         # version to the version we are looking into for each
         # to look for references
-        for workspaces in Workspace.workspaceCache.values():
+        for workspaces in Workspace.workspace_cache.values():
             for workspace in workspaces.values():
                 for mod in workspace.mods.values():
                     for document in mod.documents.values():
@@ -134,3 +138,108 @@ class Workspace:
                         result.update(refs)
 
         return list(result)
+
+
+
+
+# configuration
+
+    @staticmethod
+    def find_workspace_of_configuration_file(path: Path) -> 'Workspace | None':
+        # only search in project workspaces
+        for workspace in Workspace.workspace_cache.get(WorkspaceType.PROJECT, {}).values():
+            if (workspace.get_configuration_path() == path):
+                return workspace
+        return None
+
+    @staticmethod
+    def is_configuration_file(path: Path) -> bool:
+        return path.is_file() and path.name == CONFIGURATION_FILE_NAME
+
+    @staticmethod
+    def is_global_configuration_file(path: Path) -> bool:
+        return path.is_file() and path.resolve() == GLOBAL_CONFIGURATION_FILE
+
+    @staticmethod
+    def update_global_configuration(text: str | None = None) -> None:
+        logging.info("Updating global configuration from %s", GLOBAL_CONFIGURATION_FILE)
+        Workspace.global_configuration = Workspace.load_configuration(GLOBAL_CONFIGURATION_FILE, text=text)
+        logging.debug(Workspace.global_configuration)
+
+    @staticmethod
+    def update_configuration_file(path: Path, text: str | None = None) -> bool:
+        # skip if not a configuration file
+        if not Workspace.is_configuration_file(path):
+            return False
+
+        # check if it's a global config file
+        if Workspace.is_global_configuration_file(path):
+            Workspace.update_global_configuration()
+            return True
+
+        # find out if it's a workspace-relative config file
+        workspace = Workspace.find_workspace_of_configuration_file(path)
+        if workspace is None:
+            return False
+
+        # if it's from a workspace, then we simply update its configuration
+        workspace.update_configuration(text=text)
+        return True
+
+    @staticmethod
+    def update_all_configurations() -> None:
+        Workspace.update_global_configuration()
+        for workspace in Workspace.workspace_cache.get(WorkspaceType.PROJECT, {}).values():
+            workspace.update_configuration()
+
+    def get_configuration_path(self) -> Path:
+        return self.folder / CONFIGURATION_FILE_NAME
+
+    def update_configuration(self, text: str | None = None) -> None:
+        logging.info("Updating configuration for workspace at %s", self.folder)
+        self.configuration = Workspace.load_configuration(self.get_configuration_path(), text=text)
+        logging.debug(self.configuration)
+
+    @staticmethod
+    def get_global_configuration() -> ConfigurationModel:
+        if Workspace.global_configuration is None:
+            Workspace.update_global_configuration()
+        assert Workspace.global_configuration is not None # to make Pylance happy
+        return Workspace.global_configuration
+
+    def get_configuration(self) -> ConfigurationModel:
+        if self.configuration is None:
+            self.update_configuration()
+        assert self.configuration is not None # to make Pylance happy
+
+        # merge with global configuration
+        global_config = Workspace.get_global_configuration()
+
+        return merge_pydantic_models(global_config, self.configuration)
+
+    @staticmethod
+    def load_configuration(config_path: Path, text: str | None = None) -> ConfigurationModel:
+        if not config_path.exists() or not config_path.is_file():
+            return ConfigurationModel()
+
+        # load the configuration file
+        try:
+            if text is not None:
+                data = json.loads(text)
+            else:
+                with open(config_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
+            logging.exception(f"Failed to load configuration file {config_path}. Loading default configuration.")
+            return ConfigurationModel()
+
+        try:
+            # only validate a configuration file that is already a dictionary
+            if isinstance(data, dict):
+                return ConfigurationModel.model_validate(data)
+
+            logging.warning(f"Configuration file {config_path} should contain a dictionary as the root. Loading default configuration.")
+            return ConfigurationModel()
+        except ValidationError as e:
+            logging.warning(f"Configuration file validation error for {config_path}:\n{e}")
+            return ConfigurationModel()
