@@ -6,10 +6,11 @@ from pydantic import ValidationError
 
 
 from .. import CONFIGURATION_FILE_NAME, GLOBAL_CONFIGURATION_FILE
-from . import WorkspaceType, VersionType, ConfigurationModel
+from . import WorkspaceType, VersionType
 from .document import Document
 from .mod import Mod, ModCollection
 from .version import Version
+from .config import ConfigurationModel
 from ..utils import glob_files_by_extensions, merge_pydantic_models
 
 if TYPE_CHECKING:
