@@ -1,0 +1,90 @@
+{
+    "$defs": {
+        "DatasetModel": {
+            "properties": {
+                "release": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/ReleaseModel"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Provides a configuration for the dataset version to use for validation. This overrides the `latest` field if set."
+                },
+                "latest": {
+                    "anyOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": true,
+                    "description": "Indicates whether to use the latest dataset version for validation.",
+                    "title": "Latest"
+                }
+            },
+            "title": "DatasetModel",
+            "type": "object"
+        },
+        "ReleaseModel": {
+            "properties": {
+                "major": {
+                    "description": "Build game version number.",
+                    "minimum": 42,
+                    "title": "Major",
+                    "type": "integer"
+                },
+                "minor": {
+                    "description": "Minor game version number.",
+                    "minimum": 0,
+                    "title": "Minor",
+                    "type": "integer"
+                },
+                "patch": {
+                    "description": "Patch game version number.",
+                    "minimum": 0,
+                    "title": "Patch",
+                    "type": "integer"
+                },
+                "version": {
+                    "description": "Dataset version number for the provided Build release (major.minor.patch). This is incremented whenever the dataset for a specific version is updated.",
+                    "minimum": 1,
+                    "title": "Version",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "major",
+                "minor",
+                "patch",
+                "version"
+            ],
+            "title": "ReleaseModel",
+            "type": "object"
+        }
+    },
+    "description": "Represents the content of the configuration files for workspace environments.",
+    "properties": {
+        "dataset": {
+            "$ref": "#/$defs/DatasetModel",
+            "description": "Provides configuration for the dataset version to use for diagnostics."
+        },
+        "libraries": {
+            "description": "Set of library folders to reference. Usually this should contain the base game folder.",
+            "items": {
+                "format": "path",
+                "type": "string"
+            },
+            "title": "Libraries",
+            "type": "array",
+            "uniqueItems": true
+        }
+    },
+    "title": "ConfigurationModel",
+    "type": "object"
+}
