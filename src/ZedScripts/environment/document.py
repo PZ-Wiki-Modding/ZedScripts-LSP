@@ -76,6 +76,8 @@ class Document:
         Document.documents.append(self)
         Document.documents_by_version.setdefault(self.version, []).append(self)
 
+        self.parse()
+
     def __repr__(self) -> str:
         return f"Document(version={self.version}, workspace={self.workspace}, mod={self.mod}, path={self.path})"
 
