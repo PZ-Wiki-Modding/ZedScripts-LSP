@@ -66,3 +66,11 @@ class ConfigurationModel(BaseModel):
         description="Set of library folders to reference. Usually this should contain the base game folder.",
         default_factory=set,
     )
+    ignored: set[str] = Field(
+        description="Regex patterns for files and folders to ignore in the workspace.",
+        default=set([
+            r"tileGeometry\.txt",
+            r"tileDepthTextureAssignments\.txt",
+            r".+\.tiles\.txt"
+        ]),
+    )
