@@ -65,19 +65,21 @@ def glob_files_by_extensions(folder: Path, extensions: set[str]) -> Iterable[Pat
 
 T = TypeVar("T", bound=BaseModel)
 
-def merge_pydantic_models(base: T, nxt: T) -> T:
-    """Merge two Pydantic model instances.
+def merge_pydantic_models(base: T, *models: T) -> T:
+    """Merge multiple Pydantic model instances.
 
-    The attributes of 'base' and 'nxt' that weren't explicitly set are dumped into dicts
+    The attributes of 'base' and all subsequent models that weren't explicitly set are dumped into dicts
     using '.model_dump(exclude_unset=True)', which are then merged using 'deepmerge',
     and the merged result is turned into a model instance using '.model_validate'.
 
-    For attributes set on both 'base' and 'nxt', the value from 'nxt' will be used in
+    For attributes set on both 'base' and the subsequent models, the value from the last model in the arguments will be used in
     the output result.
 
+    Modified from:
     @source: https://github.com/pydantic/pydantic/discussions/3416#discussioncomment-12267413
     """
     base_dict = base.model_dump(exclude_unset=True)
-    nxt_dict = nxt.model_dump(exclude_unset=True)
-    merged_dict = always_merger.merge(base_dict, nxt_dict)
-    return base.model_validate(merged_dict)
+    for nxt in models:
+        nxt_dict = nxt.model_dump(exclude_unset=True)
+        base_dict = always_merger.merge(base_dict, nxt_dict)
+    return base.model_validate(base_dict)
