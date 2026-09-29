@@ -600,14 +600,14 @@ class Value(Element["ValueNode"]):
             self.parent.add_diagnostic(
                 type=DiagnosticType.VALUE_UNMATCHED_BLOCK_REF,
                 location=node.strip().to_range(),
-                args={"value": value, "parameter": ref_type, "expected_block": block}
+                args={"value": value, "parameter": self.key(), "expected_block": ref_type}
             )
             return False
         if refs_len > 1:
             self.parent.add_diagnostic(
                 type=DiagnosticType.VALUE_MULTIPLE_BLOCK_REFS,
                 location=node.strip().to_range(),
-                args={"value": value, "parameter": ref_type, "expected_block": block}
+                args={"value": value, "parameter": self.key(), "expected_block": ref_type}
             )
             return False
 
