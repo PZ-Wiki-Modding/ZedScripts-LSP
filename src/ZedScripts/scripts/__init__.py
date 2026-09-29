@@ -82,7 +82,7 @@ class ArrayType(TypedDict):
     type: Literal[ValueType.STRING, ValueType.INTEGER, ValueType.FLOAT, ValueType.BOOLEAN]
 
 class ObjectType(TypedDict):
-    keyValueSep: str
+    keyValueSeparator: str
     """the separator used to split the key and value"""
     keyType: Literal[ValueType.STRING, ValueType.INTEGER, ValueType.FLOAT, ValueType.BOOLEAN]
     valueType: Literal[ValueType.STRING, ValueType.INTEGER, ValueType.FLOAT, ValueType.BOOLEAN]

@@ -421,7 +421,7 @@ class Value(Element["ValueNode"]):
                     assert object_data is not None
 
                     # first make sure that each pairs contain the key-value separator
-                    key_value_separator = object_data['keyValueSep']
+                    key_value_separator = object_data['keyValueSeparator']
                     for v in values:
                         if key_value_separator not in v:
                             self.parent.add_diagnostic(
