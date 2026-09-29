@@ -1,7 +1,16 @@
 import logging
+import enum
 from pathlib import Path
 from typing import Optional
 from pydantic import BaseModel, Field
+
+from ..scripts.version import DataVersion
+
+
+class DatasetTag(enum.Enum):
+    LATEST = "latest"
+    STABLE = "stable"
+
 
 
 class ReleaseModel(BaseModel):
@@ -35,6 +44,17 @@ class DatasetModel(BaseModel):
         description="Provides a configuration for the stable dataset version to use for validation. Ignored if `release` or `latest` is set.",
         default=True,
     )
+
+    def to_data_version(self) -> DataVersion | DatasetTag:
+        if self.release is None:
+            if self.latest:
+                return DatasetTag.LATEST
+            if self.stable:
+                return DatasetTag.STABLE
+            logging.warning("No dataset version specified, defaulting to 'stable'.")
+            return DatasetTag.STABLE
+        return DataVersion.from_release_model(self.release)
+
 
 class ConfigurationModel(BaseModel):
     """Represents the content of the configuration files for workspace environments."""
