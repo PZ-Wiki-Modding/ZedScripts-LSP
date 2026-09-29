@@ -28,11 +28,12 @@ class ZedLanguageProtocole(LanguageServerProtocol): ...
 
 
 class ZedServer(LanguageServer):
+    instance: 'ZedServer | None' = None
     def __init__(self):
         super().__init__(name="zedserver", version=__version__, protocol_cls=ZedLanguageProtocole)
         self.documents: dict[Path, Document] = {}
         zedlocalizer.load_locale_files()
-        self.dataset: Dataset = Dataset()
+        ZedServer.instance = self
 
     def send_notification(self, method: ZedNotification, params: NotificationParams | None = None) -> None:
         self.protocol.notify(
