@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from .mod import Mod
     from ..server import ZedServer
     from ..scripts.block import Block, Root
+    from ..scripts.dataset import Dataset
 
 class Document:
     documents: list['Document'] = []
@@ -81,13 +82,17 @@ class Document:
     def set_mod(self, mod: 'Mod') -> None:
         self.mod = mod
 
-    def make_zedscripts(self, server: 'ZedServer') -> None:
-        server.send_notification(
-            method=ZedNotification.SET_ZEDSCRIPTS,
-            params=SetZedScriptsNotificationParams(
-                uri=path_to_uri(self.path)
+    def make_zedscripts(self) -> None:
+        # import here to avoid circular dependency
+        from ..server import ZedServer
+        server = ZedServer.instance
+        if server is not None:
+            server.send_notification(
+                method=ZedNotification.SET_ZEDSCRIPTS,
+                params=SetZedScriptsNotificationParams(
+                    uri=path_to_uri(self.path)
+                )
             )
-        )
 
     def get_text(self) -> str:
         if self.text is None:
@@ -127,9 +132,9 @@ class Document:
         return None
 
     @staticmethod
-    def make(server: 'ZedServer', path: Path, workspace: 'Workspace') -> 'Document | None':
+    def make(dataset: 'Dataset', path: Path, workspace: 'Workspace') -> 'Document | None':
         # find the rootType of the document
-        rootType = server.dataset.test_for_root(path)
+        rootType = dataset.test_for_root(path)
         if rootType is None:
             return None
 
@@ -143,18 +148,18 @@ class Document:
 
         # if it is a valid ZedScripts document, create a new Document instance
         document = Document(path, rootType, workspace, version)
-        document.make_zedscripts(server)
+        document.make_zedscripts()
         Document.documents.append(document)
 
         return document
 
     @staticmethod
-    def find_or_make(server: 'ZedServer', path: Path, workspace: 'Workspace') -> 'Document | None':
+    def find_or_make(dataset: 'Dataset', path: Path, workspace: 'Workspace') -> 'Document | None':
         # if we find one, we don't have to verify it is a ZedScripts file
         # bcs it means the document didn't move
         document = Document.find(path)
         if document is None:
-            document = Document.make(server, path, workspace)
+            document = Document.make(dataset, path, workspace)
         return document
 
     @staticmethod
@@ -168,19 +173,22 @@ class Document:
             # document
 
     @staticmethod
-    def rename(server: 'ZedServer', old_path: Path, new_path: Path) -> None:
+    def rename(old_path: Path, new_path: Path) -> None:
+        # no previous document exists for the old path
+        document = Document.find(old_path)
+        if document is None:
+            return
+
         # first make sure that the new path is a valid root in the dataset
-        rootType = server.dataset.test_for_root(new_path)
+        rootType = document.workspace.dataset.test_for_root(new_path)
         if rootType is None:
             Document.delete(old_path)
             return
 
         # update the document information with new path and new root type
-        document = Document.find(old_path)
-        if document is not None:
-            document.path = new_path
-            document.rootType = rootType
-            document.make_zedscripts(server)
+        document.path = new_path
+        document.rootType = rootType
+        document.make_zedscripts()
 
 
 
@@ -267,7 +275,7 @@ class Document:
         self.body = chunk_to_root(self, result.chunk, self.rootType)
         build_syntactic_tokens(self)
 
-    def validate(self, server: 'ZedServer') -> None:
+    def validate(self) -> None:
         logging.debug("Validating document: %s", self.get_uri())
         # clear old diagnostics and semantic tokens
         self.diagnostics.clear()
@@ -278,7 +286,7 @@ class Document:
         assert body is not None, f"Document ({self.get_uri()}) body should not be None before validation"
 
         # validate the root block, which will validate its children
-        body.validate(server.dataset)
+        body.validate(self.workspace.dataset)
 
 
 
@@ -294,9 +302,9 @@ class Document:
         logging.debug("Reparsing document: %s", self.get_uri())
         self.parse()
 
-    def on_document_diagnostics(self, server: 'ZedServer', previous_result_id: str | None) -> DiagnosticReport:
+    def on_document_diagnostics(self, previous_result_id: str | None) -> DiagnosticReport:
         # validate the document
-        self.validate(server)
+        self.validate()
 
         result_id = self.get_diagnostics_id()
         if (previous_result_id is not None
@@ -307,8 +315,8 @@ class Document:
             items=self.get_lsp_diagnostics(),
             result_id=result_id)
 
-    def on_workspace_diagnostics(self, server: 'ZedServer', previous_result_id: str | None) -> WorkspaceDiagnosticReport:
-        self.validate(server)
+    def on_workspace_diagnostics(self, previous_result_id: str | None) -> WorkspaceDiagnosticReport:
+        self.validate()
 
         # verify that the diagnostics didn't move
         # and if they didn't then send an unchanged report
@@ -332,11 +340,11 @@ class Document:
             result_id=self.get_semantic_tokens_id(), # useless since they don't send it back ?
         )
 
-    def on_hover(self, server: 'ZedServer', position: types.Position) -> types.Hover | None:
+    def on_hover(self, position: types.Position) -> types.Hover | None:
         text_position = position_to_texposition(position)
         if self.body is None:
             return None
-        return self.body.get_hover_information(server.dataset, text_position)
+        return self.body.get_hover_information(self.workspace.dataset, text_position)
 
     def on_linked_editing_range(self, position: types.Position) -> types.LinkedEditingRanges | None:
         if self.body is None:

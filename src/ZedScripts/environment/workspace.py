@@ -12,9 +12,9 @@ from .mod import Mod, ModCollection
 from .version import Version
 from .config import ConfigurationModel
 from ..utils import glob_files_by_extensions, merge_pydantic_models
+from ..scripts.dataset import Dataset
 
 if TYPE_CHECKING:
-    from ..server import ZedServer
     from ..scripts.block import ScriptBlock
 
 
@@ -22,15 +22,17 @@ if TYPE_CHECKING:
 class Workspace:
     workspace_cache: dict[WorkspaceType, dict[Path, 'Workspace']] = {}
     global_configuration: ConfigurationModel | None = None
+    global_dataset: 'Dataset' = Dataset()
 
-    def __init__(self, server: 'ZedServer', folder: Path, workspace_type: WorkspaceType):
-        self.server = server
+    def __init__(self, folder: Path, workspace_type: WorkspaceType):
         self.folder = folder
         self.workspace_type = workspace_type
         self.documents: dict[Path, Document] = {}
 
         self.mods: ModCollection = ModCollection()
-        self.configuration: ConfigurationModel | None = None
+        self.configuration: ConfigurationModel = self.update_configuration()
+        self.dataset: Dataset = Dataset()
+        self.dataset.load(self.configuration.dataset)
 
         # cache workspace
         Workspace.workspace_cache.setdefault(workspace_type, {})[folder] = self
@@ -70,9 +72,28 @@ class Workspace:
             # if it's OTHER, then it's probably not a mod file
             # TODO: should we handle those ?
 
+    @staticmethod
+    def load_libraries() -> None:
+        logging.info("Loading libraries for all workspaces.")
+
+        # gather libraries from configs
+        config = Workspace.get_global_configuration()
+
+        configs = []
+        for workspace in Workspace.workspace_cache.get(WorkspaceType.PROJECT, {}).values():
+            configs.append(workspace.get_configuration())
+        merged_config = merge_pydantic_models(config, *configs)
+
+        # add each libraries to global library cache
+        libraries = merged_config.libraries
+
+        Workspace.workspace_cache[WorkspaceType.LIBRARY] = {}
+        for library in libraries:
+            Workspace.workspace_cache[WorkspaceType.LIBRARY][library] = Workspace(library, WorkspaceType.LIBRARY)
+
 
     def load_document(self, path: Path) -> Document | None:
-        document = Document.find_or_make(self.server, path, self)
+        document = Document.find_or_make(self.dataset, path, self)
         if document is not None:
             self.mods.add_document(path, document)
             self.documents[path] = document
@@ -196,10 +217,11 @@ class Workspace:
     def get_configuration_path(self) -> Path:
         return self.folder / CONFIGURATION_FILE_NAME
 
-    def update_configuration(self, text: str | None = None) -> None:
+    def update_configuration(self, text: str | None = None) -> ConfigurationModel:
         logging.info("Updating configuration for workspace at %s", self.folder)
         self.configuration = Workspace.load_configuration(self.get_configuration_path(), text=text)
         logging.debug(self.configuration)
+        return self.configuration
 
     @staticmethod
     def get_global_configuration() -> ConfigurationModel:

@@ -12,7 +12,8 @@ from pygls.uris import from_fs_path, to_fs_path
 from .__about__ import __version__
 from .utils import uri_to_path
 from .environment import WorkspaceType
-from .environment.workspace import Workspace, Document
+from .environment.workspace import Workspace
+from .environment.document import Document
 from .providers.diagnostics import DiagnosticReport
 from .providers.semantic_tokens import get_tokens
 from .providers.locale import zedlocalizer
@@ -102,7 +103,7 @@ class ZedServer(LanguageServer):
         Document.delete(path)
 
     def on_document_renamed(self, old_file: Path, new_file: Path) -> None:
-        Document.rename(self, old_file, new_file)
+        Document.rename(old_file, new_file)
 
     def on_did_change_watched_files(self, params: types.DidChangeWatchedFilesParams) -> None:
         # we are only interested in handling the global configuration file changes
@@ -121,7 +122,7 @@ class ZedServer(LanguageServer):
         document = Workspace.find_or_make(path)
         if document is None:
             return None
-        return document.on_document_diagnostics(self, previous_result_id)
+        return document.on_document_diagnostics(previous_result_id)
 
     def on_semantic_tokens(self, path: Path) -> types.SemanticTokens | None:
         document = Document.find(path)
@@ -133,7 +134,7 @@ class ZedServer(LanguageServer):
         document = Document.find(path)
         if document is None:
             return None
-        return document.on_hover(self, position)
+        return document.on_hover(position)
 
     def on_linked_editing_range(self, path: Path, position: types.Position) -> types.LinkedEditingRanges | None:
         document = Document.find(path)
@@ -168,15 +169,16 @@ def initialize(server: ZedServer, params: types.InitializeParams):
     # this will store what the server can currently do
     capabilities.register_client_capabilities(params)
 
-    # load the dataset
-    server.dataset.load()
+    # load the global dataset
+    Workspace.global_dataset.load()
 
     # TODO: implement workspace loading starting from this
     logging.debug("Server workspace folders")
     logging.debug(server.workspace.folders)
-    for folder in server.workspace.folders:
-        ws = Workspace(server, uri_to_path(folder), WorkspaceType.PROJECT)
+    for workspace_folder in server.workspace.folders.values():
+        ws = Workspace(uri_to_path(workspace_folder.uri), WorkspaceType.PROJECT)
         ws.load()
+    Workspace.load_libraries()
 
     # from the above, we determine what the server capabilities should be
     return types.InitializeResult(
