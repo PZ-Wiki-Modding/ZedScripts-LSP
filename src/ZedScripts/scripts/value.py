@@ -565,14 +565,14 @@ class Value(Element["ValueNode"]):
         root = self.parent.get_root()
 
         # retrieve imports
-        searchable_modules: list[str]
-        if module is None:
-            searchable_modules = []
-        else:
-            searchable_modules = root.get_imports()
+        searchable_modules: set[str] = {"Base"}
+        if module is not None:
+        #     searchable_modules = set()
+        # else:
+            searchable_modules.update(root.get_imports())
 
             # the used module is searched into too
-            searchable_modules.append(module)
+            searchable_modules.add(module)
 
         # if allowed, auto import the parent module block
         if not block_type_data.get('noAutoImport', False):
@@ -580,7 +580,7 @@ class Value(Element["ValueNode"]):
             if (module_block is not None
                 and module_block.id is not None
                 and module_block.id not in searchable_modules):
-                searchable_modules.append(module_block.id)
+                searchable_modules.add(module_block.id)
 
         # search the block reference in the searchable modules
         ref_type = block_type_data['name']

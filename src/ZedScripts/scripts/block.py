@@ -506,16 +506,16 @@ class Root(Block, Element["Chunk"]):
                 return child
         return None
 
-    def get_imports(self) -> list[str]:
+    def get_imports(self) -> set[str]:
         """
         Retrieves all the imports of the current module block.
         """
-        imports: list[str] = ["Base"]
+        imports: set[str] = set()
 
         # find the module block
         module = self.get_module()
         if module is None:
-            return imports
+            return set(imports)
 
         # search for import statements within the module block
         for child in module:
@@ -524,7 +524,7 @@ class Root(Block, Element["Chunk"]):
             # retrieve all the values
             for value in child.values:
                 if not value.is_key_value():
-                    imports.append(value.value())
+                    imports.add(value.value())
         return imports
 
     def find_references(self, modules: Iterable[str], id: str, block_type: str) -> list['ScriptBlock']:
