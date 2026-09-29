@@ -104,6 +104,7 @@ class Workspace:
 
         # add each libraries to global library cache
         libraries = merged_config.libraries
+        libraries = Workspace.filter_out_projects(libraries)
 
         Workspace.workspace_cache[WorkspaceType.LIBRARY] = {}
         for library in libraries:
@@ -149,6 +150,18 @@ class Workspace:
         if workspace is not None:
             return workspace.load_document(path)
         return None
+
+    @staticmethod
+    def filter_out_projects(libraries: set[Path]) -> set[Path]:
+        """Filter out the libraries that are already present inside 
+        folders of project workspaces since those will have already parsed that content.
+        
+        Doesn't filter out libraries that are a folder above a project workspace however."""
+        project_folders = set(Workspace.workspace_cache.get(WorkspaceType.PROJECT, {}).keys())
+        
+        return {lib for lib in libraries 
+                if not any(lib.resolve().is_relative_to(proj.resolve()) 
+                           for proj in project_folders)}
 
 
 # searches
