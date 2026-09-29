@@ -8,6 +8,7 @@ from . import ScriptBlockData, ScriptBlockParameter, ValueType
 from .version import GameVersion, DataVersion
 from .. import SCRIPTS_DATA_MANIFEST
 from ..providers.http import load_json
+from ..environment.config import DatasetModel, DatasetTag
 
 
 class Release(TypedDict):
@@ -21,13 +22,28 @@ class Datasets(TypedDict):
 
 
 class Manifest:
+    instance: 'Manifest | None' = None
+
     def __init__(self, latest_build: GameVersion, releases: dict[GameVersion, Release], stable: DataVersion):
-        self.latest_build: GameVersion                = latest_build
-        self.releases:     dict[GameVersion, Release] = releases
-        self.stable:       DataVersion                = stable
+        self.latest_build:  GameVersion                = latest_build
+        self.releases:      dict[GameVersion, Release] = releases
+        self.stable:        DataVersion                = stable
+
+        self.releases_list: list[str] = self.make_releases_list()
+
+        # cache manifest
+        Manifest.instance = self
 
     def __repr__(self) -> str:
         return f"Manifest(latest_build={self.latest_build}, releases={len(self.releases)}, stable={self.stable})"
+
+    def make_releases_list(self) -> list[str]:
+        """Transforms into a list of strings all available dataset versions."""
+        releases_list: list[str] = []
+        for version, release in self.releases.items():
+            for v in range(release['version']):
+                releases_list.append(str(version.to_data_version(v)))
+        return sorted(releases_list)
 
     @staticmethod
     def from_dict(data: dict) -> "Manifest":
@@ -36,6 +52,22 @@ class Manifest:
             releases={GameVersion(k): v for k, v in data["releases"].items()},
             stable=DataVersion(data["stable"]),
         )
+
+    @staticmethod
+    def load() -> "Manifest":
+        # if for some reason the LSP gets active a long time
+        # this will not get updated (but tbh this should absolutely not be a problem)
+        if Manifest.instance is not None:
+            return Manifest.instance
+
+        # load the manifest from the JSON file
+        logging.info("Loading manifest...")
+        manifest_data = load_json(SCRIPTS_DATA_MANIFEST)
+        if manifest_data is None:
+            raise RuntimeError("Failed to load manifest data")
+        
+        logging.debug(pformat(manifest_data))
+        return Manifest.from_dict(manifest_data)
 
     def get_latest(self) -> tuple[DataVersion,Release]:
         versions = sorted(self.releases.keys())
@@ -48,23 +80,36 @@ class Manifest:
         return stable_version
 
 
-    def get_best_dataset_tag(self, key: str) -> DataVersion | None:
-        # find classic keyword cases        
+    def get_best_dataset_tag(self, key: DataVersion | DatasetTag) -> DataVersion:
+        # find classic keyword cases
         match key:
-            case "latest":
+            case DatasetTag.LATEST:
                 return self.get_latest()[0]
-
-            case "stable":
+            case DatasetTag.STABLE:
                 return self.get_stable()
+            case _:
+                if not isinstance(key, DataVersion):
+                    return NotImplemented
 
-        # else we handle the str as a version
-        # and we find the closest one in the manifest
-        return NotImplemented
+        # try to find the key in available releases
+        to_find = str(key)
+        releases_list = self.releases_list
 
-    def get_dataset_links(self, key: str) -> Datasets:
+        pos: int | None = releases_list.index(to_find) if to_find in releases_list else None
+        if pos is not None:
+            return DataVersion(releases_list[pos])
+
+        # if not found, return stable
+        logging.warning("Dataset version not found, falling back to stable.")
+        return self.get_stable()
+
+
+
+    def get_dataset_links(self, dataset_config: DatasetModel) -> Datasets:
         """
         Retrieve the dataset links for the specified tag_key.
         """
+        key = dataset_config.to_data_version()
         best_tag = self.get_best_dataset_tag(key)
         if best_tag is None:
             raise ValueError(f"No dataset found for key: {key}")
@@ -81,7 +126,7 @@ class Manifest:
 
 class Dataset:
     def __init__(self):
-        self.manifest: Manifest = self.load_manifest()
+        self.manifest: Manifest = Manifest.load()
 
         self.blocks: dict[str, ScriptBlockData]
         self.roots: dict[str, ScriptBlockData]
@@ -89,17 +134,9 @@ class Dataset:
     def __repr__(self) -> str:
         return f"Dataset(manifest={self.manifest}, blocks={len(self.blocks)}, roots={len(self.roots)})"
 
-    def load_manifest(self) -> Manifest:
-        logging.info("Loading manifest...")
-        manifest_data = load_json(SCRIPTS_DATA_MANIFEST)
-        if manifest_data is None:
-            raise RuntimeError("Failed to load manifest data")
-        logging.debug(pformat(manifest_data))
-        return Manifest.from_dict(manifest_data)
-
-    def load(self) -> None:
-        logging.info("Loading dataset...")
-        links = self.manifest.get_dataset_links("latest")
+    def load(self, dataset_config: DatasetModel = DatasetModel()) -> None:
+        logging.info(f"Loading dataset... ({dataset_config})")
+        links = self.manifest.get_dataset_links(dataset_config)
 
         # load datasets (possibly from cache)
         blocks = load_json(links["blocks"])
