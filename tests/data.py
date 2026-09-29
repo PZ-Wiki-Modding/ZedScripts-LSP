@@ -57,6 +57,9 @@ class DatasetModel(BaseModel):
         default=True,
     )
 
+    def test(self):
+        return self.release
+
 class ConfigurationModel(BaseModel):
     """Represents the content of the configuration files for workspace environments."""
     dataset: DatasetModel = Field(
@@ -128,3 +131,7 @@ print(config_global)
 print(config_local)
 merged_config = merge_pydantic_models(config_global, config_local)
 print(merged_config)
+
+print()
+print(merged_config.dataset)
+print(merged_config.dataset.test())
