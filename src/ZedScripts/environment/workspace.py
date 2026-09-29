@@ -1,5 +1,6 @@
 import logging
 import json
+import re
 from pathlib import Path
 from typing import Any, TYPE_CHECKING, Iterable
 from pydantic import ValidationError
@@ -30,6 +31,7 @@ class Workspace:
         self.documents: dict[Path, Document] = {}
 
         self.mods: ModCollection = ModCollection()
+        self.ignored_patterns: list[re.Pattern] = []
         self.configuration: ConfigurationModel = self.update_configuration()
         self.dataset: Dataset = Dataset()
         self.dataset.load(self.configuration.dataset)
@@ -46,14 +48,30 @@ class Workspace:
         """
         logging.info(f"Loading workspace: {self.folder}")
         self.load_mods()
+        # self.load_documents()
         self.load_documents()
 
     def load_documents(self) -> None:
-        # glob .txt and .info files
-        for file in glob_files_by_extensions(self.folder, {".txt", ".info"}):
-            # try to find or create a Document instance for this file
-            # if it's not detected as a valid ZedScripts document then it will return None
-            self.load_document(file)
+        # inside the workspace folder, find every txt files, and try to load them
+        # as documents
+        files = list(self.folder.rglob("*.txt"))
+        total_files = len(files)
+        progress = 0
+        last_progress = 0
+        step = 10
+        for i, path in enumerate(files):
+            progress = (i + 1) / total_files * 100
+            self.load_document(path)
+            if progress - last_progress >= step:
+                logging.info(f"Loading progress: {progress:.2f}%")
+                last_progress = progress
+            
+    # def load_documents(self) -> None:
+    #     # glob .txt and .info files
+    #     for file in glob_files_by_extensions(self.folder, {".txt", ".info"}):
+    #         # try to find or create a Document instance for this file
+    #         # if it's not detected as a valid ZedScripts document then it will return None
+    #         self.load_document(file)
 
     def load_mods(self) -> None:
         logging.info(f"Loading mods for workspace: {self.folder}")
@@ -90,18 +108,30 @@ class Workspace:
         Workspace.workspace_cache[WorkspaceType.LIBRARY] = {}
         for library in libraries:
             Workspace.workspace_cache[WorkspaceType.LIBRARY][library] = Workspace(library, WorkspaceType.LIBRARY)
+        for library in Workspace.workspace_cache[WorkspaceType.LIBRARY].values():
+            library.load()
 
+    def should_ignore(self, path: Path) -> bool:
+        for pattern in self.ignored_patterns:
+            if pattern.search(str(path)):
+                return True
+        return False
 
     def load_document(self, path: Path) -> Document | None:
+        # skip if the path respects the ignored patterns
+        if self.should_ignore(path):
+            return None
+
         document = Document.find_or_make(self.dataset, path, self)
         if document is not None:
             self.mods.add_document(path, document)
             self.documents[path] = document
         return document
 
+
     @staticmethod
     def find_workspace(path: Path) -> 'Workspace | None':
-        for workspace_type, workspaces in Workspace.workspace_cache.items():
+        for workspaces in Workspace.workspace_cache.values():
             for folder, workspace in workspaces.items():
                 if folder in path.parents:
                     return workspace
@@ -221,7 +251,12 @@ class Workspace:
         logging.info("Updating configuration for workspace at %s", self.folder)
         self.configuration = Workspace.load_configuration(self.get_configuration_path(), text=text)
         logging.debug(self.configuration)
+        self.post_update_configuration()
         return self.configuration
+
+    def post_update_configuration(self) -> None:
+        ignored = self.get_configuration().ignored
+        self.ignored_patterns = [re.compile(pattern) for pattern in ignored]
 
     @staticmethod
     def get_global_configuration() -> ConfigurationModel:
