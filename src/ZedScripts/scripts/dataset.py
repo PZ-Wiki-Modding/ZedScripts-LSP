@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 from pprint import pformat
 
+from .. import SCRIPTS_BLOCKS_DATA_LINK, ROOTS_DATA_LINK
 from . import ScriptBlockData, ScriptBlockParameter, ValueType
 from .version import GameVersion, DataVersion
 from .. import SCRIPTS_DATA_MANIFEST
@@ -115,8 +116,8 @@ class Manifest:
             raise ValueError(f"No dataset found for key: {key}")
 
         return {
-            "blocks": f"https://raw.githubusercontent.com/PZ-Wiki-Modding/pz-scripts-data/refs/tags/{best_tag}/out/scriptsBlocks.json",
-            "roots": f"https://raw.githubusercontent.com/PZ-Wiki-Modding/pz-scripts-data/refs/tags/{best_tag}/out/roots.json",
+            "blocks": SCRIPTS_BLOCKS_DATA_LINK.format(best_tag=best_tag),
+            "roots": ROOTS_DATA_LINK.format(best_tag=best_tag),
         }
 
 
@@ -137,6 +138,10 @@ class Dataset:
     def load(self, dataset_config: DatasetModel = DatasetModel()) -> None:
         logging.info(f"Loading dataset... ({dataset_config})")
         links = self.manifest.get_dataset_links(dataset_config)
+
+        logging.info(f"Downloading from following dataset links:")
+        logging.info(f"Blocks: {links['blocks']}")
+        logging.info(f"Roots: {links['roots']}")
 
         # load datasets (possibly from cache)
         blocks = load_json(links["blocks"])
