@@ -1,4 +1,4 @@
-.PHONY: help build cleanup build_wheel
+.PHONY: help build cleanup release setup clean build_package upload
 .ONESHELL:
 
 SHELL := /bin/bash
@@ -10,7 +10,11 @@ help:
 	@echo "Available targets:"
 	@echo "  build  - Build the ZedScripts language server installer"
 	@echo "  cleanup - Clean up build artifacts"
-	@echo "  build_wheel - Build the ZedScripts language server wheel"
+	@echo "  release - Build and upload the ZedScripts language server package to PyPi"
+	@echo "  setup - Set up the Python virtual environment and install build dependencies"
+	@echo "  clean - Clean up the dist directory"
+	@echo "  build_package - Build the ZedScripts language server package"
+	@echo "  upload - Upload the ZedScripts language server package to PyPi"
 
 # setup .venv if it doesn't exist
 _setup:
@@ -23,12 +27,20 @@ _setup:
 build: _setup
 	$(VENV)/bin/pyinstaller --noconfirm ZedScripts.spec
 
+# PyPi release chain
+release: cleanup setup build_package upload
+
 cleanup:
-# 	rm -rf $(VENV)
-	rm -rf dist
-	rm -rf build
 	find . -type d -name '__pycache__' -exec rm -rf {} +
 	rm -Rf src/*.egg-info
 
-build_wheel:
-	$(VENV)/bin/python -m build --wheel
+setup:
+	$(PYTHON) -m venv $(VENV) && echo "*" > $(VENV)/.gitignore
+	. $(VENV)/bin/activate && pip install --upgrade pip
+	pip install --upgrade build twine
+
+build_package:
+	$(VENV)/bin/python3 -m build
+
+upload:
+	$(VENV)/bin/python3 -m twine upload --repository pypi dist/*
