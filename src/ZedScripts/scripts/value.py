@@ -184,6 +184,17 @@ class Value(Element["ValueNode"]):
                     fullType_text = "full" if fullType is True else "type only"
                     type_text = f"block<{block_type}> ({fullType_text})"
 
+                case ValueType.CALLBACK:
+                    callback_data = type_data.get('callback')
+                    assert callback_data is not None
+
+                    parameters = callback_data['parameters']
+                    returns = callback_data.get('returns')
+
+                    type_text = f"callback({', '.join([f'{p['name']}: {p['type']}' for p in parameters])})"
+                    if returns is not None:
+                        type_text += f" -> {returns}"
+
 
             out += f" : {type_text}"
 
@@ -201,6 +212,9 @@ class Value(Element["ValueNode"]):
 
                         separator = array_data['separator']
                         default_text = separator.join(default_value)
+                case ValueType.BOOLEAN:
+                    if isinstance(default_value, bool):
+                        default_text = str(default_value).lower()
 
             out += f" = {default_text}"
 
