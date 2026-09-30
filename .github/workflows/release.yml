@@ -44,11 +44,11 @@ jobs:
           - runner: ubuntu-latest
             name: Linux
             artifact-name: linux-executable
-            executable-path: ZedScripts-LSP/dist/ZedScripts
+            executable-path: dist/ZedScripts
           - runner: windows-latest
             name: Windows
             artifact-name: windows-executable
-            executable-path: ZedScripts-LSP/dist/ZedScripts.exe
+            executable-path: dist/ZedScripts.exe
 
     steps:
       - uses: actions/checkout@v4
