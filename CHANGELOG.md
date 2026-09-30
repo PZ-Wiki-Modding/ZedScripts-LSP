@@ -5,6 +5,7 @@
 - Provide parameter type information in hovering ([#4](https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/issues/4))
 - Centralized download links for datasets
 - `cant_self_validate` method for `Dataset`
+- Warning diagnostic unparsed tokens ([#8](https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/issues/8))
 - Fix `ScriptBlockParameter` typing for defaults
 - Fix configuration file parsing allowing for `dataset.release.version` to be optional (defaults to maximum available build release `version`) and to have a value equal to 0 ([#7](https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/issues/7))
 
