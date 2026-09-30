@@ -52,7 +52,7 @@ class ScriptBlockParameter(TypedDict):
     description: NotRequired[str]
     allowedDuplicate: NotRequired[bool]
     canBeEmpty: NotRequired[bool]
-    default: NotRequired[ScriptBlockValue]
+    default: NotRequired[ScriptBlockValue | list]
     type: NotRequired['ParameterType']
     deprecated: NotRequired['DeprecatedInfo']
     values: NotRequired[list[ScriptBlockValue]]
