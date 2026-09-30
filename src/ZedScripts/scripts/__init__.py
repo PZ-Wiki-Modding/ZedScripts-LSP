@@ -90,6 +90,7 @@ class ParameterType(TypedDict):
     object: NotRequired['ObjectType']
     block: NotRequired['BlockType']
     translation: NotRequired['TranslationProperties']
+    callback: NotRequired['CallbackType']
 
 class ArrayType(TypedDict):
     separator: str
@@ -110,6 +111,15 @@ class BlockType(TypedDict):
     """if true, this should use the module to reference the block"""
     noAutoImport: NotRequired[bool]
     """if true, the will not automatically check its own parent block module when fullType is set to true"""
+
+class CallbackType(TypedDict):
+    parameters: list['CallbackParameter']
+    returns: NotRequired[str]
+
+class CallbackParameter(TypedDict):
+    name: str
+    type: str
+    isJava: bool
 
 
 class ScriptBlockNeeds(TypedDict):
