@@ -11,6 +11,9 @@ from .. import SCRIPTS_DATA_MANIFEST
 from ..providers.http import load_json
 from ..environment.config import DatasetModel, DatasetTag
 
+if TYPE_CHECKING:
+    from ..environment.config import ReleaseModel
+
 
 class Release(TypedDict):
     date: str
@@ -49,10 +52,37 @@ class Manifest:
     @staticmethod
     def from_dict(data: dict) -> "Manifest":
         return Manifest(
-            latest_build=GameVersion(data["latest_build"]),
-            releases={GameVersion(k): v for k, v in data["releases"].items()},
+            latest_build=GameVersion.find_or_make(data["latest_build"]),
+            releases={GameVersion.find_or_make(k): v for k, v in data["releases"].items()},
             stable=DataVersion(data["stable"]),
         )
+
+    @staticmethod
+    def find_release(game_version: GameVersion) -> Release | None:
+        assert Manifest.instance is not None
+        for version, release in Manifest.instance.releases.items():
+            if version == game_version:
+                return release
+        return None
+
+    @staticmethod
+    def get_latest_version(major: int, minor: int, patch: int) -> int:
+        assert Manifest.instance is not None
+        release = Manifest.find_release(GameVersion.from_values(major, minor, patch))
+        if release is None:
+            raise ValueError(f"No release found for version {major}.{minor}.{patch}")
+        return release['version']
+
+    @staticmethod
+    def from_release_model(dataset_config: 'ReleaseModel') -> 'DataVersion':
+        game_version = GameVersion.from_values(dataset_config.major, dataset_config.minor, dataset_config.patch)
+        version = dataset_config.version
+        if version is None:
+            version = Manifest.get_latest_version(dataset_config.major, dataset_config.minor, dataset_config.patch)
+        data_version = game_version.to_data_version(version)
+        return data_version
+
+
 
     @staticmethod
     def load() -> "Manifest":
