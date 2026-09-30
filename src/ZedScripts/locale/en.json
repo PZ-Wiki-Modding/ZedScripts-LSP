@@ -4,6 +4,7 @@
         "PARSER_TOO_MANY_CLOSING_BRACKETS": "Too many closing brackets.",
         "PARSER_BLOCK_MISSING_TYPE": "Block is missing a type.",
         "PARSER_BLOCK_NOT_CLOSED": "Block not closed.",
+        "PARSER_UNPARSED_TOKENS": "Unparsed tokens found.",
 
         "BLOCK_UNKNOWN_BLOCK": "'{type}' is an unknown script block.",
 
