@@ -35,5 +35,22 @@ pip install .
 
 You can either launch the LSP from Python or you can launch the software as is.
 
+The LSP will generate a log file inside the user folder, typically located at:
+
+<details>
+<summary>Linux</summary>
+
+```bash
+|~/.zedscripts/server.log
+```
+</details>
+
+<details>
+<summary>Windows</summary>
+```bash
+%USERPROFILE%\.zedscripts\server.log
+```
+</details>
+
 ## License
 See [LICENSE](LICENSE) for details.
