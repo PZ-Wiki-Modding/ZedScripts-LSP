@@ -28,7 +28,7 @@ class ReleaseModel(BaseModel):
     )
     version: int = Field(
         description="Dataset version number for the provided Build release (major.minor.patch). This is incremented whenever the dataset for a specific version is updated.",
-        ge=1,
+        ge=0,
     )
 
 class DatasetModel(BaseModel):
