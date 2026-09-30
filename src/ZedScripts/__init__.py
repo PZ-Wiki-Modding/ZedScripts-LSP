@@ -8,6 +8,7 @@ ZEDSCRIPT_CACHE_DIR = Path.home() / ".zedscripts"
 """
 Cache directory to hold various information related to ZedScripts.
 """
+ZEDSCRIPT_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 # config files
 CONFIGURATION_FILE_NAME = ".zedscripts.json"
