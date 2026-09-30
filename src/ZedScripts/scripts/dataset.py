@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, TypedDict
 from pprint import pformat
 
 from .. import SCRIPTS_BLOCKS_DATA_LINK, ROOTS_DATA_LINK
-from . import ScriptBlockData, ScriptBlockParameter, ValueType
+from . import ScriptBlockData, ScriptBlockParameter, ValueType, cant_self_validate
 from .version import GameVersion, DataVersion
 from .. import SCRIPTS_DATA_MANIFEST
 from ..providers.http import load_json
@@ -291,19 +291,8 @@ class Dataset:
 
     def test_for_type(self, expected_type: ValueType, value: str) -> ValueType:
         #   return early types we can't really determine from the value itself
-        match expected_type:
-            case ValueType.STRING:
-                return ValueType.STRING
-            case ValueType.ARRAY:
-                return ValueType.ARRAY
-            case ValueType.OBJECT:
-                return ValueType.OBJECT
-            case ValueType.BLOCK:
-                return ValueType.BLOCK
-            case ValueType.CALLBACK:
-                return ValueType.CALLBACK
-            case ValueType.TRANSLATION:
-                return ValueType.TRANSLATION
+        if cant_self_validate(expected_type):
+            return expected_type
 
         # check if boolean
         if value.lower() in ["true", "false"]:

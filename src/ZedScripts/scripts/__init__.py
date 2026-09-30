@@ -70,6 +70,20 @@ class ValueType(enum.StrEnum):
     CALLBACK = "callback"
     TRANSLATION = "translation"
 
+_early_return: set[ValueType] = {
+    ValueType.STRING,
+    ValueType.ARRAY,
+    ValueType.OBJECT,
+    ValueType.BLOCK,
+    ValueType.CALLBACK,
+    ValueType.TRANSLATION,
+}
+
+def cant_self_validate(value_type: ValueType) -> bool:
+    """Verifies whenever the provided value_type cannot be validated by the value itself."""
+    return value_type in _early_return
+
+
 class ParameterType(TypedDict):
     main: ValueType
     array: NotRequired['ArrayType']
