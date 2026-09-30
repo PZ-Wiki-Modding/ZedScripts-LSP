@@ -1,13 +1,10 @@
 import os
-import typing
 import logging
 from pathlib import Path
-from pprint import pformat
 
 from lsprotocol import types
 from pygls.lsp.server import LanguageServer
 from pygls.protocol.language_server import LanguageServerProtocol
-from pygls.uris import from_fs_path, to_fs_path
 
 from .__about__ import __version__
 from .utils import uri_to_path
@@ -19,7 +16,6 @@ from .providers.semantic_tokens import get_tokens
 from .providers.locale import zedlocalizer
 from .providers import capabilities
 from .providers.notifications import ZedNotification, NotificationParams
-from .scripts.dataset import Dataset
 
 
 
