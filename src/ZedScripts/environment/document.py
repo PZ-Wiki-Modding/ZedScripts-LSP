@@ -90,8 +90,8 @@ class Document:
         server = ZedServer.instance
         if server is not None:
             server.send_notification(
-                method=ZedNotification.SET_ZEDSCRIPTS,
-                params=SetZedScriptsNotificationParams(
+                ZedNotification.SET_ZEDSCRIPTS,
+                SetZedScriptsNotificationParams(
                     uri=path_to_uri(self.path)
                 )
             )

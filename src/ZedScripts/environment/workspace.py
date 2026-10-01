@@ -12,7 +12,8 @@ from .document import Document
 from .mod import Mod, ModCollection
 from .version import Version
 from .config import ConfigurationModel
-from ..utils import glob_files_by_extensions, merge_pydantic_models
+from ..providers.notifications import ZedNotification, send_progress_notification
+from ..utils import merge_pydantic_models
 from ..scripts.dataset import Dataset
 
 if TYPE_CHECKING:
@@ -52,26 +53,29 @@ class Workspace:
         self.load_documents()
 
     def load_documents(self) -> None:
+        send_progress_notification(ZedNotification.LOADING_DOCUMENTS, 
+                                   self.folder, 0.0, self.workspace_type)
+
         # inside the workspace folder, find every txt files, and try to load them
         # as documents
         files = list(self.folder.rglob("*.txt"))
         total_files = len(files)
-        progress = 0
         last_progress = 0
         step = 10
-        for i, path in enumerate(files):
-            progress = (i + 1) / total_files * 100
+        step_count = step * total_files / 100
+        for progress, path in enumerate(files):
             self.load_document(path)
-            if progress - last_progress >= step:
-                logging.info(f"Loading progress: {progress:.2f}%")
+
+            # send update notification to client
+            if progress - last_progress >= step_count:
+                logging.info(f"Loading progress: {progress}/{total_files}")
+                send_progress_notification(ZedNotification.LOADING_DOCUMENTS, 
+                                           self.folder, progress / total_files * 100, self.workspace_type)
                 last_progress = progress
-            
-    # def load_documents(self) -> None:
-    #     # glob .txt and .info files
-    #     for file in glob_files_by_extensions(self.folder, {".txt", ".info"}):
-    #         # try to find or create a Document instance for this file
-    #         # if it's not detected as a valid ZedScripts document then it will return None
-    #         self.load_document(file)
+
+        # send final progress notification
+        send_progress_notification(ZedNotification.LOADING_DOCUMENTS, 
+                                   self.folder, 100, self.workspace_type)
 
     def load_mods(self) -> None:
         logging.info(f"Loading mods for workspace: {self.folder}")

@@ -33,6 +33,7 @@ class ZedServer(LanguageServer):
         ZedServer.instance = self
 
     def send_notification(self, method: ZedNotification, params: NotificationParams | None = None) -> None:
+        logging.debug("Sending notification: %s with params: %s", method, params)
         self.protocol.notify(
             method,
             params
@@ -165,17 +166,6 @@ def initialize(server: ZedServer, params: types.InitializeParams):
     # this will store what the server can currently do
     capabilities.register_client_capabilities(params)
 
-    # load the global dataset
-    Workspace.global_dataset.load()
-
-    # TODO: implement workspace loading starting from this
-    logging.debug("Server workspace folders")
-    logging.debug(server.workspace.folders)
-    for workspace_folder in server.workspace.folders.values():
-        ws = Workspace(uri_to_path(workspace_folder.uri), WorkspaceType.PROJECT)
-        ws.load()
-    Workspace.load_libraries()
-
     # from the above, we determine what the server capabilities should be
     return types.InitializeResult(
         capabilities=capabilities.get_server_capabilities(),
@@ -183,6 +173,27 @@ def initialize(server: ZedServer, params: types.InitializeParams):
             name="ZedScripts Language Server",
             version=__version__,
         )
+    )
+
+
+@zedserver.feature(types.INITIALIZED)
+def initialized(server: ZedServer, params: types.InitializedParams) -> None:
+    """
+    Called after the client sends the 'initialized' notification.
+    At this point, the client is ready to receive notifications.
+    This is the proper place to load workspaces and send progress notifications.
+    """
+    # load the global dataset
+    Workspace.global_dataset.load()
+
+    logging.debug("Server workspace folders")
+    logging.debug(server.workspace.folders)
+    for workspace_folder in server.workspace.folders.values():
+        ws = Workspace(uri_to_path(workspace_folder.uri), WorkspaceType.PROJECT)
+        ws.load()
+    Workspace.load_libraries()
+    server.send_notification(
+        ZedNotification.LOADING_DOCUMENTS_DONE
     )
 
 
