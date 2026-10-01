@@ -244,7 +244,7 @@ def did_change(ls: SemanticTokensServer, params: types.DidOpenTextDocumentParams
     types.TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL,
     types.SemanticTokensLegend(
         token_types=TokenTypes,
-        token_modifiers=[m.name for m in TokenModifier],
+        token_modifiers=[name for m in TokenModifier if (name := m.name) is not None],
     ),
 )
 def semantic_tokens_full(ls: SemanticTokensServer, params: types.SemanticTokensParams):
