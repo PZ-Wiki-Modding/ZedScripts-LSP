@@ -52,7 +52,7 @@ class ScriptBlockParameter(TypedDict):
     description: NotRequired[str]
     allowedDuplicate: NotRequired[bool]
     canBeEmpty: NotRequired[bool]
-    default: NotRequired[ScriptBlockValue]
+    default: NotRequired[ScriptBlockValue | list]
     type: NotRequired['ParameterType']
     deprecated: NotRequired['DeprecatedInfo']
     values: NotRequired[list[ScriptBlockValue]]
@@ -70,12 +70,27 @@ class ValueType(enum.StrEnum):
     CALLBACK = "callback"
     TRANSLATION = "translation"
 
+_early_return: set[ValueType] = {
+    ValueType.STRING,
+    ValueType.ARRAY,
+    ValueType.OBJECT,
+    ValueType.BLOCK,
+    ValueType.CALLBACK,
+    ValueType.TRANSLATION,
+}
+
+def cant_self_validate(value_type: ValueType) -> bool:
+    """Verifies whenever the provided value_type cannot be validated by the value itself."""
+    return value_type in _early_return
+
+
 class ParameterType(TypedDict):
     main: ValueType
     array: NotRequired['ArrayType']
     object: NotRequired['ObjectType']
     block: NotRequired['BlockType']
     translation: NotRequired['TranslationProperties']
+    callback: NotRequired['CallbackType']
 
 class ArrayType(TypedDict):
     separator: str
@@ -96,6 +111,15 @@ class BlockType(TypedDict):
     """if true, this should use the module to reference the block"""
     noAutoImport: NotRequired[bool]
     """if true, the will not automatically check its own parent block module when fullType is set to true"""
+
+class CallbackType(TypedDict):
+    parameters: list['CallbackParameter']
+    returns: NotRequired[str]
+
+class CallbackParameter(TypedDict):
+    name: str
+    type: str
+    isJava: bool
 
 
 class ScriptBlockNeeds(TypedDict):

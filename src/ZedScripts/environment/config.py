@@ -26,9 +26,10 @@ class ReleaseModel(BaseModel):
         description="Patch game version number.",
         ge=0,
     )
-    version: int = Field(
+    version: Optional[int] = Field(
         description="Dataset version number for the provided Build release (major.minor.patch). This is incremented whenever the dataset for a specific version is updated.",
-        ge=1,
+        default=None,
+        ge=0,
     )
 
 class DatasetModel(BaseModel):
@@ -53,7 +54,12 @@ class DatasetModel(BaseModel):
                 return DatasetTag.STABLE
             logging.warning("No dataset version specified, defaulting to 'stable'.")
             return DatasetTag.STABLE
-        return DataVersion.from_release_model(self.release)
+        from ..scripts.dataset import Manifest
+        try:
+            return Manifest.from_release_model(self.release)
+        except Exception as e:
+            logging.error(f"Failed to get data version from release model: {e}. Defaulting to 'stable'.")
+            return DatasetTag.STABLE
 
 
 class ConfigurationModel(BaseModel):

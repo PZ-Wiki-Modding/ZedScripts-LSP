@@ -1,11 +1,7 @@
 import enum
-import logging
-from pathlib import Path
-from typing import Optional
-from pydantic import BaseModel, Field
 
 
-class WorkspaceType(enum.Enum):
+class WorkspaceType(enum.StrEnum):
     """Represents different types of workspace folders."""
     LIBRARY = enum.auto()
     """A library defined by the user to reference things from.

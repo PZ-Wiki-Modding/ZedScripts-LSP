@@ -18,6 +18,7 @@ class DiagnosticType(enum.Enum):
     PARSER_TOO_MANY_CLOSING_BRACKETS =       enum.auto()
     PARSER_BLOCK_MISSING_TYPE =              enum.auto()
     PARSER_BLOCK_NOT_CLOSED =                enum.auto()
+    PARSER_UNPARSED_TOKENS =                 enum.auto()
 
     # block diagnostics
     BLOCK_UNKNOWN_BLOCK =                    enum.auto()
@@ -58,6 +59,8 @@ DiagnosticDefinition(DiagnosticType.PARSER_TOO_MANY_CLOSING_BRACKETS,
 DiagnosticDefinition(DiagnosticType.PARSER_BLOCK_MISSING_TYPE,
                      DiagnosticSeverity.Error)
 DiagnosticDefinition(DiagnosticType.PARSER_BLOCK_NOT_CLOSED,
+                     DiagnosticSeverity.Warning)
+DiagnosticDefinition(DiagnosticType.PARSER_UNPARSED_TOKENS,
                      DiagnosticSeverity.Error)
 
 # block diagnostics

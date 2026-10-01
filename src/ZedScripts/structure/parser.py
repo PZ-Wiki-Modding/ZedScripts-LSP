@@ -114,6 +114,15 @@ def parse_tokens(tokens: TokenCollection) -> ParseResult:
                                             TextRange(token.pos, token.end))
                             )
                             break
+                        if len(unparsed_tokens) > 1:
+                            # necessary when when writing between two block end }
+                            # should be -1 when after a key-value def
+                            start = 1
+                            end = -2 if len(unparsed_tokens) > 2 else -1
+                            result.errors.append(
+                                SyntaxError(SyntaxErrorType.UNPARSED_TOKENS,
+                                            TextRange(unparsed_tokens[start].pos, unparsed_tokens[end].end))
+                            )
                         top_block = parser.pop_block()
                         top_block.close_bracket = token
                     case "{":

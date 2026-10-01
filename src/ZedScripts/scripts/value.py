@@ -138,9 +138,92 @@ class Value(Element["ValueNode"]):
 
 ## information
 
-    def get_tree(self) -> str:
+    def get_type_info(self, dataset: 'Dataset') -> str:
+        # retrieve parameter information
+        parent_type = self.parent.type
+        key = self.key()
+        if not dataset.can_block_have_parameter(parent_type, key):
+            return ""
+        parameter_data = dataset.get_parameter_data(parent_type, key)
+
+        out: str = ""
+
+        # type information
+        type_data = parameter_data.get('type')
+        expected_type: str | None = None
+        if type_data is not None:
+            expected_type = type_data['main']
+            type_text = expected_type
+
+            # based on the expected type, we adjust the type information
+            match expected_type:
+                case ValueType.ARRAY:
+                    array_data = type_data.get('array')
+                    assert array_data is not None
+
+                    array_type = array_data['type']
+                    separator = array_data['separator']
+                    type_text = f"{array_type}[] (separator: '{separator}')"
+
+                case ValueType.OBJECT:
+                    object_data = type_data.get('object')
+                    assert object_data is not None
+
+                    pairsSeparator = object_data['pairsSeparator']
+                    keyValueSeparator = object_data['keyValueSeparator']
+                    keyType = object_data['keyType']
+                    valueType = object_data['valueType']
+                    type_text = f"<{keyType}{keyValueSeparator}{valueType}> (pairs separator: '{pairsSeparator}')"
+
+                case ValueType.BLOCK:
+                    block_data = type_data.get('block')
+                    assert block_data is not None
+
+                    block_type = block_data['name']
+                    fullType = block_data.get('fullType', False)
+                    fullType_text = "full" if fullType is True else "type only"
+                    type_text = f"block<{block_type}> ({fullType_text})"
+
+                case ValueType.CALLBACK:
+                    callback_data = type_data.get('callback')
+                    assert callback_data is not None
+
+                    parameters = callback_data['parameters']
+                    returns = callback_data.get('returns')
+
+                    type_text = f"callback({', '.join([f'{p['name']}: {p['type']}' for p in parameters])})"
+                    if returns is not None:
+                        type_text += f" -> {returns}"
+
+
+            out += f" : {type_text}"
+
+        # default value information
+        default_value = parameter_data.get('default')
+        if default_value is not None:
+            default_text = str(default_value)
+            # handle special cases based on the expected type if available
+            match expected_type:
+                case ValueType.ARRAY:
+                    if isinstance(default_value, list):
+                        assert type_data is not None
+                        array_data = type_data.get('array')
+                        assert array_data is not None
+
+                        separator = array_data['separator']
+                        default_text = separator.join(default_value)
+                case ValueType.BOOLEAN:
+                    if isinstance(default_value, bool):
+                        default_text = str(default_value).lower()
+
+            out += f" = {default_text}"
+
+        return out.strip()
+
+    def get_tree(self, dataset: 'Dataset') -> str:
         block_tree = self.parent.get_tree()
-        return f"{block_tree} # {self.key()}"
+        type_info = self.get_type_info(dataset)
+        return f"{block_tree} # {self.key()} {type_info}"
 
     def get_description(self, dataset: 'Dataset') -> str:
         parent_type = self.parent.type
@@ -161,7 +244,7 @@ class Value(Element["ValueNode"]):
         # hovering the parameter, we show information about that
         if key_node.to_range() == text_position:
             # show a tree hierarchy of the parameter and description
-            tree = format_tree(self.get_tree())
+            tree = format_tree(self.get_tree(dataset))
             desc = self.get_description(dataset)
 
             # show link to ScriptsDocs

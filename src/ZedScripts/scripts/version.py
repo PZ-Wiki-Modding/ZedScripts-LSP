@@ -1,9 +1,10 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 if TYPE_CHECKING:
     from ..environment.config import ReleaseModel
 
 
 class GameVersion:
+    _cache: dict[str, 'GameVersion'] = {}
     def __init__(self, version: str):
         self.version = version
         split_version = version.split(".")
@@ -12,11 +13,25 @@ class GameVersion:
         self.minor = int(split_version[1])
         self.patch = int(split_version[2])
 
+        # cache
+        GameVersion._cache[version] = self
+
+    def __hash__(self):
+        return hash((self.major, self.minor, self.patch))
+
     def __str__(self) -> str:
         return self.version
 
     def to_data_version(self, build: int) -> "DataVersion":
         return DataVersion(f"{self.major}.{self.minor}.{self.patch}.{build}")
+
+    @staticmethod
+    def find_or_make(version: str) -> "GameVersion":
+        return GameVersion._cache.get(version, GameVersion(version))
+
+    @staticmethod
+    def from_values(major: int, minor: int, patch: int) -> "GameVersion":
+        return GameVersion.find_or_make(f"{major}.{minor}.{patch}")
 
     def __ge__(self, other):
         if not isinstance(other, GameVersion): return NotImplemented
@@ -34,8 +49,12 @@ class GameVersion:
         if not isinstance(other, GameVersion): return NotImplemented
         return (self.major, self.minor, self.patch) <= (other.major, other.minor, other.patch)
 
+    def __eq__(self, other):
+        if not isinstance(other, GameVersion): return NotImplemented
+        return (self.major, self.minor, self.patch) == (other.major, other.minor, other.patch)
+
 class DataVersion(GameVersion):
-    _cache: dict[str, "DataVersion"] = {}
+    _data_cache: dict[str, 'DataVersion'] = {}
     def __init__(self, version: str):
         super().__init__(version)
         split_version = version.split(".")
@@ -43,16 +62,14 @@ class DataVersion(GameVersion):
         self.build = int(split_version[3])
 
         # cache
-        DataVersion._cache[version] = self
+        DataVersion._data_cache[version] = self
+
+    def __hash__(self):
+        return hash((self.major, self.minor, self.patch, self.build))
 
     def to_game_version(self) -> GameVersion:
-        return GameVersion(f"{self.major}.{self.minor}.{self.patch}")
-
-    @staticmethod
-    def from_release_model(dataset_config: 'ReleaseModel') -> 'DataVersion':
-        version = f"{dataset_config.major}.{dataset_config.minor}.{dataset_config.patch}.{dataset_config.version}"
-        return DataVersion(version)
+        return GameVersion.find_or_make(f"{self.major}.{self.minor}.{self.patch}")
 
     @staticmethod
     def find_or_make(version: str) -> "DataVersion":
-        return DataVersion._cache.get(version, DataVersion(version))
+        return DataVersion._data_cache.get(version, DataVersion(version))
