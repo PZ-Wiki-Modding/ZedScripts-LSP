@@ -223,7 +223,16 @@ class Value(Element["ValueNode"]):
     def get_tree(self, dataset: 'Dataset') -> str:
         block_tree = self.parent.get_tree()
         type_info = self.get_type_info(dataset)
-        return f"{block_tree} # {self.key()} {type_info}"
+
+        txt = f"{block_tree} # {self.key()} {type_info}"
+
+        if dataset.can_block_have_parameter(self.parent.type, self.key()):
+            param_data = dataset.get_parameter_data(self.parent.type, self.key())
+            deprecated = param_data.get('deprecated')
+            if deprecated is not None:
+                txt = f"(deprecated)\n{txt}"
+
+        return txt
 
     def get_description(self, dataset: 'Dataset') -> str:
         parent_type = self.parent.type
