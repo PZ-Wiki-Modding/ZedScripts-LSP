@@ -1,5 +1,11 @@
 # ZedScripts LSP
 
+[![License](https://img.shields.io/github/license/PZ-Wiki-Modding/ZedScripts?label=License)](LICENSE)
+![Code Size](https://img.shields.io/github/languages/code-size/PZ-Wiki-Modding/ZedScripts?label=Code%20Size)
+[![PyPi Version](https://img.shields.io/pypi/v/ZedScripts)](https://pypi.org/project/ZedScripts/)
+[![PyPi Downloads](https://img.shields.io/pypi/dm/ZedScripts)](https://pypi.org/project/ZedScripts/)
+![PyPI Python Version](https://img.shields.io/pypi/pyversions/ZedScripts)
+
 > [!IMPORTANT]
 > Work In Progress, this is a BETA release
 
