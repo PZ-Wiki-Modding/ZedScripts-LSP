@@ -95,7 +95,7 @@ class Workspace:
             # only consider versioning and common folders
             version = Version.find_or_make_version(file)
             if version.type in {VersionType.VERSIONING, VersionType.COMMON}:
-                mod_folder = file.parent.parent
+                mod_folder = file.parent.parent # the folder containing the 42 / common folders
                 mod = Mod.find_or_make_mod(mod_folder, self)
                 mod.add_mod_info_file(file, version)
                 self.mods[mod_folder] = mod
@@ -124,12 +124,24 @@ class Workspace:
         libraries = Workspace.filter_out_projects(libraries)
 
         Workspace.workspace_cache[WorkspaceType.LIBRARY] = {}
+        libraries_count = 0
         for library in libraries:
             Workspace.workspace_cache[WorkspaceType.LIBRARY][library] = Workspace(library, WorkspaceType.LIBRARY)
-        libraries_count = 0
-        for library in Workspace.workspace_cache[WorkspaceType.LIBRARY].values():
-            library.load()
             libraries_count += 1
+
+        notifications.send_notification(
+            notifications.ZedNotification.SET_LIBRARIES_COUNT,
+            count=libraries_count
+        )
+
+        for i, library in enumerate(Workspace.workspace_cache[WorkspaceType.LIBRARY].values()):
+            notifications.send_notification(
+                notifications.ZedNotification.LOADING_DOCUMENTS,
+                uri=str(library.folder),
+                workspace_type=library.workspace_type,
+                index=i
+            )
+            library.load()
         return libraries_count
 
     def should_ignore(self, path: Path) -> bool:

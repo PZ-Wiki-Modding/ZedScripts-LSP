@@ -185,24 +185,35 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
     # load the global dataset
     Workspace.global_dataset.load()
 
+    # load workspaces
     logging.debug("Server workspace folders")
     logging.debug(server.workspace.folders)
     should_load_libraries = False
     folders = server.workspace.folders.values()
-    for workspace_folder in folders:
+    
+    notifications.send_notification(
+        notifications.ZedNotification.SET_WORKSPACE_COUNT,
+        count=len(folders)
+    )
+
+    for i, workspace_folder in enumerate(folders):
         ws = Workspace(uri_to_path(workspace_folder.uri), WorkspaceType.PROJECT)
 
         notifications.send_notification(
             notifications.ZedNotification.LOADING_DOCUMENTS,
             uri=path_to_uri(ws.folder),
-            workspace_type=ws.workspace_type
+            workspace_type=ws.workspace_type,
+            index=i+1
         )
 
         _, file_count = ws.load()
         if file_count != 0:
             should_load_libraries = True
+
+    # load libraries if any ZedScripts files were found
     if should_load_libraries:
-        libraries_count = Workspace.load_libraries()
+        Workspace.load_libraries()
+
     server.send_notification(notifications.ZedNotification.LOADING_DOCUMENTS_DONE)
 
 
