@@ -82,5 +82,32 @@ Example configuration:
 
 WIP: proper documentation will come soon
 
+## IDE configuration
+Based on the IDE you use, you may need to install the ZedScripts LSP application for your OS in the [releases](https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases) (Linux, Windows).
+
+### Visual Studio Code
+
+Install the [ZedScripts extension](https://marketplace.visualstudio.com/items?itemName=SimKDT.ZedScripts) from the Visual Studio Code marketplace. The extension will handle the downloading and setup of the ZedScripts LSP server for you.
+
+### VIM
+
+Using [yegappan/lsp](https://github.com/yegappan/lsp), setup the ZedScripts LSP server as follows:
+
+```vim
+let lspServers = [
+      \ #{
+      \   name: 'zedscripts',
+      \   filetype: ['text', 'zedscripts'],
+      \   path: 'path/to/ZedScripts',
+      \   args: []
+      \ }
+      \ ]
+
+autocmd User LspSetup call LspAddServer(lspServers)
+```
+
+> [!NOTE]
+> You can see [this video](https://www.youtube.com/watch?v=-5lb_jLQmKc) which explains how to set up VIM, and notably setup a LSP server.
+
 ## License
 See [LICENSE](LICENSE) for details.
