@@ -12,8 +12,8 @@ from .document import Document
 from .mod import Mod, ModCollection
 from .version import Version
 from .config import ConfigurationModel
-from ..providers.notifications import ZedNotification, send_progress_notification
-from ..utils import merge_pydantic_models
+from ..providers import notifications
+from ..utils import merge_pydantic_models, path_to_uri
 from ..scripts.dataset import Dataset
 
 if TYPE_CHECKING:
@@ -57,9 +57,6 @@ class Workspace:
         return loaded_mod_count, loaded_document_count
 
     def load_documents(self) -> int:
-        send_progress_notification(ZedNotification.LOADING_DOCUMENTS, 
-                                   self.folder, 0.0, self.workspace_type)
-
         # inside the workspace folder, find every txt files, and try to load them
         # as documents
         files = list(self.folder.rglob("*.txt"))
@@ -76,13 +73,17 @@ class Workspace:
             # send update notification to client
             if progress - last_progress >= step_count:
                 logging.info(f"Loading progress: {progress}/{total_files}")
-                send_progress_notification(ZedNotification.LOADING_DOCUMENTS, 
-                                           self.folder, progress / total_files * 100, self.workspace_type)
+                notifications.send_notification(
+                    notifications.ZedNotification.SET_PROGRESS,
+                    progress=progress / total_files * 100,
+                )
                 last_progress = progress
 
         # send final progress notification
-        send_progress_notification(ZedNotification.LOADING_DOCUMENTS, 
-                                   self.folder, 100, self.workspace_type)
+        notifications.send_notification(
+            notifications.ZedNotification.SET_PROGRESS,
+            progress=100
+        )
         return loaded_file_count
 
     def load_mods(self) -> int:
@@ -107,7 +108,7 @@ class Workspace:
         return mod_count
 
     @staticmethod
-    def load_libraries() -> None:
+    def load_libraries() -> int:
         logging.info("Loading libraries for all workspaces.")
 
         # gather libraries from configs
@@ -125,8 +126,11 @@ class Workspace:
         Workspace.workspace_cache[WorkspaceType.LIBRARY] = {}
         for library in libraries:
             Workspace.workspace_cache[WorkspaceType.LIBRARY][library] = Workspace(library, WorkspaceType.LIBRARY)
+        libraries_count = 0
         for library in Workspace.workspace_cache[WorkspaceType.LIBRARY].values():
             library.load()
+            libraries_count += 1
+        return libraries_count
 
     def should_ignore(self, path: Path) -> bool:
         for pattern in self.ignored_patterns:

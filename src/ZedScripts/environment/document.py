@@ -10,8 +10,8 @@ from ..utils import path_to_uri, position_to_texposition
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.lexer import Lexer, TokenCollection
 from ..structure.parser import parse_tokens, chunk_to_root
+from ..providers import notifications
 from ..providers.diagnostics import DiagnosticReport, WorkspaceDiagnosticReport, DiagnosticCollection
-from ..providers.notifications import ZedNotification, SetZedScriptsNotificationParams
 from ..providers.semantic_tokens import SemanticTokenCollection, build_syntactic_tokens
 from ..providers.actions import make_linked_editing_ranges
 
@@ -21,8 +21,7 @@ if TYPE_CHECKING:
 
     from .workspace import Workspace
     from .mod import Mod
-    from ..server import ZedServer
-    from ..scripts.block import Block, Root
+    from ..scripts.block import Root
     from ..scripts.dataset import Dataset
 
 class Document:
@@ -85,16 +84,10 @@ class Document:
         self.mod = mod
 
     def make_zedscripts(self) -> None:
-        # import here to avoid circular dependency
-        from ..server import ZedServer
-        server = ZedServer.instance
-        if server is not None:
-            server.send_notification(
-                ZedNotification.SET_ZEDSCRIPTS,
-                SetZedScriptsNotificationParams(
-                    uri=path_to_uri(self.path)
-                )
-            )
+        notifications.send_notification(
+            notifications.ZedNotification.SET_ZEDSCRIPTS,
+            uri=self.get_uri()
+        )
 
     def get_text(self) -> str:
         if self.text is None:

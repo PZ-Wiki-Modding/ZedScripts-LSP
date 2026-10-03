@@ -7,15 +7,14 @@ from pygls.lsp.server import LanguageServer
 from pygls.protocol.language_server import LanguageServerProtocol
 
 from .__about__ import __version__
-from .utils import uri_to_path
+from .utils import uri_to_path, path_to_uri
 from .environment import WorkspaceType
 from .environment.workspace import Workspace
 from .environment.document import Document
 from .providers.diagnostics import DiagnosticReport
 from .providers.semantic_tokens import get_tokens
 from .providers.locale import zedlocalizer
-from .providers import capabilities
-from .providers.notifications import ZedNotification, NotificationParams
+from .providers import capabilities, notifications
 
 
 
@@ -32,7 +31,7 @@ class ZedServer(LanguageServer):
         zedlocalizer.load_locale_files()
         ZedServer.instance = self
 
-    def send_notification(self, method: ZedNotification, params: NotificationParams | None = None) -> None:
+    def send_notification(self, method: notifications.ZedNotification, params: dict | None = None) -> None:
         logging.debug("Sending notification: %s with params: %s", method, params)
         self.protocol.notify(
             method,
@@ -189,16 +188,22 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
     logging.debug("Server workspace folders")
     logging.debug(server.workspace.folders)
     should_load_libraries = False
-    for workspace_folder in server.workspace.folders.values():
+    folders = server.workspace.folders.values()
+    for workspace_folder in folders:
         ws = Workspace(uri_to_path(workspace_folder.uri), WorkspaceType.PROJECT)
+
+        notifications.send_notification(
+            notifications.ZedNotification.LOADING_DOCUMENTS,
+            uri=path_to_uri(ws.folder),
+            workspace_type=ws.workspace_type
+        )
+
         _, file_count = ws.load()
         if file_count != 0:
             should_load_libraries = True
     if should_load_libraries:
-        Workspace.load_libraries()
-    server.send_notification(
-        ZedNotification.LOADING_DOCUMENTS_DONE
-    )
+        libraries_count = Workspace.load_libraries()
+    server.send_notification(notifications.ZedNotification.LOADING_DOCUMENTS_DONE)
 
 
 @zedserver.feature(types.TEXT_DOCUMENT_DID_OPEN)
