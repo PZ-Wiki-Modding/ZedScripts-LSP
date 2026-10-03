@@ -43,16 +43,20 @@ class Workspace:
     def __repr__(self) -> str:
         return f"Workspace(type={self.workspace_type}, folder={self.folder})"
 
-    def load(self) -> None:
+    def load(self) -> tuple[int, int]:
         """
         Retrieve every script files and cache them as Document instances.
+
+        Returns:
+            tuple[int, int]: A tuple containing the number of loaded mods and the number of loaded documents.
         """
         logging.info(f"Loading workspace: {self.folder}")
-        self.load_mods()
+        loaded_mod_count = self.load_mods()
         # self.load_documents()
-        self.load_documents()
+        loaded_document_count = self.load_documents()
+        return loaded_mod_count, loaded_document_count
 
-    def load_documents(self) -> None:
+    def load_documents(self) -> int:
         send_progress_notification(ZedNotification.LOADING_DOCUMENTS, 
                                    self.folder, 0.0, self.workspace_type)
 
@@ -63,8 +67,11 @@ class Workspace:
         last_progress = 0
         step = 10
         step_count = step * total_files / 100
+        loaded_file_count = 0
         for progress, path in enumerate(files):
-            self.load_document(path)
+            document = self.load_document(path)
+            if document is not None:
+                loaded_file_count += 1
 
             # send update notification to client
             if progress - last_progress >= step_count:
@@ -76,11 +83,13 @@ class Workspace:
         # send final progress notification
         send_progress_notification(ZedNotification.LOADING_DOCUMENTS, 
                                    self.folder, 100, self.workspace_type)
+        return loaded_file_count
 
-    def load_mods(self) -> None:
+    def load_mods(self) -> int:
         logging.info(f"Loading mods for workspace: {self.folder}")
         # look for mod.info files
         # one or more of these files are associated to a specific mod
+        mod_count = 0
         for file in self.folder.rglob("mod.info"):
             # only consider versioning and common folders
             version = Version.find_or_make_version(file)
@@ -89,10 +98,13 @@ class Workspace:
                 mod = Mod.find_or_make_mod(mod_folder, self)
                 mod.add_mod_info_file(file, version)
                 self.mods[mod_folder] = mod
+                mod_count += 1
                 continue
 
             # if it's OTHER, then it's probably not a mod file
             # TODO: should we handle those ?
+
+        return mod_count
 
     @staticmethod
     def load_libraries() -> None:

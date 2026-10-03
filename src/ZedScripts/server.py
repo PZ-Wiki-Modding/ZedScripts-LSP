@@ -188,10 +188,14 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
 
     logging.debug("Server workspace folders")
     logging.debug(server.workspace.folders)
+    should_load_libraries = False
     for workspace_folder in server.workspace.folders.values():
         ws = Workspace(uri_to_path(workspace_folder.uri), WorkspaceType.PROJECT)
-        ws.load()
-    Workspace.load_libraries()
+        _, file_count = ws.load()
+        if file_count != 0:
+            should_load_libraries = True
+    if should_load_libraries:
+        Workspace.load_libraries()
     server.send_notification(
         ZedNotification.LOADING_DOCUMENTS_DONE
     )
