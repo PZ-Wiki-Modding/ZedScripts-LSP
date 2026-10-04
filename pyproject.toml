@@ -3,9 +3,8 @@ name = "ZedScripts"
 description = ""
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.12.3"
-version = "0.0.2"
-license = "MIT"
-license-files = ["LICENSE"]
+version = "0.0.3"
+license = {file = "LICENSE"}
 authors = [
   { name = "SimKDT" },
 ]
@@ -34,3 +33,10 @@ build-backend = "setuptools.build_meta"
 ZedScripts = [
     "locale/*.json"
 ]
+
+# uv configs
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
