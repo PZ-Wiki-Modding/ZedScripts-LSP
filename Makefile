@@ -20,9 +20,23 @@ cleanup:
 	find . -type d -name '__pycache__' -exec rm -rf {} +
 	rm -Rf src/*.egg-info
 
-release: cleanup
+# make sure the version in the package matches the version in the source files
+verify_version:
+	PKG_VERSION=$(shell uv version --short)
+	FILES_VERSION=$(shell uv run python -m ZedScripts.__about__)
+	echo "Package version: $$PKG_VERSION"
+	echo "Files version: $$FILES_VERSION"
+	if [ "$$PKG_VERSION" != "$$FILES_VERSION" ]; then \
+		echo "Version mismatch!"; \
+		exit 1; \
+	fi
+
+release: verify_version cleanup
 	uv build
 	uv publish
+	VERSION=$(shell uv version --short)
+	git tag -a "v$$VERSION" -m "Release version $$VERSION"
+	git push --tags
 
 # schema generation
 build_schema:
