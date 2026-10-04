@@ -1,0 +1,229 @@
+{
+    "$defs": {
+        "DatasetModel": {
+            "properties": {
+                "release": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/ReleaseModel"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Provides a configuration for the dataset version to use for validation. This overrides the `latest` and `stable` fields if set."
+                },
+                "latest": {
+                    "anyOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": false,
+                    "description": "Indicates whether to use the latest dataset version for validation. This is ignored if `release` is set. Overrides the `stable` field if set.",
+                    "title": "Latest"
+                },
+                "stable": {
+                    "anyOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": true,
+                    "description": "Provides a configuration for the stable dataset version to use for validation. Ignored if `release` or `latest` is set.",
+                    "title": "Stable"
+                }
+            },
+            "title": "DatasetModel",
+            "type": "object"
+        },
+        "DiagnosticsModel": {
+            "description": "Represents the diagnostics configuration for the workspace environment.",
+            "properties": {
+                "type": {
+                    "description": "Specifies the diagnostic member name to enable.",
+                    "enum": [
+                        "PARSER_TOO_MANY_CLOSING_BRACKETS",
+                        "PARSER_BLOCK_MISSING_TYPE",
+                        "PARSER_BLOCK_NOT_CLOSED",
+                        "PARSER_UNPARSED_TOKENS",
+                        "BLOCK_UNKNOWN_BLOCK",
+                        "BLOCK_UNEXPECTED_ID",
+                        "BLOCK_MISSING_ID",
+                        "BLOCK_HAS_ID_IN_PARENT",
+                        "BLOCK_ID_CANNOT_CONTAIN_SPACES",
+                        "BLOCK_INVALID_ID",
+                        "BLOCK_FORBIDDEN_ID",
+                        "VALUE_UNKNOWN_PARAMETER",
+                        "VALUE_DEPRECATED_REPLACEMENT_VERSION",
+                        "VALUE_DEPRECATED_REPLACEMENT",
+                        "VALUE_DEPRECATED_VERSION",
+                        "VALUE_DEPRECATED",
+                        "VALUE_DUPLICATE",
+                        "VALUE_MISSING",
+                        "VALUE_FORBIDDEN",
+                        "VALUE_INVALID_TYPE",
+                        "VALUE_INVALID_OBJECT_FORMAT",
+                        "VALUE_INVALID_OBJECT_KEY_TYPE",
+                        "VALUE_INVALID_OBJECT_VALUE_TYPE",
+                        "VALUE_WRONGLY_FORMATTED_KEY_VALUE_PAIR",
+                        "VALUE_WITH_NEWLINE",
+                        "VALUE_INVALID_BLOCK_REFERENCE",
+                        "VALUE_CANNOT_PROVIDE_MODULE",
+                        "VALUE_BLOCK_REF_CANNOT_BE_EMPTY",
+                        "VALUE_UNMATCHED_BLOCK_REF",
+                        "VALUE_MULTIPLE_BLOCK_REFS"
+                    ],
+                    "type": "string"
+                },
+                "enable": {
+                    "anyOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": true,
+                    "description": "Indicates whether diagnostics are enabled.",
+                    "title": "Enable"
+                },
+                "severity": {
+                    "anyOf": [
+                        {
+                            "enum": [
+                                "Error",
+                                "Warning",
+                                "Information",
+                                "Hint"
+                            ],
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Specifies the severity level of the diagnostics."
+                },
+                "tags": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "enum": [
+                                    "Unnecessary",
+                                    "Deprecated"
+                                ],
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Specifies the tags associated with the diagnostics.",
+                    "title": "Tags"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "title": "DiagnosticsModel",
+            "type": "object"
+        },
+        "ReleaseModel": {
+            "properties": {
+                "major": {
+                    "description": "Build game version number.",
+                    "minimum": 42,
+                    "title": "Major",
+                    "type": "integer"
+                },
+                "minor": {
+                    "description": "Minor game version number.",
+                    "minimum": 0,
+                    "title": "Minor",
+                    "type": "integer"
+                },
+                "patch": {
+                    "description": "Patch game version number.",
+                    "minimum": 0,
+                    "title": "Patch",
+                    "type": "integer"
+                },
+                "version": {
+                    "anyOf": [
+                        {
+                            "minimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Dataset version number for the provided Build release (major.minor.patch). This is incremented whenever the dataset for a specific version is updated.",
+                    "title": "Version"
+                }
+            },
+            "required": [
+                "major",
+                "minor",
+                "patch"
+            ],
+            "title": "ReleaseModel",
+            "type": "object"
+        }
+    },
+    "description": "Represents the content of the configuration files for workspace environments.",
+    "properties": {
+        "dataset": {
+            "$ref": "#/$defs/DatasetModel",
+            "description": "Provides configuration for the dataset version to use for diagnostics."
+        },
+        "libraries": {
+            "description": "Set of library folders to reference. Usually this should contain the base game folder.",
+            "items": {
+                "format": "path",
+                "type": "string"
+            },
+            "title": "Libraries",
+            "type": "array",
+            "uniqueItems": true
+        },
+        "ignored": {
+            "default": [
+                ".+\\.tiles\\.txt",
+                "tileDepthTextureAssignments\\.txt",
+                "tileGeometry\\.txt"
+            ],
+            "description": "Regex patterns for files and folders to ignore in the workspace.",
+            "items": {
+                "type": "string"
+            },
+            "title": "Ignored",
+            "type": "array",
+            "uniqueItems": true
+        },
+        "diagnostics": {
+            "description": "List of diagnostics configurations for the workspace environment.",
+            "items": {
+                "$ref": "#/$defs/DiagnosticsModel"
+            },
+            "title": "Diagnostics",
+            "type": "array"
+        }
+    },
+    "title": "ConfigurationModel",
+    "type": "object"
+}

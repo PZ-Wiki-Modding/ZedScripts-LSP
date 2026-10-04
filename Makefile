@@ -44,3 +44,6 @@ build_package:
 
 upload:
 	$(VENV)/bin/python3 -m twine upload --repository pypi dist/*
+
+make_schema:
+	uv run python -m ZedScripts.environment.config > schema/zedscripts.json
