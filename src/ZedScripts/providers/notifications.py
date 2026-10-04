@@ -1,6 +1,6 @@
 import enum
 
-from typing import TYPE_CHECKING, Literal, overload
+from typing import TYPE_CHECKING, Literal, overload, Any
 if TYPE_CHECKING:
     from ..environment import WorkspaceType
 
@@ -40,6 +40,10 @@ def send_notification(
 def send_notification(
     notification: Literal[ZedNotification.LOADING_DOCUMENTS],
     *, uri: str, workspace_type: 'WorkspaceType', index: int) -> None: ...
+@overload
+def send_notification(
+    notification: Literal[ZedNotification.LOADING_DOCUMENTS_DONE],
+) -> None: ...
 
 
 def send_notification(notification: ZedNotification, **kargs) -> None:

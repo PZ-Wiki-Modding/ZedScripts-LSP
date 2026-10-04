@@ -31,7 +31,7 @@ class ZedServer(LanguageServer):
         zedlocalizer.load_locale_files()
         ZedServer.instance = self
 
-    def send_notification(self, method: notifications.ZedNotification, params: dict | None = None) -> None:
+    def send_notification(self, method: notifications.ZedNotification, params: dict = {}) -> None:
         logging.debug("Sending notification: %s with params: %s", method, params)
         self.protocol.notify(
             method,
@@ -214,7 +214,7 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
     if should_load_libraries:
         Workspace.load_libraries()
 
-    server.send_notification(notifications.ZedNotification.LOADING_DOCUMENTS_DONE)
+    notifications.send_notification(notifications.ZedNotification.LOADING_DOCUMENTS_DONE)
 
 
 @zedserver.feature(types.TEXT_DOCUMENT_DID_OPEN)
