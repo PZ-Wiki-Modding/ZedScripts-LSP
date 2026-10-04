@@ -116,7 +116,8 @@ class Block:
         return duplicate_count > 1 # > 1 bcs there's itself in the list
 
     def add_diagnostic(self, type: DiagnosticType, location: TextRange, args: dict[str, Any] = {}) -> None:
-        self.document.diagnostics.add(type=type, location=location, args=args)
+        config = self.document.workspace.configuration
+        self.document.diagnostics.add(config, type=type, location=location, args=args)
 
     def add_semantic_token(self, type: SemanticTokenType, location: TextRange, modifiers: list[SemanticTokenModifier] = []) -> None:
         self.document.semantic_tokens.add(type=type, location=location, modifiers=modifiers)

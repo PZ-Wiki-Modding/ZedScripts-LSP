@@ -7,7 +7,7 @@ from ..enums.SyntaxErrorType import SyntaxErrorType
 from ..providers.diagnostics import DiagnosticDefinition
 
 
-class DiagnosticType(enum.Enum):
+class DiagnosticType(enum.StrEnum):
     @classmethod
     def _missing_(cls, value: Any) -> 'DiagnosticType | None':
         if isinstance(value, SyntaxErrorType):

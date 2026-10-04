@@ -104,7 +104,8 @@ class Document:
         return path_to_uri(self.path)
     
     def get_lsp_diagnostics(self) -> list[types.Diagnostic]:
-        lsp_diagnostics = self.diagnostics.to_lsp() + self.syntactic_diagnostics.to_lsp()
+        config = self.workspace.get_configuration()
+        lsp_diagnostics = self.diagnostics.to_lsp(config) + self.syntactic_diagnostics.to_lsp(config)
         logging.debug(f"LSP Diagnostics for {self.get_uri()}: {len(lsp_diagnostics)}")
         return lsp_diagnostics
 
@@ -260,8 +261,10 @@ class Document:
         # set new syntactic diagnostics
         syntactic_diagnostics = self.syntactic_diagnostics
         syntactic_diagnostics.clear() # reset previous syntactic diagnostics
+        config = self.workspace.configuration
         for error in result.errors:
             syntactic_diagnostics.add(
+                config,
                 type=DiagnosticType(error.type),
                 location=error.location
             )
