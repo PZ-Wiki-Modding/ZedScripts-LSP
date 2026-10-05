@@ -93,10 +93,6 @@ def parse_type_id(tokens: list[Token]) -> tuple[TokenCollection | None, TokenCol
     return type_token, id_token
 
 
-def parse(text: str) -> ParseResult:
-    return parse_tokens(Lexer.tokenize(text))
-
-
 def parse_tokens(tokens: TokenCollection) -> ParseResult:
     parser = Parser()
     unparsed_tokens: list[Token] = []
