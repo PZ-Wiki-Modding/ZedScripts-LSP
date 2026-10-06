@@ -3,6 +3,9 @@
 
 ## [Unreleased]
 
+## [1.0.1] - 2026/10/06
+- Fixed an issue with block ID validation in certain scenarios ([#14](https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/issues/14))
+
 ## [1.0.0] - 2026/10/04
 - Show a `(deprecated)` note in hover information of a deprecated parameter
 - Package name changed from ZedScripts-LSP to ZedScripts
@@ -25,7 +28,8 @@ Initial base by [@demiurgeQuantified], created by [@SimKDT]. Provided by [@PZ-Wi
 
 
 
-[unreleased]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/compare/v1.0.0...HEAD
+[unreleased]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.0.1
 [1.0.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.0.0
 [0.0.2]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v0.0.2
 [0.0.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v0.0.1
