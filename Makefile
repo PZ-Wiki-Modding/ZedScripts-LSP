@@ -19,7 +19,7 @@ build_app:
 cleanup:
 	find . -type d -name '__pycache__' -exec rm -rf {} +
 	rm -Rf src/*.egg-info
-	rm -r build dist
+	rm -rf build dist
 
 # make sure the version in the package matches the version in the source files
 verify_version:
