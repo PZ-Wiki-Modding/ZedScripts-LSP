@@ -76,7 +76,7 @@ DiagnosticDefinition(DiagnosticType.BLOCK_UNEXPECTED_ID,
                      tags=[DiagnosticTag.Unnecessary])
 DiagnosticDefinition(DiagnosticType.BLOCK_MISSING_ID,
                      DiagnosticSeverity.Error,
-                     args={"type": str, "id": str})
+                     args={"type": str})
 DiagnosticDefinition(DiagnosticType.BLOCK_HAS_ID_IN_PARENT,
                      DiagnosticSeverity.Error,
                      args={"type": str, "parent_type": str, "invalid_blocks": list},

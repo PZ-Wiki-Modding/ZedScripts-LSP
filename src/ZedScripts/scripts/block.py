@@ -405,7 +405,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
                 self.add_diagnostic(
                     DiagnosticType.BLOCK_MISSING_ID,
                     node.type.to_range(),
-                    {"id": ID_data}
+                    {"type": type}
                 )
                 return False
 
