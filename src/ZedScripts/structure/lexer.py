@@ -194,24 +194,20 @@ WHITESPACE_NO_NEWLINE = string.whitespace.replace("\n", "")
 
 
 
-class ZedscriptSource:
-    def __init__(self, text: str) -> None:
-        self.string: str = text
-        self.tokens: TokenCollection = TokenCollection()
-
-
 class Token:
     def __init__(
             self, type: TokenType, pos: TextPosition, end: TextPosition,
-            source: ZedscriptSource, text: str
+            text: str
     ) -> None:
         self.type: TokenType = type
         self.pos: TextPosition = pos
         """Start position of the token."""
         self.end: TextPosition = end
         """End position of the token."""
-        self.source: ZedscriptSource = source
         self.text = text
+
+    def __repr__(self) -> str:
+        return f"Token(type={self.type}, text={self.text!r})"
 
     def pos_of(self, i: int) -> TextPosition:
         """
@@ -314,23 +310,22 @@ class TokenCollection(UserList[Token]):
 
 # TODO: this class is kinda redundant after all
 class TokenBuilder:
-    def __init__(self, pos: TextPosition, type: TokenType, source: ZedscriptSource) -> None:
+    def __init__(self, pos: TextPosition, type: TokenType) -> None:
         self.type: TokenType = type
         self.pos: TextPosition = pos
         self.text: str = ""
-        self.source: ZedscriptSource = source
 
     def add(self, char: str) -> None:
         self.text += char
 
     def build(self, end: TextPosition) -> Token:
-        return Token(self.type, self.pos, end, self.source, self.text)
+        return Token(self.type, self.pos, end, self.text)
 
 
 class Lexer:
     def __init__(self, text: str) -> None:
         self.text: str = text
-        self.source = ZedscriptSource(text)
+        self.tokens = TokenCollection()
         self.pos: int = -1
         self.line: int = 0
         self.offset: int = 0
@@ -364,7 +359,7 @@ class Lexer:
         return self.text[self.pos + num_characters]
 
     def start_token(self, type: TokenType) -> TokenBuilder:
-        return TokenBuilder(TextPosition(self.line, self.offset), type, self.source)
+        return TokenBuilder(TextPosition(self.line, self.offset), type)
 
     def tokenize_comment(self) -> None:
         assert self.check_comment()
@@ -381,7 +376,7 @@ class Lexer:
                 token.add(self.next())
                 break
 
-        self.source.tokens.append(
+        self.tokens.append(
             token.build(
                 TextPosition(self.line, self.offset)
             )
@@ -396,7 +391,7 @@ class Lexer:
     def tokenize_punctuator(self) -> None:
         token = self.start_token(TokenType.PUNCTUATOR)
         token.add(self.next())
-        self.source.tokens.append(
+        self.tokens.append(
             token.build(
                 TextPosition(self.line, self.offset)
             )
@@ -414,7 +409,7 @@ class Lexer:
                 break
             token.add(self.next())
 
-        self.source.tokens.append(
+        self.tokens.append(
             token.build(
                 TextPosition(self.line, self.offset)
             )
@@ -429,7 +424,7 @@ class Lexer:
                 break
             token.add(self.next())
 
-        self.source.tokens.append(
+        self.tokens.append(
             token.build(
                 TextPosition(self.line, self.offset)
             )
@@ -449,7 +444,7 @@ class Lexer:
             elif char in ELEMENTS_DELIMITERS:
                 token = lexer.start_token(TokenType.ELEMENT_DELIMITER)
                 token.add(lexer.next())
-                lexer.source.tokens.append(
+                lexer.tokens.append(
                     token.build(
                         TextPosition(lexer.line, lexer.offset)
                     )
@@ -460,7 +455,7 @@ class Lexer:
                 continue
             lexer.tokenize_text()
 
-        return TokenCollection(lexer.source.tokens)
+        return TokenCollection(lexer.tokens)
 
 
 if __name__ == "__main__":
