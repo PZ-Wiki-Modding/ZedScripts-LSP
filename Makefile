@@ -1,4 +1,4 @@
-.PHONY: help build cleanup release setup clean build_package upload make_schema
+.PHONY: help build cleanup release setup clean build_package upload make_schema test
 .ONESHELL:
 
 SHELL := /bin/bash
@@ -11,6 +11,10 @@ help:
 	@echo "  build_app  - Build the ZedScripts language server installer"
 	@echo "  cleanup - Clean up build artifacts"
 	@echo "  release - Build and upload the ZedScripts language server package to PyPi"
+	@echo "  test - Run offline language server unit tests"
+
+test:
+	uv run --frozen python -m unittest discover -s tests -p 'test_*.py' -v
 
 build_app:
 	uv run pyinstaller --noconfirm ZedScripts.spec
