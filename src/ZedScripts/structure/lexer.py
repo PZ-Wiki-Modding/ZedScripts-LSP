@@ -229,6 +229,16 @@ class Token:
     def __str__(self) -> str:
         return self.text
 
+    def __eq__(self, value: object) -> bool:
+        if not isinstance(value, Token):
+            return NotImplemented
+        return (
+            self.type == value.type and
+            self.pos == value.pos and
+            self.end == value.end and
+            self.text == value.text
+        )
+
 
 class TokenCollection(UserList[Token]):
     def at(self, pos: TextPosition) -> Token | None:
