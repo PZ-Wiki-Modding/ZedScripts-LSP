@@ -131,12 +131,14 @@ class Document:
     def make(dataset: 'Dataset', path: Path, workspace: 'Workspace') -> 'Document | None':
         # find the rootType of the document
         rootType = dataset.test_for_root(path)
+        logging.debug(f"Tested {path} for root, got: {rootType}")
         if rootType is None:
             return None
 
         # find the version and skip if pre 42
         # since we don't validate that
         version = Version.find_or_make_version(path)
+        logging.debug(f"Tested {path} for version, got: {version}")
         if version.type == VersionType.PRE_42:
             return None
 
