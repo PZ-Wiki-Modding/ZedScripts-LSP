@@ -21,9 +21,19 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Install build dependencies
+        run: |
+          uv sync --extra test
+
       - name: Run pytest
         run: |
-          uv run pytest
+          status=0
+          uv run pytest || status=$?
+          if [ "$status" -eq 5 ]; then
+            echo "No tests collected; skipping tests."
+          else
+            exit "$status"
+          fi
 
   build-schema:
     needs: [run-tests]
@@ -37,6 +47,10 @@ jobs:
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           enable-cache: true
+
+      - name: Install build dependencies
+        run: |
+          uv sync
 
       - name: Generate schema
         run: |

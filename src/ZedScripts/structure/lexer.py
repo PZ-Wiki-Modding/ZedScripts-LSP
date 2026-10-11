@@ -207,7 +207,7 @@ class Token:
         self.text = text
 
     def __repr__(self) -> str:
-        return f"Token(type={self.type}, text={self.text!r})"
+        return f"Token(type={self.type}, text={self.text!r}, pos={self.pos}, end={self.end})"
 
     def pos_of(self, i: int) -> TextPosition:
         """
