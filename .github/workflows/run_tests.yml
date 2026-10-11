@@ -29,4 +29,10 @@ jobs:
 
       - name: Run pytest
         run: |
-          uv run pytest
+          status=0
+          uv run pytest || status=$?
+          if [ "$status" -eq 5 ]; then
+            echo "No tests collected; skipping tests."
+          else
+            exit "$status"
+          fi
