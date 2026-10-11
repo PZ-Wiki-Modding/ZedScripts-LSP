@@ -2,7 +2,7 @@ import logging
 import enum
 from pathlib import Path
 from typing import Annotated, Optional
-from pydantic import BaseModel, BeforeValidator, Field, WithJsonSchema
+from pydantic import BaseModel, BeforeValidator, Field, WithJsonSchema, ConfigDict
 
 from lsprotocol.types import DiagnosticSeverity, DiagnosticTag
 
@@ -77,8 +77,13 @@ class DatasetTag(enum.StrEnum):
     STABLE = "stable"
 
 
+class ZedBaseModel(BaseModel):
+    """Base model for all ZedScripts configuration models.
+    Notably used to set additionalProperties to false for everything."""
+    model_config = ConfigDict(extra='forbid')
 
-class ReleaseModel(BaseModel):
+
+class ReleaseModel(ZedBaseModel):
     major: int = Field(
         description="Build game version number.",
         ge=42,
@@ -97,7 +102,7 @@ class ReleaseModel(BaseModel):
         ge=0,
     )
 
-class DatasetModel(BaseModel):
+class DatasetModel(ZedBaseModel):
     release: Optional[ReleaseModel] = Field(
         description="Provides a configuration for the dataset version to use for validation. This overrides the `latest` and `stable` fields if set.",
         default=None,
@@ -126,7 +131,7 @@ class DatasetModel(BaseModel):
             logging.error(f"Failed to get data version from release model: {e}. Defaulting to 'stable'.")
             return DatasetTag.STABLE
 
-class DiagnosticsModel(BaseModel):
+class DiagnosticsModel(ZedBaseModel):
     """Represents the diagnostics configuration for the workspace environment."""
     type: DiagnosticTypeName = Field(
         description="Specifies the diagnostic member name to enable.",
@@ -144,7 +149,7 @@ class DiagnosticsModel(BaseModel):
         default=None,
     )
 
-class ConfigurationModel(BaseModel):
+class ConfigurationModel(ZedBaseModel):
     """Represents the content of the configuration files for workspace environments."""
     dataset: DatasetModel = Field(
         description="Provides configuration for the dataset version to use for diagnostics.",

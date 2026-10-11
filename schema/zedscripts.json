@@ -1,6 +1,7 @@
 {
     "$defs": {
         "DatasetModel": {
+            "additionalProperties": false,
             "properties": {
                 "release": {
                     "anyOf": [
@@ -45,6 +46,7 @@
             "type": "object"
         },
         "DiagnosticsModel": {
+            "additionalProperties": false,
             "description": "Represents the diagnostics configuration for the workspace environment.",
             "properties": {
                 "type": {
@@ -142,6 +144,7 @@
             "type": "object"
         },
         "ReleaseModel": {
+            "additionalProperties": false,
             "properties": {
                 "major": {
                     "description": "Build game version number.",
@@ -185,6 +188,7 @@
             "type": "object"
         }
     },
+    "additionalProperties": false,
     "description": "Represents the content of the configuration files for workspace environments.",
     "properties": {
         "dataset": {
