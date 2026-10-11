@@ -3,6 +3,21 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026/10/12
+- Code cleanup
+- Implemented automated tests to verify some features before release of new versions:
+  - Test for schema and default config generation
+  - Test for parser functionality
+- Improved logging:
+  - Provided an option for logging level available only in the global configuration (`server.logging_level`)
+  - Logging is now per server instance, that is each server has its own log file named with the date timestamp
+  - Only 5 log files are stored, older files are automatically deleted
+- The global configuration file is now automatically created with the default values if it does not exist
+- Config module subcommands:
+  - `schema` to generate the schema file for `.zedscripts.json` validation
+  - `default` to generate the default configuration file for the LSP
+  - Each can have a `--output` argument to specify an output file path
+
 ## [1.0.1] - 2026/10/06
 - Fixed an issue with block ID validation in certain scenarios ([#14](https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/issues/14))
 
@@ -28,7 +43,8 @@ Initial base by [@demiurgeQuantified], created by [@SimKDT]. Provided by [@PZ-Wi
 
 
 
-[unreleased]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/compare/v1.0.1...HEAD
+[unreleased]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.1.0
 [1.0.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.0.1
 [1.0.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.0.0
 [0.0.2]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v0.0.2
