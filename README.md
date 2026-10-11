@@ -171,6 +171,10 @@ Each diagnostic by default have a specific set of modifiers that can be overridd
 }
 ```
 
+### Server
+A list of server-related configurations for the LSP. The following parameters are available:
+- `logging_level` (optional, default: `INFO`): specifies the logging level for the server. This option is only available in the global configuration and accepts values such as `NOTSET`, `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`.
+
 ## IDE configuration
 Based on the IDE you use, you may need to install the ZedScripts LSP application for your OS in the [releases](https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases) (Linux, Windows).
 
