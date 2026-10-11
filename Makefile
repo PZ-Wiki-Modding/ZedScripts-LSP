@@ -11,6 +11,7 @@ help:
 	@echo "  build_app  - Build the ZedScripts language server installer"
 	@echo "  cleanup - Clean up build artifacts"
 	@echo "  release - Build and upload the ZedScripts language server package to PyPi"
+	@echo "  build_schema - Generate the JSON schema for the configuration model"
 
 build_app:
 	uv run pyinstaller --noconfirm ZedScripts.spec
@@ -41,4 +42,4 @@ release: verify_version cleanup
 
 # schema generation
 build_schema:
-	uv run python -m ZedScripts.environment.config > schema/zedscripts.json
+	uv run python -m ZedScripts.environment.config schema -o schema/zedscripts.json

@@ -1,3 +1,10 @@
+"""
+Provides the configuration models and schema generation for the ZedScripts environment.
+
+Usage:
+    python -m ZedScripts.environment.config schema -o schema/zedscripts.json
+    python -m ZedScripts.environment.config default -o default_config.json
+"""
 import logging
 import enum
 from pathlib import Path
@@ -179,6 +186,46 @@ class ConfigurationModel(ZedBaseModel):
         return None
 
 if __name__ == "__main__":
-    import json
-    config = ConfigurationModel()
-    print(json.dumps(config.model_json_schema(), indent=4))
+    import argparse
+
+    def print_schema(args: argparse.Namespace):
+        import json
+        config = ConfigurationModel()
+        out = json.dumps(config.model_json_schema(), indent=4)
+        print(out)
+        if args.output_path:
+            with open(args.output_path, "w") as f:
+                f.write(out)
+
+    def print_default_config(args: argparse.Namespace):
+        config = ConfigurationModel()
+        out = config.model_dump_json(indent=4)
+        print(out)
+        if args.output_path:
+            with open(args.output_path, "w") as f:
+                f.write(out)
+
+    main_parser = argparse.ArgumentParser(description="ZedScripts configuration tool")
+
+    # schema generation command
+    subparser = main_parser.add_subparsers(
+        dest="command",
+        required=True,
+        help="Available commands"
+    )
+    schema_parser = subparser.add_parser("schema", 
+                                         help="Print the JSON schema of the configuration model.")
+    schema_parser.add_argument("-o", "--output-path", 
+                               help="Path to output the JSON schema.")
+    schema_parser.set_defaults(func=print_schema)
+
+    # default configuration command
+    default_config_subparser = subparser.add_parser("default", 
+                                                    help="Print the default configuration of the workspace environment.")
+    default_config_subparser.add_argument("-o", "--output-path", 
+                                          help="Path to output the default configuration.")
+    default_config_subparser.set_defaults(func=print_default_config)
+
+    args = main_parser.parse_args()
+
+    args.func(args)
