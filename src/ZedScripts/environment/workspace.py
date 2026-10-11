@@ -260,7 +260,20 @@ class Workspace:
     @staticmethod
     def update_global_configuration(text: str | None = None) -> None:
         logging.info("Updating global configuration from %s", GLOBAL_CONFIGURATION_FILE)
-        Workspace.global_configuration = Workspace.load_configuration(GLOBAL_CONFIGURATION_FILE, text=text)
+        # init file if it doesn't exist to default values
+        if not GLOBAL_CONFIGURATION_FILE.exists():
+            with open(GLOBAL_CONFIGURATION_FILE, "w") as f:
+                config = ConfigurationModel()
+                f.write(config.model_dump_json(
+                    indent=4
+                ))
+        
+        # load existing global
+        else:
+            config = Workspace.load_configuration(GLOBAL_CONFIGURATION_FILE, text=text)
+
+        # cache current snapshot of the global configuration
+        Workspace.global_configuration = config
         logging.debug(Workspace.global_configuration)
 
     @staticmethod
