@@ -9,7 +9,34 @@ permissions:
   contents: write
 
 jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    name: Run Tests
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          enable-cache: true
+
+      - name: Install build dependencies
+        run: |
+          uv sync --extra test
+
+      - name: Run pytest
+        run: |
+          status=0
+          uv run pytest || status=$?
+          if [ "$status" -eq 5 ]; then
+            echo "No tests collected; skipping tests."
+          else
+            exit "$status"
+          fi
+
   build-schema:
+    needs: [run-tests]
     runs-on: ubuntu-latest
     name: Generate schema
 
@@ -37,6 +64,7 @@ jobs:
           retention-days: 1
 
   build-wheel:
+    needs: [run-tests]
     runs-on: ubuntu-latest
     name: Build Python Wheel
 
@@ -64,6 +92,7 @@ jobs:
           retention-days: 1
 
   build-executable:
+    needs: [run-tests]
     runs-on: ${{ matrix.runner }}
     name: Build ${{ matrix.name }} Executable
     strategy:
@@ -102,7 +131,7 @@ jobs:
           retention-days: 1
 
   create-release:
-    needs: [build-schema, build-wheel, build-executable]
+    needs: [run-tests, build-schema, build-wheel, build-executable]
     runs-on: ubuntu-latest
     name: Create Release
 

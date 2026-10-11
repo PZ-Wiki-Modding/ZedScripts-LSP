@@ -23,6 +23,9 @@ build = [
 debug = [
     "debugpy"
 ]
+test = [
+    "pytest"
+]
 
 # used to load locale JSON files
 [build-system]
