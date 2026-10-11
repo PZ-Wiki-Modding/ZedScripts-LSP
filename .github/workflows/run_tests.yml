@@ -23,6 +23,10 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Install build dependencies
+        run: |
+          uv sync --extra test
+
       - name: Run pytest
         run: |
           uv run pytest
