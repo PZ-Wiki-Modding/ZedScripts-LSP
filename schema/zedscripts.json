@@ -186,6 +186,34 @@
             ],
             "title": "ReleaseModel",
             "type": "object"
+        },
+        "ServerModel": {
+            "additionalProperties": false,
+            "description": "Represents the server configuration for the workspace environment.",
+            "properties": {
+                "logging_level": {
+                    "anyOf": [
+                        {
+                            "enum": [
+                                "NOTSET",
+                                "DEBUG",
+                                "INFO",
+                                "WARNING",
+                                "ERROR",
+                                "CRITICAL"
+                            ],
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": 20,
+                    "description": "Specifies the logging level for the server."
+                }
+            },
+            "title": "ServerModel",
+            "type": "object"
         }
     },
     "additionalProperties": false,
@@ -226,6 +254,10 @@
             },
             "title": "Diagnostics",
             "type": "array"
+        },
+        "server": {
+            "$ref": "#/$defs/ServerModel",
+            "description": "Provides configuration for the server in the workspace environment."
         }
     },
     "title": "ConfigurationModel",

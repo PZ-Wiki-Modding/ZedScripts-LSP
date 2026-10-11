@@ -1,6 +1,5 @@
 import os
 import logging
-import logging.handlers
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -27,6 +26,9 @@ log_dir.mkdir(parents=True, exist_ok=True)
 
 # define logger
 logger = logging.getLogger()
+
+# set early level, this is changed later by the user configuration
+# in the server initialization
 logger.setLevel(logging.DEBUG if IS_DEBUG else logging.INFO)
 
 formater = logging.Formatter("%(asctime)s %(levelname)s %(message)s")

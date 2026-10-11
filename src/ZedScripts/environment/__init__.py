@@ -1,4 +1,5 @@
 import enum
+import logging
 
 
 class WorkspaceType(enum.StrEnum):
@@ -31,3 +32,10 @@ class VersionType(enum.StrEnum):
     BASE_GAME = enum.auto()
     """Base game files (e.g., `ProjectZomboid/media`)."""
 
+class LoggerLevel(enum.IntEnum):
+    NOTSET = logging.NOTSET
+    DEBUG = logging.DEBUG
+    INFO = logging.INFO
+    WARNING = logging.WARNING
+    ERROR = logging.ERROR
+    CRITICAL = logging.CRITICAL

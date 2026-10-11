@@ -13,6 +13,7 @@ from pydantic import BaseModel, BeforeValidator, Field, WithJsonSchema, ConfigDi
 
 from lsprotocol.types import DiagnosticSeverity, DiagnosticTag
 
+from ..environment import LoggerLevel
 from ..scripts.version import DataVersion
 from ..enums.Diagnostic import DiagnosticType
 
@@ -72,6 +73,24 @@ DiagnosticTagName = Annotated[
     WithJsonSchema({
         "type": "string",
         "enum": [member.name for member in DiagnosticTag],
+    }),
+]
+
+def _parse_logger_level_name(value: object) -> object:
+    if isinstance(value, LoggerLevel):
+        return value
+    if isinstance(value, str):
+        try:
+            return LoggerLevel[value]
+        except KeyError:
+            raise ValueError("level must be a LoggerLevel member name") from None
+    return value
+LoggerLevelName = Annotated[
+    LoggerLevel,
+    BeforeValidator(_parse_logger_level_name),
+    WithJsonSchema({
+        "type": "string",
+        "enum": [member.name for member in LoggerLevel],
     }),
 ]
 
@@ -156,6 +175,14 @@ class DiagnosticsModel(ZedBaseModel):
         default=None,
     )
 
+class ServerModel(ZedBaseModel):
+    """Represents the server configuration for the workspace environment."""
+    logging_level: Optional[LoggerLevelName] = Field(
+        description="Specifies the logging level for the server. This option only works in the global configuration.",
+        default=LoggerLevel.INFO,
+        exclude=True,
+    )
+
 class ConfigurationModel(ZedBaseModel):
     """Represents the content of the configuration files for workspace environments."""
     dataset: DatasetModel = Field(
@@ -177,6 +204,10 @@ class ConfigurationModel(ZedBaseModel):
     diagnostics: list[DiagnosticsModel] = Field(
         description="List of diagnostics configurations for the workspace environment.",
         default_factory=list,
+    )
+    server: ServerModel = Field(
+        description="Provides configuration for the server in the workspace environment.",
+        default_factory=ServerModel,
     )
 
     def find_diagnostic(self, type: DiagnosticType) -> DiagnosticsModel | None:

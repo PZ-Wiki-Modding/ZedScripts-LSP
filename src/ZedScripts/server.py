@@ -11,7 +11,6 @@ from .utils import uri_to_path, path_to_uri
 from .environment import WorkspaceType
 from .environment.workspace import Workspace
 from .environment.document import Document
-from .environment.client_config import InitializationOptions, get_initialization_options
 from .providers.diagnostics import DiagnosticReport
 from .providers.semantic_tokens import get_tokens
 from .providers.locale import zedlocalizer
@@ -166,11 +165,10 @@ def initialize(server: ZedServer, params: types.InitializeParams):
     # this will store what the server can currently do
     capabilities.register_client_capabilities(params)
 
-    options: InitializationOptions = get_initialization_options(params.initialization_options)
-    logging.info("Initialization options: %s", options)
-    if options.logging is not None:
-        logging.info("Setting logging level to %s", options.logging.level)
-        logging.getLogger().setLevel(options.logging.level)
+    global_config = Workspace.get_global_configuration()
+    if global_config.server.logging_level is not None:
+        logging.info("Setting logging level to %s", global_config.server.logging_level)
+        logging.getLogger().setLevel(global_config.server.logging_level)
 
     # from the above, we determine what the server capabilities should be
     return types.InitializeResult(
