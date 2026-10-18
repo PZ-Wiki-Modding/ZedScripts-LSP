@@ -1,0 +1,21 @@
+craftRecipe CarveWhistle
+{
+    time = 200,
+    tags = AnySurfaceCraft;Survivalist,
+    category = Carving,
+    xpAward = Carving:60,
+    SkillRequired = Carving:6,
+    needTobeLearn = true,
+    AutoLearnAny = Carving:8,
+    timedAction = SharpenStake,
+    inputs
+    {
+        item 1 tags[DrillWood;DrillMetal;DrillWoodPoor] mode:keep flags[MayDegradeLight],
+        item 1 tags[SharpKnife] mode:keep flags[MayDegradeLight],
+        item 1 [Base.SmallAnimalBone] flags[Prop2;AllowDestroyedItem],
+    }
+    outputs
+    {
+        item 1 Base.Whistle_Bone,
+    }
+}

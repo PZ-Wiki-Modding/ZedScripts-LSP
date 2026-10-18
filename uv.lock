@@ -584,6 +584,9 @@ build = [
 debug = [
     { name = "debugpy" },
 ]
+pygments = [
+    { name = "pygments" },
+]
 test = [
     { name = "pytest" },
 ]
@@ -595,8 +598,9 @@ requires-dist = [
     { name = "lsprotocol" },
     { name = "pydantic" },
     { name = "pygls" },
+    { name = "pygments", marker = "extra == 'pygments'" },
     { name = "pyinstaller", marker = "extra == 'build'" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "requests-cache" },
 ]
-provides-extras = ["build", "debug", "test"]
+provides-extras = ["build", "debug", "test", "pygments"]

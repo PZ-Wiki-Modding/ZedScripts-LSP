@@ -1,4 +1,6 @@
 
+import argparse
+
 from ZedScripts.structure.lexer import Lexer, TextPosition, TokenType, Token, TokenCollection
 
 def get_example() -> str:
@@ -226,7 +228,7 @@ def get_theorical_tokens():
 
 
 
-def generate_theorical_tokens():
+def generate_theorical_tokens(*args):
     """
     Assuming the tokens currently being parsed are already the right ones, generate the comparison list of theorical tokens
     we are supposed to compare against.
@@ -235,7 +237,7 @@ def generate_theorical_tokens():
     for token in lexical_tokens:
         print(f"Token({token.type}, TextPosition({token.pos.line}, {token.pos.offset}), TextPosition({token.end.line}, {token.end.offset}), {token.text!r}),")
 
-def test_lexer():
+def test_lexer(*args):
     """Test the lexer by comparing its output against the theorical tokens."""
     lexical_tokens = parse_example_content()
     theorical_tokens = get_theorical_tokens()
@@ -245,6 +247,40 @@ def test_lexer():
         assert token == theorical_token, f"Theorical token: {theorical_token!r}, Actual token: {token!r}"
 
 
+def test_pygments(args: argparse.Namespace | None = None):
+    try:
+        from ZedScripts.structure.pygments_lexer import highlight_zedscripts
+        from pygments import highlight
+        from pygments.formatters import TerminalFormatter, Terminal256Formatter
+
+    # if pygments is not installed, then don't run this test
+    except ImportError:
+        print("Pygments is not installed, skipping the test.")
+        return
+
+    xterm = True if args is not None and args.xterm else False
+
+    print(
+        highlight_zedscripts(
+            get_example(), 
+            Terminal256Formatter() if xterm else TerminalFormatter()))
+
+
+def test_pygments_comments(*args):
+    try:
+        from ZedScripts.structure.pygments_lexer import ZedScriptsLexer
+        from pygments.token import Comment, Error, Name
+    except ImportError:
+        print("Pygments is not installed, skipping the test.")
+        return
+
+    tokens = list(ZedScriptsLexer().get_tokens(get_example()))
+    comment_text = "".join(value for token_type, value in tokens if token_type in Comment.Multiline)
+    assert "/* values */" in comment_text
+    assert "/* comment, different syntax block under\n    hello world */" in comment_text
+    assert "/* comment continued */" in comment_text
+    assert not [value for token_type, value in tokens if token_type in Error]
+    assert (Name.Class, "ItemTest") in tokens
 
 
 
@@ -258,16 +294,24 @@ def main():
         required=True,
     )
 
-    run_parser = subparser.add_parser("run", help="Run the lexer test.")
-    run_parser.set_defaults(func=test_lexer)
+    test_lexer_parser = subparser.add_parser("test_lexer", 
+                                             help="Run the lexer test.")
+    test_lexer_parser.set_defaults(func=test_lexer)
 
-    generate_parser = subparser.add_parser("generate", help="Generate the theorical tokens.")
+    test_pygments_parser = subparser.add_parser("test_pygments", 
+                                                help="Run the pygments test.")
+    test_pygments_parser.set_defaults(func=test_pygments)
+    test_pygments_parser.add_argument('-x', '--xterm', action='store_true', 
+                                      help='Use Terminal256Formatter for pygments output.')
+
+    generate_parser = subparser.add_parser("generate", 
+                                           help="Generate the theorical tokens.")
     generate_parser.set_defaults(func=generate_theorical_tokens)
 
     args = main_parser.parse_args()
 
 
-    args.func()
+    args.func(args)
 
 
 if __name__ == "__main__":

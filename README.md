@@ -202,5 +202,24 @@ autocmd User LspSetup call LspAddServer(lspServers)
 > [!NOTE]
 > You can see [this video](https://www.youtube.com/watch?v=-5lb_jLQmKc) which explains how to set up VIM, and notably setup a LSP server.
 
+## Pygments
+
+The ZedScripts LSP provides a Pygments lexer for syntax highlighting of ZedScripts code. It is available in the `ZedScripts.structure.pygments_lexer` module. You can notably use the command-line wrapper to highlight any file's content as ZedScripts:
+
+```bash
+uv pip install ZedScripts[pygments]
+highlight-zedscripts path/to/file.txt
+```
+
+![Screenshot of the output of highlight-zedscripts command on an example script file](assets/pygments_implementation.png)
+
+To use the lexer in Sphinx docs, you can add the following to your `conf.py`:
+
+```python
+from ZedScripts.structure.pygments_lexer import ZedScriptsLexer
+from sphinx.highlighting import lexers
+lexers['zedscripts'] = ZedScriptsLexer()
+```
+
 ## License and contribution
 This project is licensed under a [MIT license](LICENSE). Before contributing to the project, please see [CONTRIBUTING](CONTRIBUTING.md).
