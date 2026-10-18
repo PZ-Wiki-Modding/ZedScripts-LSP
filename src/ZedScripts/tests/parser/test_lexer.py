@@ -224,15 +224,6 @@ def get_theorical_tokens():
 
 
 
-def test_lexer():
-    """Test the lexer by comparing its output against the theorical tokens."""
-    lexical_tokens = parse_example_content()
-    theorical_tokens = get_theorical_tokens()
-
-    for token, theorical_token in zip(lexical_tokens, theorical_tokens):
-        print(repr(theorical_token).ljust(80), repr(token).ljust(80))
-        assert token == theorical_token, f"Theorical token: {theorical_token!r}, Actual token: {token!r}"
-
 def generate_theorical_tokens():
     """
     Assuming the tokens currently being parsed are already the right ones, generate the comparison list of theorical tokens
@@ -242,19 +233,39 @@ def generate_theorical_tokens():
     for token in lexical_tokens:
         print(f"Token({token.type}, TextPosition({token.pos.line}, {token.pos.offset}), TextPosition({token.end.line}, {token.end.offset}), {token.text!r}),")
 
+def test_lexer():
+    """Test the lexer by comparing its output against the theorical tokens."""
+    lexical_tokens = parse_example_content()
+    theorical_tokens = get_theorical_tokens()
+
+    for token, theorical_token in zip(lexical_tokens, theorical_tokens):
+        print(repr(theorical_token).ljust(80), repr(token).ljust(80))
+        assert token == theorical_token, f"Theorical token: {theorical_token!r}, Actual token: {token!r}"
+
+
+
+
+
+
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Lexer test.")
-    parser.add_argument("--run", action="store_true", help="Run the lexer test.")
-    parser.add_argument("--generate", action="store_true", help="Generate the theorical tokens.") 
-    args = parser.parse_args()
-    if args.run:
-        test_lexer()
-    elif args.generate:
-        generate_theorical_tokens()
-    else:
-        parser.print_help()
+    main_parser = argparse.ArgumentParser(description="Lexer test.")
+    subparser = main_parser.add_subparsers(
+        dest="command",
+        required=True,
+    )
+
+    run_parser = subparser.add_parser("run", help="Run the lexer test.")
+    run_parser.set_defaults(func=test_lexer)
+
+    generate_parser = subparser.add_parser("generate", help="Generate the theorical tokens.")
+    generate_parser.set_defaults(func=generate_theorical_tokens)
+
+    args = main_parser.parse_args()
+
+
+    args.func()
 
 
 if __name__ == "__main__":
