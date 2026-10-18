@@ -47,7 +47,7 @@ class ZedServer(LanguageServer):
         try:
             import debugpy
         except ImportError:
-            logging.error("debugpy is not installed. Debugging will not be available.")
+            logging.error("debugpy is not installed. Debugging will not be available. Install the `debug` group dependencies (`pip install ZedScripts[debug]`).")
             return
 
         debug_port = 5678
