@@ -3,6 +3,14 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2026/10/19
+- Added [pygments](https://pygments.org/) support for syntax highlighting in code blocks.
+  - Use it in sphinx docs (see README for details)
+  - Use the command `highlight-zedscripts <file>` to print the file's content with the lexer highlight applied.
+- Added debug diagnostic for missing parameter descriptions (`DEBUG_MISSING_PARAMETER_DESCRIPTION`), only appears when the environment variable `ZEDSCRIPTS_DEBUG_MODE` is set.
+- Added extra information on how to install debugpy when launching in debug mode without it.
+- Some cleanup to existing tests.
+
 ## [1.1.0] - 2026/10/12
 - Code cleanup
 - Implemented automated tests to verify some features before release of new versions:
