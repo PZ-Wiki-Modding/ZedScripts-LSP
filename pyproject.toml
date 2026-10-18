@@ -1,6 +1,6 @@
 [project]
 name = "ZedScripts"
-description = ""
+description = "ZedScripts Language Server Protocol for Project Zomboid's Script format"
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.12.3"
 version = "1.2.0"
