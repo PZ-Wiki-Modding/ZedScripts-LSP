@@ -1,8 +1,7 @@
 
 from ZedScripts.structure.lexer import Lexer, TextPosition, TokenType, Token, TokenCollection
 
-
-def parse_example_content() -> TokenCollection:
+def get_example() -> str:
     EXAMPLE_SCRIPT_CONTENT = r"""
 module Base {
     item ItemTest {
@@ -48,7 +47,10 @@ module Base {
     }
 }
     """.strip()
-    return Lexer.tokenize(EXAMPLE_SCRIPT_CONTENT)
+    return EXAMPLE_SCRIPT_CONTENT
+
+def parse_example_content() -> TokenCollection:
+    return Lexer.tokenize(get_example())
 
 
 def get_theorical_tokens():
