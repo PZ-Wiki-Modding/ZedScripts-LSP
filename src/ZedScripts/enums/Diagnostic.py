@@ -52,6 +52,9 @@ class DiagnosticType(enum.StrEnum):
     VALUE_UNMATCHED_BLOCK_REF =              enum.auto()
     VALUE_MULTIPLE_BLOCK_REFS =              enum.auto()
 
+    # debug
+    DEBUG_MISSING_PARAMETER_DESCRIPTION =    enum.auto()
+
 
 # syntax diagnostics
 DiagnosticDefinition(DiagnosticType.PARSER_TOO_MANY_CLOSING_BRACKETS,
@@ -154,6 +157,10 @@ DiagnosticDefinition(DiagnosticType.VALUE_UNMATCHED_BLOCK_REF,
 DiagnosticDefinition(DiagnosticType.VALUE_MULTIPLE_BLOCK_REFS,
                      DiagnosticSeverity.Error,
                      args={"value": str, "parameter": str, "expected_block": str})
+
+DiagnosticDefinition(DiagnosticType.DEBUG_MISSING_PARAMETER_DESCRIPTION,
+                     DiagnosticSeverity.Information,
+                     args={"type": str, "key": str})
 
 
 # ensure that all diagnostic types have a corresponding definition

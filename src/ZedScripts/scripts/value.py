@@ -240,7 +240,7 @@ class Value(Element["ValueNode"]):
         if not dataset.can_block_have_parameter(parent_type, key):
             return ''
         param_data = dataset.get_parameter_data(parent_type, key)
-        return param_data.get('description', '') if param_data else ''
+        return param_data.get('description', '')
 
     def get_scriptsdocs_url(self, tree: list[str]) -> str | None:
         return self.parent.get_scriptsdocs_url(tree) + f"#scripts-{self.parent.type}-{self.key()}".replace(' ', '-').lower()
@@ -412,6 +412,14 @@ class Value(Element["ValueNode"]):
             return False
 
         param_data = dataset.get_parameter_data(parent_type, key)
+
+        # DEBUG: add information diagnostic if there is not description for the parameter
+        if not param_data.get('description', ''):
+            self.parent.add_diagnostic(
+                type=DiagnosticType.DEBUG_MISSING_PARAMETER_DESCRIPTION,
+                location=key_node.to_range(),
+                args={"type": parent_type, "key": key}
+            )
 
         # do the type highlight before anything else
         # so we highlight by type even if the value is otherwise invalid

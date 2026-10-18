@@ -33,6 +33,8 @@
         "VALUE_CANNOT_PROVIDE_MODULE": "Value '{value}' cannot contain a module '{module}' reference, only direct block references are allowed.",
         "VALUE_BLOCK_REF_CANNOT_BE_EMPTY": "Value '{value}' has an empty block reference, which is not allowed.",
         "VALUE_UNMATCHED_BLOCK_REF": "Value '{value}' for parameter '{parameter}' does not match any existing block (expects '{expected_block}' block). Make sure the referenced block exists.",
-        "VALUE_MULTIPLE_BLOCK_REFS": "Multiple block references found for '{value}' for parameter '{parameter}' (expects '{expected_block}' block). Make sure duplicate block references are not present."
+        "VALUE_MULTIPLE_BLOCK_REFS": "Multiple block references found for '{value}' for parameter '{parameter}' (expects '{expected_block}' block). Make sure duplicate block references are not present.",
+
+        "DEBUG_MISSING_PARAMETER_DESCRIPTION": "DEBUG: Parameter '{key}' in block '{type}' is missing a description."
     }
 }
