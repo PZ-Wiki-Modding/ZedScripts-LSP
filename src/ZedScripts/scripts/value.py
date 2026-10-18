@@ -652,8 +652,6 @@ class Value(Element["ValueNode"]):
             )
             return False
 
-        # TODO: look for the source block
-
         root = self.parent.get_root()
 
         # retrieve imports
