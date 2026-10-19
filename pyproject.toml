@@ -15,6 +15,18 @@ dependencies = [
     "pydantic",
     "deepmerge",
 ]
+classifiers = [
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Environment :: Console",
+    "Development Status :: 5 - Production/Stable",
+    "Topic :: Text Editors :: Integrated Development Environments (IDE)",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+
+]
 
 [project.optional-dependencies]
 build = [
