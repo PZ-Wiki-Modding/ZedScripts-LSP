@@ -10,6 +10,7 @@ It is powered by the [pz-scripts-data](https://github.com/PZ-Wiki-Modding/pz-scr
 
 ## Installation
 ### Releases
+Releases are available on the [GitHub releases page](https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases) containing the built binaries for windows and linux platforms, as well as the package's wheel and a schema file `zedscripts.json` for the `.zedscripts.json` configuration files.
 
 ### Python package
 
