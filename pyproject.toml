@@ -52,7 +52,8 @@ highlight-zedscripts = "ZedScripts.structure.pygments_lexer:main"
 
 [tool.setuptools.package-data]
 ZedScripts = [
-    "locale/*.json"
+    "locale/*.json",
+    "py.typed"
 ]
 
 # uv configs
