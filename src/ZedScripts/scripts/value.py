@@ -280,7 +280,10 @@ class Value(Element["ValueNode"]):
 
             if IS_DEBUG:
                 txt += "(debug)\n\n"
-                txt += f"- Refs: {[f"{ref.document.path}:{ref.get_ref_id_range()}" for ref in self.refs]}"
+                txt += f"Refs:"
+                ref_items = [f"{ref.document.path}:{ref.get_ref_id_range()}" for ref in self.refs]
+                for ref_item in ref_items:
+                    txt += f"\n- {ref_item}"
 
             return make_hover_information(txt, value_node.to_range())
 
