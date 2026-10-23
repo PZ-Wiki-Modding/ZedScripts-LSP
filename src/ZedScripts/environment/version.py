@@ -155,35 +155,33 @@ class Version:
         # we didn't find any indicator for a specific version
         return Version.OTHER
 
+    def _order_key(self) -> tuple[int, int]:
+        return (self.major, self.minor)
+
     def find_closest_below(self, others: list['Version']) -> 'Version | None':
-        others_str = [str(other) for other in others]
-        others_str.sort()
+        if not others:
+            return None
 
         # if self is not using versioning, then we simply retrieve the latest
         if self.type != VersionType.VERSIONING:
-            return Version(others_str[-1])
+            return max(others, key=Version._order_key)
 
         # check if it's itself in the list
-        if str(self) in others_str:
-            return self
+        for other in others:
+            if other.version == self.version:
+                return other
 
-        # we now insert self into the sorted list to find the closest below
-        self_str = str(self)
-        others_str.append(self_str)
-        others_str.sort() # sort again of course
+        # the closest version below is the highest one that is lower than self
+        below = [other for other in others if other._order_key() < self._order_key()]
+        if below:
+            return max(below, key=Version._order_key)
 
-        # find self in the sorted list
-        self_index = others_str.index(self_str)
-
-        # if self is not the first element, then we return the element just before it
-        if self_index > 0:
-            return Version(others_str[self_index - 1])
-
-        # if it's at the first position, we pick the version above
+        # if no version is below, we pick the closest version above
         # TODO: this is generally not a common case, probably should verify how
         # the game handles it
-        if self_index == 0 and len(others_str) > 1:
-            return Version(others_str[self_index + 1])
+        above = [other for other in others if other._order_key() > self._order_key()]
+        if above:
+            return min(above, key=Version._order_key)
 
         logging.warning("No closest below version found for %s", self)
 
