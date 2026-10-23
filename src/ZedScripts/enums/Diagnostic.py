@@ -137,7 +137,7 @@ DiagnosticDefinition(DiagnosticType.VALUE_INVALID_OBJECT_VALUE_TYPE,
                      DiagnosticSeverity.Error,
                      args={"obj_value": str, "key": str, "expected_type": str, "actual_type": str})
 DiagnosticDefinition(DiagnosticType.VALUE_WRONGLY_FORMATTED_KEY_VALUE_PAIR,
-                     DiagnosticSeverity.Warning,
+                     DiagnosticSeverity.Information,
                      args={"type": str, "key": str, "value": str})
 DiagnosticDefinition(DiagnosticType.VALUE_WITH_NEWLINE,
                      DiagnosticSeverity.Information,
