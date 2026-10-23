@@ -59,7 +59,7 @@ class Workspace:
     def load_documents(self) -> int:
         # inside the workspace folder, find every txt files, and try to load them
         # as documents
-        files = list(self.folder.rglob("*.txt"))
+        files = list(self.folder.rglob("*.txt", case_sensitive=True))
         total_files = len(files)
         last_progress = 0
         step = 10
