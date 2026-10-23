@@ -562,6 +562,7 @@ class Value(Element["ValueNode"]):
                             )
                             failed = True
 
+                        # TODO: wtf did I meant to do here ...
                         # verify by
 
                     # if at least one failed, then the entire object is considered invalid
