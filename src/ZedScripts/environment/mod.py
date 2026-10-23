@@ -41,7 +41,7 @@ class Mod:
             result.setdefault(doc.version, []).append(doc)
         return result
 
-    def get_closest_from_version(self, version: 'Version') -> list['Document']:
+    def get_documents_from_closest_version(self, version: 'Version') -> list['Document']:
         """Retrieve the documents of the closest version equal or below of the provided version."""
         # only keep versions that use versioning
         by_version = self.get_by_version()

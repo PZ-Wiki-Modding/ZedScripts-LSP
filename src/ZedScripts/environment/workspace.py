@@ -229,7 +229,7 @@ class Workspace:
         for workspaces in Workspace.workspace_cache.values():
             for workspace in workspaces.values():
                 for mod in workspace.mods.values():
-                    for document in mod.get_closest_from_version(version):
+                    for document in mod.get_documents_from_closest_version(version):
                         if document.body is None: continue
                         refs = document.body.find_references(modules, id, block_type)
                         result.update(refs)
