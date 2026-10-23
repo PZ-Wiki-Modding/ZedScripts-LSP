@@ -1,7 +1,16 @@
 import enum
-from typing import (TYPE_CHECKING, 
+from typing import (TYPE_CHECKING,  get_args,
                     TypedDict, Literal, NotRequired, 
                     TypeVar, Generic)
+
+from pz_scripts_data.schema import (
+    ParameterMainType,
+    TranslationType,
+    CallBackType,
+    BlockType,
+    ObjectType,
+    ArrayType,
+)
 
 if TYPE_CHECKING:
     from ..structure.ast import ValueNode, BlockNode, Chunk
@@ -70,33 +79,46 @@ class ValueType(enum.StrEnum):
     CALLBACK = "callback"
     TRANSLATION = "translation"
 
-_early_return: set[ValueType] = {
-    ValueType.STRING,
-    ValueType.ARRAY,
-    ValueType.OBJECT,
-    ValueType.BLOCK,
-    ValueType.CALLBACK,
-    ValueType.TRANSLATION,
-}
+# _early_return: set[ValueType] = {
+#     ValueType.STRING,
+#     ValueType.ARRAY,
+#     ValueType.OBJECT,
+#     ValueType.BLOCK,
+#     ValueType.CALLBACK,
+#     ValueType.TRANSLATION,
+# }
 
-def cant_self_validate(value_type: ValueType) -> bool:
+_early_return = (
+    Literal['string']
+    | ArrayType
+    | ObjectType
+    | BlockType
+    | CallBackType
+    | TranslationType
+)
+
+def is_valid_type(t, ty):
+    """Verifies that the given value type `t` is valid according to the specified type `ty`."""
+    return set(get_args(t)).issubset(get_args(ty))
+
+def cant_self_validate(value_type: ParameterMainType) -> bool:
     """Verifies whenever the provided value_type cannot be validated by the value itself."""
-    return value_type in _early_return
+    return is_valid_type(value_type, _early_return)
 
 
 class ParameterType(TypedDict):
     main: ValueType
-    array: NotRequired['ArrayType']
-    object: NotRequired['ObjectType']
-    block: NotRequired['BlockType']
+    array: NotRequired['ArrayTypeTEMP']
+    object: NotRequired['ObjectTypeTEMP']
+    block: NotRequired['BlockTypeTEMP']
     translation: NotRequired['TranslationProperties']
-    callback: NotRequired['CallbackType']
+    callback: NotRequired['CallbackTypeTEMP']
 
-class ArrayType(TypedDict):
+class ArrayTypeTEMP(TypedDict):
     separator: str
     type: Literal[ValueType.STRING, ValueType.INTEGER, ValueType.FLOAT, ValueType.BOOLEAN]
 
-class ObjectType(TypedDict):
+class ObjectTypeTEMP(TypedDict):
     keyValueSeparator: str
     """the separator used to split the key and value"""
     keyType: Literal[ValueType.STRING, ValueType.INTEGER, ValueType.FLOAT, ValueType.BOOLEAN]
@@ -104,7 +126,7 @@ class ObjectType(TypedDict):
     pairsSeparator: str
     """the separator used to split different key-value pairs"""
 
-class BlockType(TypedDict):
+class BlockTypeTEMP(TypedDict):
     name: str
     """the block type (e.g. "sound", "item", "model"...)"""
     fullType: NotRequired[bool]
@@ -112,7 +134,7 @@ class BlockType(TypedDict):
     noAutoImport: NotRequired[bool]
     """if true, the will not automatically check its own parent block module when fullType is set to true"""
 
-class CallbackType(TypedDict):
+class CallbackTypeTEMP(TypedDict):
     parameters: list['CallbackParameter']
     returns: NotRequired[str]
 

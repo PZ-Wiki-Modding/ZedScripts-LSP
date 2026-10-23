@@ -180,7 +180,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
         if not dataset.is_script_block(self.type):
             return ''
         block_data = dataset.get_script_block_data(self.type)
-        return block_data.get('description', '')
+        return block_data.description or ""
 
     def get_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
         node = self.node
@@ -352,7 +352,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
 
         # get ID data
         block_data = dataset.get_script_block_data(self.type)
-        ID_data = block_data.get('ID')
+        ID_data = block_data.block_id
 
         # retrieve ID info
         id = self.id
@@ -385,14 +385,14 @@ class ScriptBlock(Block, Element["BlockNode"]):
             return True
 
         # check if ID is optional for this block with a specific parent type
-        optional_blocks = ID_data.get('optional')
+        optional_blocks = ID_data.optional
         if optional_blocks is not None:
             parent_type = self.parent.type
             if parent_type.lower() in [block.lower() for block in optional_blocks]:
                 return True # it's optional, so we skip any other checks
 
         # used to check if the parent block requires an ID for this sub-block
-        parents_without = ID_data.get('parentsWithout')
+        parents_without = ID_data.parents_without
         should_have_id_from_parent = True
         if parents_without is not None:
             parent_type = self.parent.type
@@ -421,7 +421,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
                 return False
 
             # verify that the ID can have spaces
-            can_have_spaces = ID_data.get('canHaveSpace', False)
+            can_have_spaces = ID_data.can_have_space if ID_data.can_have_space is not None else False
             if not can_have_spaces and " " in id:
                 self.add_diagnostic(
                     DiagnosticType.BLOCK_ID_CANNOT_CONTAIN_SPACES,
@@ -431,7 +431,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
                 return False
 
             # check if the ID is an accepted value
-            valid_IDs = ID_data.get('values')
+            valid_IDs = ID_data.values
             if valid_IDs is not None:
                 if id not in valid_IDs:
                     self.add_diagnostic(
@@ -445,12 +445,12 @@ class ScriptBlock(Block, Element["BlockNode"]):
                 # for example specific parameters or parents defining variants
 
                 # whenever we need to consider it as its own type based on the provided ID
-                if ID_data.get('asType', False):
+                if ID_data.as_type == True:
                     self.type = self.type + " " + id
                     self.id = None # set the ID to None since it is now part of the type
 
             # forbidden IDs
-            forbidden_IDs = ID_data.get('forbidden')
+            forbidden_IDs = ID_data.forbidden
             if forbidden_IDs is not None:
                 if id in forbidden_IDs:
                     self.add_diagnostic(

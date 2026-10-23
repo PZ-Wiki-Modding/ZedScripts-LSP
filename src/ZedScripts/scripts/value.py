@@ -1,9 +1,14 @@
-import logging
 from typing import TYPE_CHECKING, Any
 
 from lsprotocol import types
 
-from .. import SCRIPTSDOCS_LINK, IS_DEBUG
+from pz_scripts_data.schema import (
+    ParameterDefinition, 
+    ScalarParameterType, ArrayParameterType, ObjectParameterType, TranslationParameterType,
+    BlockParameterType, CallbackParameterType, ParameterDeprecation
+)
+
+from .. import IS_DEBUG
 from ..utils import path_to_uri
 from . import Element
 from ..enums.Diagnostic import DiagnosticType
@@ -19,10 +24,10 @@ if TYPE_CHECKING:
     from ..scripts.dataset import Dataset
 
 
-def _get_deprecated_info(deprecated_data: 'DeprecatedInfo') -> tuple[DiagnosticType, dict[str, Any]]:
-    description = deprecated_data.get('description', "")
-    replacement = deprecated_data.get('replacedBy')
-    version = deprecated_data.get('version')
+def _get_deprecated_info(deprecated_data: ParameterDeprecation) -> tuple[DiagnosticType, dict[str, Any]]:
+    description = deprecated_data.description or ""
+    replacement = deprecated_data.replaced_by
+    version = deprecated_data.version
 
     # retrieve relevant arguments for the diagnostic
     params: dict[str, Any] = {
@@ -93,35 +98,22 @@ class Value(Element["ValueNode"]):
             return self.string.split("=", 1)[1].strip()
         return self.string.strip()
 
-    def get_values(self, dataset: 'Dataset', value: str, param_data: 'ScriptBlockParameter') -> list[str]:
+    def get_values(self, dataset: 'Dataset', value: str, param_data: ParameterDefinition) -> list[str]:
         value_type = dataset.get_parameter_type(value, param_data)
+        type_data = param_data.data_type
 
         # handle array case
-        if value_type == ValueType.ARRAY:
-            # we'll want to split by the array data
-
-            # retrieve array related data first
-            type_data = param_data.get('type')
-            assert type_data
-            array_data = type_data.get('array')
-            assert array_data
-
-            # split by the separator
-            separator = array_data['separator']
-            return [v.strip() for v in self.value().split(separator)]
-
-        # handle object case
-        elif value_type == ValueType.OBJECT:
-            # we simply split by the object's pairs separator
-
-            # retrieve object related data first
-            type_data = param_data.get('type')
-            assert type_data
-            object_data = type_data.get('object')
-            assert object_data
-
-            pairs_separator = object_data['pairsSeparator']
-            return [v.strip() for v in self.value().split(pairs_separator)]
+        if type_data is not None:
+            if isinstance(type_data, ArrayParameterType):
+                array_data = type_data.array
+                assert array_data
+                separator = array_data.separator
+                return [v.strip() for v in self.value().split(separator)]
+            elif isinstance(type_data, ObjectParameterType):
+                object_data = type_data.object
+                assert object_data
+                pairs_separator = object_data.pairs_separator
+                return [v.strip() for v in self.value().split(pairs_separator)]
 
         # else if we have a value, then it's a single value
         elif value != "":
@@ -149,49 +141,49 @@ class Value(Element["ValueNode"]):
         out: str = ""
 
         # type information
-        type_data = parameter_data.get('type')
+        type_data = parameter_data.data_type
         expected_type: str | None = None
         if type_data is not None:
-            expected_type = type_data['main']
+            expected_type = type_data.main
             type_text = expected_type
 
             # based on the expected type, we adjust the type information
-            match expected_type:
-                case ValueType.ARRAY:
-                    array_data = type_data.get('array')
+            match type_data:
+                case ArrayParameterType():
+                    array_data = type_data.array
                     assert array_data is not None
 
-                    array_type = array_data['type']
-                    separator = array_data['separator']
+                    array_type = array_data.item_type
+                    separator = array_data.separator
                     type_text = f"{array_type}[] (separator: '{separator}')"
 
-                case ValueType.OBJECT:
-                    object_data = type_data.get('object')
+                case ObjectParameterType():
+                    object_data = type_data.object
                     assert object_data is not None
 
-                    pairsSeparator = object_data['pairsSeparator']
-                    keyValueSeparator = object_data['keyValueSeparator']
-                    keyType = object_data['keyType']
-                    valueType = object_data['valueType']
+                    pairsSeparator = object_data.pairs_separator
+                    keyValueSeparator = object_data.key_value_separator
+                    keyType = object_data.key_type
+                    valueType = object_data.value_type
                     type_text = f"<{keyType}{keyValueSeparator}{valueType}> (pairs separator: '{pairsSeparator}')"
 
-                case ValueType.BLOCK:
-                    block_data = type_data.get('block')
+                case BlockParameterType():
+                    block_data = type_data.block
                     assert block_data is not None
 
-                    block_type = block_data['name']
-                    fullType = block_data.get('fullType', False)
+                    block_type = block_data.name
+                    fullType = block_data.full_type
                     fullType_text = "full" if fullType is True else "type only"
                     type_text = f"block<{block_type}> ({fullType_text})"
 
-                case ValueType.CALLBACK:
-                    callback_data = type_data.get('callback')
+                case CallbackParameterType():
+                    callback_data = type_data.callback
                     assert callback_data is not None
 
-                    parameters = callback_data['parameters']
-                    returns = callback_data.get('returns')
+                    parameters = callback_data.parameters
+                    returns = callback_data.returns
 
-                    type_text = f"callback({', '.join([f'{p['name']}: {p['type']}' for p in parameters])})"
+                    type_text = f"callback({', '.join([f'{p.name}: {p.param_type}' for p in parameters])})"
                     if returns is not None:
                         type_text += f" -> {returns}"
 
@@ -199,20 +191,20 @@ class Value(Element["ValueNode"]):
             out += f" : {type_text}"
 
         # default value information
-        default_value = parameter_data.get('default')
+        default_value = parameter_data.default_value
         if default_value is not None:
             default_text = str(default_value)
             # handle special cases based on the expected type if available
-            match expected_type:
-                case ValueType.ARRAY:
+            match type_data:
+                case ArrayParameterType():
                     if isinstance(default_value, list):
                         assert type_data is not None
-                        array_data = type_data.get('array')
+                        array_data = type_data.array
                         assert array_data is not None
 
-                        separator = array_data['separator']
+                        separator = array_data.separator
                         default_text = separator.join(default_value)
-                case ValueType.BOOLEAN:
+                case ScalarParameterType():
                     if isinstance(default_value, bool):
                         default_text = str(default_value).lower()
 
@@ -228,7 +220,7 @@ class Value(Element["ValueNode"]):
 
         if dataset.can_block_have_parameter(self.parent.type, self.key()):
             param_data = dataset.get_parameter_data(self.parent.type, self.key())
-            deprecated = param_data.get('deprecated')
+            deprecated = param_data.deprecated
             if deprecated is not None:
                 txt = f"(deprecated)\n{txt}"
 
@@ -240,7 +232,7 @@ class Value(Element["ValueNode"]):
         if not dataset.can_block_have_parameter(parent_type, key):
             return ''
         param_data = dataset.get_parameter_data(parent_type, key)
-        return param_data.get('description', '')
+        return param_data.description or ''
 
     def get_scriptsdocs_url(self, tree: list[str]) -> str | None:
         return self.parent.get_scriptsdocs_url(tree) + f"#scripts-{self.parent.type}-{self.key()}".replace(' ', '-').lower()
@@ -348,7 +340,7 @@ class Value(Element["ValueNode"]):
 
 ## semantic tokens
 
-    def add_value_type_semantic_tokens(self, actual_type: ValueType, param_data: 'ScriptBlockParameter', value_node: 'TokenCollection') -> None:
+    def add_value_type_semantic_tokens(self, actual_type: ValueType, value_node: 'TokenCollection') -> None:
         match actual_type:
             case ValueType.FLOAT:
                 self.parent.add_semantic_token(
@@ -417,7 +409,8 @@ class Value(Element["ValueNode"]):
         param_data = dataset.get_parameter_data(parent_type, key)
 
         # DEBUG: add information diagnostic if there is not description for the parameter
-        if not param_data.get('description', ''):
+        description = param_data.description
+        if description is None:
             self.parent.add_diagnostic(
                 type=DiagnosticType.DEBUG_MISSING_PARAMETER_DESCRIPTION,
                 location=key_node.to_range(),
@@ -426,9 +419,9 @@ class Value(Element["ValueNode"]):
 
         # do the type highlight before anything else
         # so we highlight by type even if the value is otherwise invalid
-        type_data = param_data.get('type')
+        type_data = param_data.data_type
         value_type = dataset.get_parameter_type(value, param_data)
-        self.add_value_type_semantic_tokens(value_type, param_data, value_node)
+        self.add_value_type_semantic_tokens(value_type, value_node)
 
         # check if value has a newline, which is usually not normal
         if "\n" in value:
@@ -441,7 +434,7 @@ class Value(Element["ValueNode"]):
             # so this may be normal
 
         # verify whenever the parameter is deprecated
-        deprecated_data = param_data.get('deprecated', None)
+        deprecated_data = param_data.deprecated
         if deprecated_data is not None:
             depr_type, param = _get_deprecated_info(deprecated_data)
             self.parent.add_diagnostic(
@@ -452,7 +445,9 @@ class Value(Element["ValueNode"]):
             return False
 
         # check for duplicates
-        can_be_duplicate = param_data.get('allowedDuplicate', False)
+        can_be_duplicate = param_data.allowed_duplicate
+        if can_be_duplicate is None:
+            can_be_duplicate = False
         if not can_be_duplicate and self.parent.check_for_duplicates(key):
             self.parent.add_diagnostic(
                 type=DiagnosticType.VALUE_DUPLICATE,
@@ -462,7 +457,9 @@ class Value(Element["ValueNode"]):
             return False
 
         # check if the value is missing
-        can_be_empty = param_data.get('canBeEmpty', False)
+        can_be_empty = param_data.can_be_empty
+        if can_be_empty is None:
+            can_be_empty = False
         if not can_be_empty and value == "":
             self.parent.add_diagnostic(
                 type=DiagnosticType.VALUE_MISSING,
@@ -476,7 +473,7 @@ class Value(Element["ValueNode"]):
 
         # check forbidden values
         # that is values that are not allowed for this parameter
-        accepted_values = param_data.get('values', None)
+        accepted_values = param_data.values
         if accepted_values is not None:
             # forbidden values are the ones not present in the accepted values list
             forbidden_values = [v for v in values if v not in accepted_values]
@@ -501,7 +498,7 @@ class Value(Element["ValueNode"]):
         if value_type is not None and type_data is not None:
             # first we verify that the expected type and the actual 
             # type of the value correspond
-            expected_type = type_data['main']
+            expected_type = type_data.main
             if value_type != expected_type:
                 self.parent.add_diagnostic(
                     type=DiagnosticType.VALUE_INVALID_TYPE,
@@ -511,20 +508,20 @@ class Value(Element["ValueNode"]):
                 return False
 
             # verify based on type
-            match expected_type:
+            match type_data:
                 # if it's a translation type, then we need to verify it
-                case ValueType.TRANSLATION:
+                case TranslationParameterType():
                 # TODO: needs to implement
                     pass
 
                 # if it's an object, then we verify the object composition
-                case ValueType.OBJECT:
+                case ObjectParameterType():
                     # retrieve the object data
-                    object_data = type_data.get('object')
+                    object_data = type_data.object
                     assert object_data is not None
 
                     # first make sure that each pairs contain the key-value separator
-                    key_value_separator = object_data['keyValueSeparator']
+                    key_value_separator = object_data.key_value_separator
                     for v in values:
                         if key_value_separator not in v:
                             self.parent.add_diagnostic(
@@ -535,8 +532,8 @@ class Value(Element["ValueNode"]):
                             return False
 
                     # then check if the key and values have the right format
-                    obj_key_type = object_data['keyType']
-                    obj_value_type = object_data['valueType']
+                    obj_key_type = object_data.key_type
+                    obj_value_type = object_data.value_type
                     failed = False
                     for v in values:
                         # we test each key and value for a type
@@ -573,8 +570,8 @@ class Value(Element["ValueNode"]):
                         return False
 
                 # if it's a block type, then it needs to reference another block
-                case ValueType.BLOCK:
-                    passed = self.validate_block_ref(value, param_data, value_node)
+                case BlockParameterType():
+                    passed = self.validate_block_ref(value, param_data, type_data, value_node)
                     if not passed:
                         return False
 
@@ -622,13 +619,9 @@ class Value(Element["ValueNode"]):
             case _:
                 return None # invalid format
 
-    def validate_block_ref(self, value: str, param_data: ScriptBlockParameter, node: TokenCollection) -> bool:
-        type_data = param_data.get('type')
-        assert type_data is not None, "Type data must be provided in the parameter data"
-        block_type_data = type_data.get('block')
-        assert block_type_data is not None, "Block type data must be provided in the type data"
-
-        can_be_empty = block_type_data.get('canBeEmpty', False)
+    def validate_block_ref(self, value: str, param_data: ParameterDefinition, type_data: BlockParameterType, node: TokenCollection) -> bool:
+        block_type_data = type_data.block
+        can_be_empty = param_data.can_be_empty or False
 
         # retrieve the full type elements
         fulltype = self.block_ref_to_fulltype(value)
@@ -644,7 +637,8 @@ class Value(Element["ValueNode"]):
         block = fulltype[1]
 
         # check that a module can be provided
-        can_full_type = block_type_data.get('fullType', False)
+        can_full_type = block_type_data.full_type or False
+
         if not can_full_type and module is not None:
             self.parent.add_diagnostic(
                 type=DiagnosticType.VALUE_CANNOT_PROVIDE_MODULE,
@@ -677,7 +671,8 @@ class Value(Element["ValueNode"]):
             searchable_modules.add(module)
 
         # if allowed, auto import the parent module block
-        if not block_type_data.get('noAutoImport', False):
+        noAutoImport = block_type_data.no_auto_import or False
+        if not noAutoImport:
             module_block = root.get_module()
             if (module_block is not None
                 and module_block.id is not None
@@ -685,7 +680,7 @@ class Value(Element["ValueNode"]):
                 searchable_modules.add(module_block.id)
 
         # search the block reference in the searchable modules
-        ref_type = block_type_data['name']
+        ref_type = block_type_data.name
         # FIXME: this is calling a static function as an instance method, not sure that's correct to do that
         # but it had to be done due to circular dependency issues
         self.cleanup_references()

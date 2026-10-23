@@ -4,8 +4,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 from pprint import pformat
 
+from pz_scripts_data.formatBlocks import ScriptsBlock
+from pz_scripts_data.schema import ParameterDefinition, FloatType, ParameterMainType
+
 from .. import SCRIPTS_BLOCKS_DATA_LINK, ROOTS_DATA_LINK
-from . import ScriptBlockData, ScriptBlockParameter, ValueType, cant_self_validate
+from . import ValueType, is_valid_type, cant_self_validate
 from .version import GameVersion, DataVersion
 from .. import SCRIPTS_DATA_MANIFEST
 from ..providers.http import load_json
@@ -159,8 +162,8 @@ class Dataset:
     def __init__(self):
         self.manifest: Manifest = Manifest.load()
 
-        self.blocks: dict[str, ScriptBlockData]
-        self.roots: dict[str, ScriptBlockData]
+        self.blocks: dict[str, ScriptsBlock]
+        self.roots: dict[str, ScriptsBlock]
 
     def __repr__(self) -> str:
         return f"Dataset(manifest={self.manifest}, blocks={len(self.blocks)}, roots={len(self.roots)})"
@@ -183,8 +186,11 @@ class Dataset:
         logging.debug(roots)
 
         # convert to proper type and store it
-        self.blocks = {k.lower(): ScriptBlockData(v) for k, v in blocks.items()}
-        self.roots = {k.lower(): ScriptBlockData(v) for k, v in roots.items()}
+        lowered_blocks: dict[str, ScriptsBlock] = {k.lower(): ScriptsBlock.model_validate(v) for k, v in blocks.items()}
+        lowered_roots: dict[str, ScriptsBlock] = {k.lower(): ScriptsBlock.model_validate(v) for k, v in roots.items()}
+
+        self.blocks = lowered_blocks
+        self.roots = lowered_roots
 
     def test_for_root(self, path: Path) -> str | None:
         """
@@ -203,11 +209,11 @@ class Dataset:
         # for each rootFile type, we test their identification patterns
         # to determine if the document is a zedscript doc
         for rootFile in self.roots.values():
-            patterns = rootFile.get('pattern', [])
+            patterns = rootFile.pattern or []
             for pattern in patterns:
                 regex = re.compile(pattern)
                 if regex.search(resolved_path) is not None:
-                    return rootFile['name']
+                    return rootFile.name
         return None
 
     def is_script_block(self, type: str) -> bool:
@@ -234,7 +240,7 @@ class Dataset:
         """
         return type.lower() in self.roots.keys()
 
-    def get_script_block_data(self, type: str) -> ScriptBlockData:
+    def get_script_block_data(self, type: str) -> ScriptsBlock:
         """
         Retrieve the script block data for the given type from the dataset.
         You first need to verify that the type corresponds to a script block 
@@ -270,7 +276,7 @@ class Dataset:
 
         # if it's a variant of another block then include that 
         # block's tree before the current block's type in the tree
-        variant_of = block_data.get('variantOf')
+        variant_of = block_data.variant_of
         variant_tree = [type]
         if variant_of is not None:
             variant_tree = self.get_block_tree(variant_of) + variant_tree
@@ -280,17 +286,17 @@ class Dataset:
     def can_block_have_parameter(self, type: str, parameter: str) -> bool:
         block_data = self.get_script_block_data(type)
         assert block_data is not None, f"{type} block should be validated before validating parameters"
-        parameters = block_data.get('parameters', [])
+        parameters = block_data.parameters
         return parameter.lower() in parameters.keys()
 
-    def get_parameter_data(self, type: str, parameter: str) -> ScriptBlockParameter:
+    def get_parameter_data(self, type: str, parameter: str) -> ParameterDefinition:
         block_data = self.get_script_block_data(type)
         assert block_data is not None, f"{type} block should be validated before retrieving parameter data"
-        parameters = block_data.get('parameters', {})
+        parameters = block_data.parameters
         return parameters[parameter.lower()]
 
 
-    def get_parameter_type(self, value: str, parameter_data: ScriptBlockParameter) -> ValueType:
+    def get_parameter_type(self, value: str, parameter_data: ParameterDefinition) -> ValueType:
         """
         Determine the type of a parameter value based on its content and 
         the expected type specified in the parameter data.
@@ -305,13 +311,13 @@ class Dataset:
         Returns:
             ValueType: The determined type of the parameter value.
         """
-        type_data = parameter_data.get('type')
+        type_data = parameter_data.data_type
 
         # default to string in any case
         if type_data is None:
             return ValueType.STRING
 
-        expected_type = type_data['main']
+        expected_type: ParameterMainType = type_data.main
 
         # assert type is something we know about
         if expected_type not in ValueType:
@@ -319,10 +325,10 @@ class Dataset:
 
         return self.test_for_type(expected_type, value)
 
-    def test_for_type(self, expected_type: ValueType, value: str) -> ValueType:
+    def test_for_type(self, expected_type: ParameterMainType, value: str) -> ValueType:
         #   return early types we can't really determine from the value itself
         if cant_self_validate(expected_type):
-            return expected_type
+            return ValueType(expected_type)
 
         # check if boolean
         if value.lower() in ["true", "false"]:
@@ -340,7 +346,7 @@ class Dataset:
             # if the expected type is float, then it's a float
             # because floats are allowed to not contain dots 
             # (simply representing whole numbers)
-            elif expected_type == ValueType.FLOAT:
+            elif is_valid_type(expected_type, FloatType):
                 return ValueType.FLOAT
 
             # else then we are simply an integer number
