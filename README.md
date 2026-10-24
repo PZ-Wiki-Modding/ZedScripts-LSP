@@ -12,6 +12,11 @@ It is powered by the [pz-scripts-data](https://github.com/PZ-Wiki-Modding/pz-scr
 ### Releases
 Releases are available on the [GitHub releases page](https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases) containing the built binaries for windows and linux platforms, as well as the package's wheel and a schema file `zedscripts.json` for the `.zedscripts.json` configuration files.
 
+Integration for different IDEs is documented in the [#ide-configuration] section.
+
+> [!WARNING]
+> This software is not usable by simply launching it. It requires integration with an IDE or usage as a Python package for its different systems.
+
 ### Python package
 
 ZedScripts LSP is available directly as a Python package if you ever need to use its functionality outside of an IDE.
@@ -77,7 +82,7 @@ Example of configuration file content:
 }
 ```
 
-They are optional and should be placed at the root of your workspaces or in the [cache directory](#cache-directory). The local configuration (root of your workspaces) will override the global configuration (cache directory).
+They are optional and should be placed at the root of your workspaces or in the [cache directory](#cache-directory). The local configuration (root of your workspaces) will override the global configuration (cache directory). For solitary files (files opened outside of a workspace), you can apply specific custom configuration by putting a configuration file in the [cache directory](#cache-directory) in a subfolder named `solitary`.
 
 ```bash
 📁 workspace1
@@ -183,7 +188,7 @@ Based on the IDE you use, you may need to install the ZedScripts LSP application
 
 ### Visual Studio Code
 
-Install the [ZedScripts extension](https://marketplace.visualstudio.com/items?itemName=SimKDT.ZedScripts) from the Visual Studio Code marketplace. The extension will handle the downloading and setup of the ZedScripts LSP server for you.
+Install the [ZedScripts extension](https://marketplace.visualstudio.com/items?itemName=SimKDT.ZedScripts) from the Visual Studio Code marketplace. The extension will handle the downloading and setup of the ZedScripts LSP server for you. It also automatically provides the JSON schema for the configuration files.
 
 ### VIM
 
