@@ -88,6 +88,7 @@ class ZedServer(LanguageServer):
         # first check if the file is a zedscripts file
         document = Workspace.find_or_make(path)
         if document is None:
+            logging.debug(f"Document changed called but not a ZedScripts file: {path}")
             return
         
         logging.debug("Document changed: %s\n%s", path, text)
@@ -227,21 +228,25 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
 
 @zedserver.feature(types.TEXT_DOCUMENT_DID_OPEN)
 def did_open(server: ZedServer, params: types.DidOpenTextDocumentParams) -> None:
+    logging.debug(f"Document opened called: {params.text_document.uri}")
     server.on_document_changed(uri_to_path(params.text_document.uri), params.text_document.text)
     
 @zedserver.feature(types.TEXT_DOCUMENT_DID_CHANGE)
 def did_change(server: ZedServer, params: types.DidChangeTextDocumentParams) -> None:
+    logging.debug(f"Document changed called: {params.text_document.uri}")
     document = server.workspace.get_text_document(params.text_document.uri)
     server.on_document_changed(uri_to_path(document.uri), str.join("", document.lines))
 
 @zedserver.feature(types.WORKSPACE_DID_DELETE_FILES)
 def workspace_did_delete_files(server: ZedServer, params: types.DeleteFilesParams) -> None:
+    logging.debug(f"Files deleted: {[file.uri for file in params.files]}")
     for file in params.files:
         path = uri_to_path(file.uri)
         server.on_document_deleted(path)
 
 @zedserver.feature(types.WORKSPACE_DID_RENAME_FILES)
 def workspace_did_rename_files(server: ZedServer, params: types.RenameFilesParams) -> None:
+    logging.debug(f"Files renamed: {[(file.old_uri, file.new_uri) for file in params.files]}")
     for file in params.files:
         old_path = uri_to_path(file.old_uri)
         new_path = uri_to_path(file.new_uri)
@@ -251,6 +256,7 @@ def workspace_did_rename_files(server: ZedServer, params: types.RenameFilesParam
 
 @zedserver.feature(types.TEXT_DOCUMENT_DIAGNOSTIC)
 def diagnostic(server: ZedServer, params: types.DocumentDiagnosticParams) -> DiagnosticReport | None:
+    logging.debug(f"Document diagnostic requested: {params.text_document.uri}")
     path = uri_to_path(params.text_document.uri)
     return server.on_document_diagnostics(path, params.previous_result_id)
 
@@ -292,25 +298,30 @@ token_types, token_modifiers = get_tokens()
         )
     )
 def semantic_tokens(server: ZedServer, params: types.SemanticTokensParams):
+    logging.debug(f"Semantic tokens requested: {params.text_document.uri}")
     path = uri_to_path(params.text_document.uri)
     return server.on_semantic_tokens(path)
 
 
 @zedserver.feature(types.TEXT_DOCUMENT_HOVER)
 def hover(server: ZedServer, params: types.HoverParams) -> types.Hover | None:
+    logging.debug(f"Hover requested: {params.text_document.uri}")
     path = uri_to_path(params.text_document.uri)
     return server.on_document_hover(path, params.position)
 
 @zedserver.feature(types.TEXT_DOCUMENT_LINKED_EDITING_RANGE)
 def linked_editing_range(server: ZedServer, params: types.LinkedEditingRangeParams) -> types.LinkedEditingRanges | None:
+    logging.debug(f"Linked editing range requested: {params.text_document.uri}")
     path = uri_to_path(params.text_document.uri)
     return server.on_linked_editing_range(path, params.position)
 
 @zedserver.feature(types.TEXT_DOCUMENT_DEFINITION)
 def definition(server: ZedServer, params: types.DefinitionParams) -> types.DefinitionResult:
+    logging.debug(f"Definition requested: {params.text_document.uri}")
     path = uri_to_path(params.text_document.uri)
     return server.on_definition(path, params.position)
 
 @zedserver.feature(types.WORKSPACE_DID_CHANGE_WATCHED_FILES)
 def did_change_watched_files(server: ZedServer, params: types.DidChangeWatchedFilesParams) -> None:
+    logging.debug("Watched files changed.")
     return server.on_did_change_watched_files(params)

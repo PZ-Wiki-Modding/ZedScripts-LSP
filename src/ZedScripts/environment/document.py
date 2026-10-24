@@ -97,6 +97,7 @@ class Document:
     def update_text(self, text: str) -> None:
         """Bump the version if it has changed."""
         if self.get_text() != text:
+            logging.debug(f"Document text updated for: {self.get_uri()}")
             self.text = text
             self.bump()
 
