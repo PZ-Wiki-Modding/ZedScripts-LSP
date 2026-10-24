@@ -3,6 +3,23 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2026/10/24
+- Added description and classifiers to package
+- Added mypy typed support
+- Added missing author [@demiurgeQuantified] to pyproject.toml
+- Fixed missing README section
+- Changes to diagnostics:
+  - VALUE_WRONGLY_FORMATTED_KEY_VALUE_PAIR from Warning to Information
+- Improved debug block references hovering
+- Revamped dataset handling and validation to use new Pydantic models from [pz-scripts-data]
+- Fixed script file discovery being case-sensitive
+- Fixed block referencing not ignored versions that can't be accessed from within another versioning script file
+- New configuration key for dataset: local
+- Now stripping descriptions of parameter hovering
+- Implemented new parameter type: file
+  - Added diagnostics for no files found and multiple files found
+  - Added hovering of the file reference value to display texture previews. Will display multiple textures being found for easy comparison.
+
 ## [1.2.0] - 2026/10/19
 - Added [pygments](https://pygments.org/) support for syntax highlighting in code blocks.
   - Use it in sphinx docs (see README for details)
@@ -51,12 +68,15 @@ Initial base by [@demiurgeQuantified], created by [@SimKDT]. Provided by [@PZ-Wi
 
 
 
-[unreleased]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/compare/v1.1.0...HEAD
+[unreleased]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.3.0
+[1.2.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.2.0
 [1.1.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.1.0
 [1.0.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.0.1
 [1.0.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.0.0
 [0.0.2]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v0.0.2
 [0.0.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v0.0.1
+[pz-scripts-data]: https://github.com/PZ-Wiki-Modding/pz-scripts-data
 [ZedScripts]: https://github.com/PZ-Wiki-Modding/ZedScripts
 [@PZ-Wiki-Modding]: https://github.com/PZ-Wiki-Modding
 [@SimKDT]: https://github.com/SimKDT
