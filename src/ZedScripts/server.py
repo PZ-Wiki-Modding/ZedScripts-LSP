@@ -205,6 +205,9 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
 
     for i, workspace_folder in enumerate(folders):
         ws = Workspace(uri_to_path(workspace_folder.uri), WorkspaceType.PROJECT)
+        _, file_count = ws.load()
+        if file_count != 0:
+            should_load_libraries = True
 
         notifications.send_notification(
             ZedNotification.LOADING_DOCUMENTS,
@@ -213,9 +216,6 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
             index=i+1
         )
 
-        _, file_count = ws.load()
-        if file_count != 0:
-            should_load_libraries = True
 
     # load libraries if any ZedScripts files were found
     if should_load_libraries:

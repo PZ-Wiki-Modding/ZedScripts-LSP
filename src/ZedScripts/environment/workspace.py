@@ -137,13 +137,13 @@ class Workspace:
         )
 
         for i, library in enumerate(Workspace.workspace_cache[WorkspaceType.LIBRARY].values()):
+            library.load()
             notifications.send_notification(
                 notifications.ZedNotification.LOADING_DOCUMENTS,
                 uri=str(library.folder),
                 workspace_type=library.workspace_type,
-                index=i
+                index=i+1
             )
-            library.load()
         return libraries_count
 
     def should_ignore(self, path: Path) -> bool:
