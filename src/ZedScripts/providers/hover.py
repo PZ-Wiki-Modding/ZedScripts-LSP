@@ -34,4 +34,4 @@ def _format_description(description: str) -> str:
     Returns:
         str: 
     """
-    return description.replace("```cpp", "```zedscripts")
+    return description.strip().replace("```cpp", "```zedscripts")
