@@ -15,6 +15,7 @@ from .providers.diagnostics import DiagnosticReport
 from .providers.semantic_tokens import get_tokens
 from .providers.locale import zedlocalizer
 from .providers import capabilities, notifications
+from .providers.notifications import ZedNotification
 
 
 
@@ -31,7 +32,7 @@ class ZedServer(LanguageServer):
         zedlocalizer.load_locale_files()
         ZedServer.instance = self
 
-    def send_notification(self, method: notifications.ZedNotification, params: dict = {}) -> None:
+    def send_notification(self, method: ZedNotification, params: dict = {}) -> None:
         logging.debug("Sending notification: %s with params: %s", method, params)
         self.protocol.notify(
             method,
@@ -198,7 +199,7 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
     folders = server.workspace.folders.values()
     
     notifications.send_notification(
-        notifications.ZedNotification.SET_WORKSPACE_COUNT,
+        ZedNotification.SET_WORKSPACE_COUNT,
         count=len(folders)
     )
 
@@ -206,7 +207,7 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
         ws = Workspace(uri_to_path(workspace_folder.uri), WorkspaceType.PROJECT)
 
         notifications.send_notification(
-            notifications.ZedNotification.LOADING_DOCUMENTS,
+            ZedNotification.LOADING_DOCUMENTS,
             uri=path_to_uri(ws.folder),
             workspace_type=ws.workspace_type,
             index=i+1
@@ -220,7 +221,7 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
     if should_load_libraries:
         Workspace.load_libraries()
 
-    notifications.send_notification(notifications.ZedNotification.LOADING_DOCUMENTS_DONE)
+    notifications.send_notification(ZedNotification.LOADING_DOCUMENTS_DONE)
 
 
 
