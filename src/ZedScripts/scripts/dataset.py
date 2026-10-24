@@ -282,7 +282,7 @@ class Dataset:
             return self.roots[type.lower()]
         raise ValueError(f"Script block data for type '{type}' not found")
 
-    def get_block_tree(self, type: str) -> list[str]:
+    def get_block_variant_tree(self, type: str) -> list[str]:
         """
         Retrieve the variantOf tree of the specified script block type.
 
@@ -300,7 +300,7 @@ class Dataset:
         variant_of = block_data.variant_of
         variant_tree = [type]
         if variant_of is not None:
-            variant_tree = self.get_block_tree(variant_of) + variant_tree
+            variant_tree = self.get_block_variant_tree(variant_of) + variant_tree
 
         return variant_tree            
 

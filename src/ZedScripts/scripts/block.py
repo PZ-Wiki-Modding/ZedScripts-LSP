@@ -192,7 +192,7 @@ class ScriptBlock(Block, Element["BlockNode"]):
 
             # show link to ScriptsDocs
             if dataset.is_script_block(self.type):
-                variant_tree = dataset.get_block_tree(self.type)
+                variant_tree = dataset.get_block_variant_tree(self.type)
                 url = self.get_scriptsdocs_url(variant_tree)
                 tree += f"\n[Documentation]({url})"
 
