@@ -223,7 +223,7 @@ def ast_to_block(document: 'Document', node: BlockNode, parent: Block) -> Script
     return block
 
 
-def ast_to_any(document, parent: ScriptBlock | Root):
+def ast_to_any(document: 'Document', parent: ScriptBlock | Root):
     if parent.node is None:
         raise RuntimeError("Parent block has no associated AST node.")
     for child in parent.node.children:
