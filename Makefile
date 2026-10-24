@@ -10,7 +10,7 @@ help:
 	@echo "Available targets:"
 	@echo "  build_app  - Build the ZedScripts language server installer"
 	@echo "  cleanup - Clean up build artifacts"
-	@echo "  release - Build and upload the ZedScripts language server package to PyPi"
+	@echo "  release - Build and upload the ZedScripts language server package to PyPi. Will first verify the version and clean up build artifacts"
 	@echo "  build_schema - Generate the JSON schema for the configuration model"
 
 build_app:
