@@ -21,6 +21,9 @@ class Mod:
         self.documents: dict[Path, 'Document'] = {}
         self.mod_info_files: dict[Path, 'Version'] = {}
 
+    def __repr__(self) -> str:
+        return f"<Mod folder={self.folder} workspace={self.workspace}>"
+
     def add_mod_info_file(self, path: Path, version: 'Version') -> None:
         self.mod_info_files[path] = version
 
@@ -33,6 +36,18 @@ class Mod:
         mod = Mod(folder, workspace)
         Mod.mods[folder] = mod
         return mod
+
+    def get_version_folders(self) -> dict[Version, list[Path]]:
+        # list of dirs in folder
+        dirs = [p for p in self.folder.iterdir() if p.is_dir()]
+
+        result: dict[Version, list[Path]] = {}
+        for d in dirs:
+            # we add media bcs the version can only be identified with a media folder present
+            version = Version.find_or_make_version(d / "media")
+            result.setdefault(version, []).append(d)
+
+        return result
 
     def get_by_version(self) -> dict[Version, list['Document']]:
         """Retrieve documents grouped by their version."""

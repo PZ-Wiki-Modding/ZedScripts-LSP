@@ -237,6 +237,52 @@ class Workspace:
         return list(result)
 
 
+    @staticmethod
+    def search_for_files(version: Version, expected_file: str) -> list[Path]:
+        # skip search for pre B42 versions
+        if version == Version.PRE_42:
+            return []
+
+        # search into documents with a version that is general
+        # and find for closest version
+        base_versions = [Version.COMMON, Version.BASE_GAME]
+        versioning_folders: set[Path] = set()
+        for workspaces in Workspace.workspace_cache.values():
+            for workspace in workspaces.values():
+                for mod in workspace.mods.values():
+                    version_folders = mod.get_version_folders()
+
+                    # search in the base versions
+                    for base_version in base_versions:
+                        for folder in version_folders.get(base_version, []):
+                            versioning_folders.add(folder)
+
+                    # search in the version closest below the target version
+                    closest_version = version.find_closest_below(
+                        [v for v in version_folders if v.type == VersionType.VERSIONING]
+                    )
+                    if closest_version is not None:
+                        for folder in version_folders.get(closest_version, []):
+                            versioning_folders.add(folder)
+
+        # search in the versioning and common folders for specific 
+        # files matching the prefix and relativeTo
+        result: set[Path] = set()
+        logging.debug(f"Versioning folders to search: {versioning_folders}")
+        for versioning_folder in versioning_folders:
+            expected_file_path = versioning_folder / expected_file
+            logging.debug(f"Looking for expected file at: {expected_file_path}")
+            if expected_file_path.exists():
+                result.add(expected_file_path)
+
+            # folder = lookup_folder / Path(expected_file).parent
+
+            # for path in folder.rglob(Path(expected_file).name, case_sensitive=True):
+            #     result.add(path)
+
+        return list(result)
+
+
 
 
 # configuration

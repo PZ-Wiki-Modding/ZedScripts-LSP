@@ -1,11 +1,14 @@
+import logging
 from typing import TYPE_CHECKING, Any
+from pathlib import Path
 
 from lsprotocol import types
 
 from pz_scripts_data.schema import (
     ParameterDefinition, 
     ScalarParameterType, ArrayParameterType, ObjectParameterType, TranslationParameterType,
-    BlockParameterType, CallbackParameterType, ParameterDeprecation
+    BlockParameterType, CallbackParameterType, FileParameterType,
+    ParameterDeprecation
 )
 
 from .. import IS_DEBUG
@@ -16,7 +19,7 @@ from ..structure.ast import ValueNode
 from ..structure.lexer import TextPosition, TokenCollection
 from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifier
 from ..providers.hover import make_hover_information, format_tree
-from ..scripts import DeprecatedInfo, ScriptBlockParameter, ValueType
+from ..scripts import ValueType
 
 if TYPE_CHECKING:
     from .block import Block, ScriptBlock
@@ -65,6 +68,7 @@ class Value(Element["ValueNode"]):
         self.comment: str = comment
 
         self.refs: list['ScriptBlock'] = []
+        self.files: list[Path] = []
 
     def __repr__(self) -> str:
         return f"Value(string={self.string}, parent={self.parent}, comment={self.comment})"
@@ -270,12 +274,33 @@ class Value(Element["ValueNode"]):
             # if its expected type is block, we can list referenced blocks
             txt = ""
 
+            files = self.files
+            if len(files) > 0:
+                # display images for each valid PNG file that were found
+                for file in files:
+                    uri = path_to_uri(file)
+
+                    # ignore non existing files
+                    if not file.exists() or not file.is_file():
+                        continue
+
+                    # only include PNG files
+                    if not file.suffix.lower() == ".png":
+                        continue
+
+                    txt += f'<img src="{uri}">'
+
+                txt += "\n\n"
+
             if IS_DEBUG:
-                txt += "(debug)\n\n"
-                txt += f"Refs:"
-                ref_items = [f"{ref.document.path}:{ref.get_ref_id_range()}" for ref in self.refs]
-                for ref_item in ref_items:
-                    txt += f"\n- {ref_item}"
+                should_show_debug = (len(self.refs) > 0)
+                if should_show_debug:
+                    txt += "(debug)\n\n"
+                    if len(self.refs) > 0:
+                        txt += f"Refs:"
+                        ref_items = [f"{ref.document.path}:{ref.get_ref_id_range()}" for ref in self.refs]
+                        for ref_item in ref_items:
+                            txt += f"\n- {ref_item}"
 
             return make_hover_information(txt, value_node.to_range())
 
@@ -362,6 +387,11 @@ class Value(Element["ValueNode"]):
                     type=SemanticTokenType.CLASS,
                     location=value_node.to_range(),
                     modifiers=[SemanticTokenModifier.DEFINITION]
+                )
+            case ValueType.FILE:
+                self.parent.add_semantic_token(
+                    type=SemanticTokenType.STRING,
+                    location=value_node.to_range()
                 )
 
         # the rest is either already handled via the texmate 
@@ -575,6 +605,11 @@ class Value(Element["ValueNode"]):
                     if not passed:
                         return False
 
+                case FileParameterType():
+                    passed = self.validate_file_ref(value, type_data, value_node)
+                    if not passed:
+                        return False
+
         # diagnostic possibly wrongly formatted key-value pair
         if key_value_separator != "=":
             if "=" in value:
@@ -684,7 +719,8 @@ class Value(Element["ValueNode"]):
         # FIXME: this is calling a static function as an instance method, not sure that's correct to do that
         # but it had to be done due to circular dependency issues
         self.cleanup_references()
-        refs = self.parent.document.workspace.search_for_block_references(root.document.version, searchable_modules, block, ref_type)
+        refs = self.parent.document.workspace.search_for_block_references(
+            root.document.version, searchable_modules, block, ref_type)
         self.refs = refs # cache result since that is used for other providers
 
         # cache itself inside refs
@@ -705,6 +741,41 @@ class Value(Element["ValueNode"]):
                 type=DiagnosticType.VALUE_MULTIPLE_BLOCK_REFS,
                 location=node.strip().to_range(),
                 args={"value": value, "parameter": self.key(), "expected_block": ref_type}
+            )
+            return False
+
+        return True
+
+    def validate_file_ref(self, value, type_data: FileParameterType, node):
+        file_data = type_data.file
+        relative_to = file_data.relative_to
+        prefix = file_data.prefix or ''
+        extension = file_data.extension
+
+        expected_file = f"{relative_to}/{prefix}{value}.{extension}"
+        logging.debug(f"Expected file: {expected_file}")
+
+        # FIXME: same as search_for_block_references, this is calling a static function as an instance method
+        # due to circular dependency issues
+        files = self.parent.document.workspace.search_for_files(
+            self.parent.document.version, expected_file)
+
+        # no file is found, add a diagnostic
+        if len(files) == 0:
+            self.parent.add_diagnostic(
+                type=DiagnosticType.VALUE_UNMATCHED_FILE_REF,
+                location=node.strip().to_range(),
+                args={"value": value, "parameter": self.key(), "expected_file": expected_file}
+            )
+            return False
+
+        self.files = files # cache result since that is used for other providers
+
+        if len(files) > 1:
+            self.parent.add_diagnostic(
+                type=DiagnosticType.VALUE_MULTIPLE_FILE_REFS,
+                location=node.strip().to_range(),
+                args={"value": value, "parameter": self.key(), "expected_file": expected_file}
             )
             return False
 

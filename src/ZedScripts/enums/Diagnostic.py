@@ -51,6 +51,8 @@ class DiagnosticType(enum.StrEnum):
     VALUE_BLOCK_REF_CANNOT_BE_EMPTY =        enum.auto()
     VALUE_UNMATCHED_BLOCK_REF =              enum.auto()
     VALUE_MULTIPLE_BLOCK_REFS =              enum.auto()
+    VALUE_UNMATCHED_FILE_REF =               enum.auto()
+    VALUE_MULTIPLE_FILE_REFS =               enum.auto()
 
     # debug
     DEBUG_MISSING_PARAMETER_DESCRIPTION =    enum.auto()
@@ -157,6 +159,13 @@ DiagnosticDefinition(DiagnosticType.VALUE_UNMATCHED_BLOCK_REF,
 DiagnosticDefinition(DiagnosticType.VALUE_MULTIPLE_BLOCK_REFS,
                      DiagnosticSeverity.Error,
                      args={"value": str, "parameter": str, "expected_block": str})
+DiagnosticDefinition(DiagnosticType.VALUE_UNMATCHED_FILE_REF,
+                     DiagnosticSeverity.Warning,
+                     args={"value": str, "parameter": str, "expected_file": str})
+DiagnosticDefinition(DiagnosticType.VALUE_MULTIPLE_FILE_REFS,
+                     DiagnosticSeverity.Warning,
+                     args={"value": str, "parameter": str, "expected_file": str})
+
 
 DiagnosticDefinition(DiagnosticType.DEBUG_MISSING_PARAMETER_DESCRIPTION,
                      DiagnosticSeverity.Information,

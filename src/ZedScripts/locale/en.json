@@ -34,6 +34,8 @@
         "VALUE_BLOCK_REF_CANNOT_BE_EMPTY": "Value '{value}' has an empty block reference, which is not allowed.",
         "VALUE_UNMATCHED_BLOCK_REF": "Value '{value}' for parameter '{parameter}' does not match any existing block (expects '{expected_block}' block). Make sure the referenced block exists.",
         "VALUE_MULTIPLE_BLOCK_REFS": "Multiple block references found for '{value}' for parameter '{parameter}' (expects '{expected_block}' block). Make sure duplicate block references are not present.",
+        "VALUE_UNMATCHED_FILE_REF": "Value '{value}' for parameter '{parameter}' does not match any existing file (expects a '{expected_file}' file). Make sure the referenced file exists.",
+        "VALUE_MULTIPLE_FILE_REFS": "Multiple file references found for '{value}' for parameter '{parameter}' (expects a '{expected_file}' file). Make sure duplicate file references are not present.",
 
         "DEBUG_MISSING_PARAMETER_DESCRIPTION": "DEBUG: Parameter '{key}' in block '{type}' is missing a description."
     }

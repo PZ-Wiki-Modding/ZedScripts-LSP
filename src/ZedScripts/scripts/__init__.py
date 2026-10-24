@@ -5,6 +5,7 @@ from typing import (TYPE_CHECKING,  get_args,
 
 from pz_scripts_data.schema import (
     ParameterMainType,
+    FileType,
     TranslationType,
     CallBackType,
     BlockType,
@@ -78,6 +79,7 @@ class ValueType(enum.StrEnum):
     BLOCK = "block"
     CALLBACK = "callback"
     TRANSLATION = "translation"
+    FILE = "file"
 
 # _early_return: set[ValueType] = {
 #     ValueType.STRING,
@@ -95,6 +97,7 @@ _early_return = (
     | BlockType
     | CallBackType
     | TranslationType
+    | FileType
 )
 
 def is_valid_type(t, ty):
