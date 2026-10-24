@@ -588,16 +588,16 @@ wheels = [
 
 [[package]]
 name = "pz-scripts-data"
-version = "1.2.0"
+version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jsonschema" },
     { name = "pydantic" },
     { name = "pyyaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fe/9c/e1da36def6586e4ee8278eb5a0c73214917e679b30f1e311c01261df8567/pz_scripts_data-1.2.0.tar.gz", hash = "sha256:6911795b56f6c5a76dc972785159b0634cbf742b64fa34f96bdfb44961bac629", size = 14409, upload-time = "2026-10-23T19:17:25.933Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/73/d7/7572b079ab8025e64bf4154caa5d74ecc49b5ec67eff60967d1a4886dcc1/pz_scripts_data-1.3.0.tar.gz", hash = "sha256:1f9fc55a8bd4e27447b6ffd30cf16b59ee6f58c938834c2ae612b6f284e844e8", size = 14713, upload-time = "2026-10-24T01:17:52.056Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/52/3c/f04e6e18484990061f3ed9711f3324133cb42c2d8ee2327facd5d2fbc511/pz_scripts_data-1.2.0-py3-none-any.whl", hash = "sha256:6c89efa57867c21cb1c41d4767ef68d93dfc4914ddf0ffac7d2559eaa568f20d", size = 15672, upload-time = "2026-10-23T19:17:24.748Z" },
+    { url = "https://files.pythonhosted.org/packages/82/0a/8e3571ecbeae51ab44f5822f1c3c6d3e635ca436a0e41a2e1374e4e2df5d/pz_scripts_data-1.3.0-py3-none-any.whl", hash = "sha256:a93e8fd7a74b33f90f0d06021c89447e7e4920eed66f2faeb3146de5d4706355", size = 15894, upload-time = "2026-10-24T01:17:50.408Z" },
 ]
 
 [[package]]
@@ -842,7 +842,7 @@ requires-dist = [
     { name = "pygments", marker = "extra == 'pygments'" },
     { name = "pyinstaller", marker = "extra == 'build'" },
     { name = "pytest", marker = "extra == 'test'" },
-    { name = "pz-scripts-data", specifier = ">=1.2.0" },
+    { name = "pz-scripts-data", specifier = ">=1.3.0" },
     { name = "requests-cache" },
 ]
 provides-extras = ["build", "debug", "test", "pygments"]
