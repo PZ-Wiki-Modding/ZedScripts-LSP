@@ -126,8 +126,10 @@ The key-values which can be set in the `dataset` section are the following:
     }
 }
 ```
-
-It's suggested to use the `stable` option.
+  - it's suggested to use the `stable` option.
+- `local`: used to point to a locally stored dataset
+  - `blocks`: JSON file containing the dataset of block definitions
+  - `roots`: JSON file containing the dataset of script root files definitions
 
 ### Libraries
 A list of paths that should include the base game path, as well as other games that your mod depends on for its scripts. This will provide LSP the ability to find other blocks definitions that you may reference inside your mod's scripts.
