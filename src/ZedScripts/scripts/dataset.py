@@ -1,5 +1,6 @@
 import logging
 import re
+import json
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 from pprint import pformat
@@ -162,8 +163,8 @@ class Dataset:
     def __init__(self):
         self.manifest: Manifest = Manifest.load()
 
-        self.blocks: dict[str, ScriptsBlock]
-        self.roots: dict[str, ScriptsBlock]
+        self.blocks: dict[str, ScriptsBlock] = {}
+        self.roots: dict[str, ScriptsBlock] = {}
 
     def __repr__(self) -> str:
         return f"Dataset(manifest={self.manifest}, blocks={len(self.blocks)}, roots={len(self.roots)})"
@@ -172,14 +173,34 @@ class Dataset:
         logging.info(f"Loading dataset... ({dataset_config})")
         links = self.manifest.get_dataset_links(dataset_config)
 
-        logging.info(f"Downloading from following dataset links:")
-        logging.info(f"Blocks: {links['blocks']}")
-        logging.info(f"Roots: {links['roots']}")
+        local = dataset_config.local
 
-        # load datasets (possibly from cache)
-        blocks = load_json(links["blocks"])
-        roots = load_json(links["roots"])
+        # load datasets (possibly from cache, or from local dataset)
+        logging.info(f"Retrieving datasets...")
 
+        blocks = None
+        roots = None
+        if local is not None and local.blocks:
+            blocks_path = Path(local.blocks)
+            if blocks_path.exists():
+                logging.info(f"Blocks (local): {local.blocks}")
+                blocks = json.load(blocks_path.open())
+
+        if local is not None and local.roots:
+            roots_path = Path(local.roots)
+            if roots_path.exists():
+                logging.info(f"Roots (local): {local.roots}")
+                roots = json.load(roots_path.open())
+
+
+        if blocks is None:
+            logging.info(f"Blocks (remote): {links['blocks']}")
+            blocks = load_json(links["blocks"])
+        if roots is None:
+            logging.info(f"Roots (remote): {links['roots']}")
+            roots = load_json(links["roots"])
+
+        # loaded datasets
         logging.debug("Blocks JSON:")
         logging.debug(blocks)
         logging.debug("Roots JSON:")

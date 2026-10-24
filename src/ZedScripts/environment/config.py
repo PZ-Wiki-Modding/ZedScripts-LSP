@@ -128,6 +128,16 @@ class ReleaseModel(ZedBaseModel):
         ge=0,
     )
 
+class LocalDatasetModel(ZedBaseModel):
+    blocks: Optional[str] = Field(
+        description="Local path to the blocks dataset file.",
+        default=None,
+    )
+    roots: Optional[str] = Field(
+        description="Local path to the roots dataset file.",
+        default=None,
+    )
+
 class DatasetModel(ZedBaseModel):
     release: Optional[ReleaseModel] = Field(
         description="Provides a configuration for the dataset version to use for validation. This overrides the `latest` and `stable` fields if set.",
@@ -140,6 +150,10 @@ class DatasetModel(ZedBaseModel):
     stable: Optional[bool] = Field(
         description="Provides a configuration for the stable dataset version to use for validation. Ignored if `release` or `latest` is set.",
         default=True,
+    )
+    local: Optional[LocalDatasetModel] = Field(
+        description="Provides local dataset file paths for blocks and roots.",
+        default=None,
     )
 
     def to_data_version(self) -> DataVersion | DatasetTag:
