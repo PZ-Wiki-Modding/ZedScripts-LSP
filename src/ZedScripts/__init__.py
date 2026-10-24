@@ -15,6 +15,8 @@ Cache directory to hold various information related to ZedScripts.
 """
 ZEDSCRIPT_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
+SOLITARY_FILES_DIR = ZEDSCRIPT_CACHE_DIR / "solitary"
+
 # config files naming
 CONFIGURATION_FILE_NAME = ".zedscripts.json"
 GLOBAL_CONFIGURATION_FILE = (ZEDSCRIPT_CACHE_DIR / CONFIGURATION_FILE_NAME).resolve()

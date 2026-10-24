@@ -2,11 +2,11 @@ import logging
 import json
 import re
 from pathlib import Path
-from typing import Any, TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable
 from pydantic import ValidationError
 
 
-from .. import CONFIGURATION_FILE_NAME, GLOBAL_CONFIGURATION_FILE
+from .. import CONFIGURATION_FILE_NAME, GLOBAL_CONFIGURATION_FILE, SOLITARY_FILES_DIR
 from . import WorkspaceType, VersionType
 from .document import Document
 from .mod import Mod, ModCollection
@@ -22,6 +22,8 @@ if TYPE_CHECKING:
 
 
 class Workspace:
+    SOLITARY: 'Workspace'
+
     workspace_cache: dict[WorkspaceType, dict[Path, 'Workspace']] = {}
     global_configuration: ConfigurationModel | None = None
     global_dataset: 'Dataset' = Dataset()
@@ -168,7 +170,7 @@ class Workspace:
             for folder, workspace in workspaces.items():
                 if folder in path.parents:
                     return workspace
-        return None
+        return Workspace.SOLITARY
 
     @staticmethod
     def find_or_make(path: Path) -> Document | None:
@@ -405,3 +407,5 @@ class Workspace:
         except ValidationError as e:
             logging.warning(f"Configuration file validation error for {config_path}:\n{e}")
             return ConfigurationModel()
+
+Workspace.SOLITARY = Workspace(SOLITARY_FILES_DIR, WorkspaceType.SOLITARY)
