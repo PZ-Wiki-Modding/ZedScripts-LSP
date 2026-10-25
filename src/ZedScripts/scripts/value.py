@@ -1,11 +1,11 @@
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, overload
 from pathlib import Path
 
 from lsprotocol import types
 
 from pz_scripts_data.schema import (
-    ParameterDefinition, 
+    ParameterDefinition, ParameterTypeUnion,
     ScalarParameterType, ArrayParameterType, ObjectParameterType, TranslationParameterType,
     BlockParameterType, CallbackParameterType, FileParameterType,
     ParameterDeprecation
@@ -520,11 +520,6 @@ class Value(Element["ValueNode"]):
                 )
                 return False
 
-        # init key_value_separator
-        # if it is equal to "=", we need to ignore the diagnostic of extra = signs
-        # possibly marking a wrongly formatted key-value pair
-        key_value_separator = None
-
         # verify the type
         if value_type is not None and type_data is not None:
             # first we verify that the expected type and the actual 
@@ -534,90 +529,34 @@ class Value(Element["ValueNode"]):
                 self.parent.add_diagnostic(
                     type=DiagnosticType.VALUE_INVALID_TYPE,
                     location=value_node.strip().to_range(),
-                    args={"key": key, "value": value, "expected_type": expected_type, "actual_type": value_type}
+                    args={"key": key, "value": value, 
+                          "expected_type": expected_type, 
+                          "actual_type": value_type}
                 )
                 return False
 
             # verify based on type
-            match type_data:
-                # if it's a translation type, then we need to verify it
-                case TranslationParameterType():
-                # TODO: needs to implement
-                    pass
+            result = self.validate_specific_type(
+                dataset, param_data, type_data, value, values, value_node
+            )
+            if not result:
+                return False
 
-                # if it's an object, then we verify the object composition
-                case ObjectParameterType():
-                    # retrieve the object data
-                    object_data = type_data.object
-                    assert object_data is not None
-
-                    # first make sure that each pairs contain the key-value separator
-                    key_value_separator = object_data.key_value_separator
-                    for v in values:
-                        if key_value_separator not in v:
-                            self.parent.add_diagnostic(
-                                type=DiagnosticType.VALUE_INVALID_OBJECT_FORMAT,
-                                location=value_node.to_range(),
-                                args={"type": parent_type, "key": key, "key_value_separator": key_value_separator}
-                            )
-                            return False
-
-                    # then check if the key and values have the right format
-                    obj_key_type = object_data.key_type
-                    obj_value_type = object_data.value_type
-                    failed = False
-                    for v in values:
-                        # we test each key and value for a type
-                        obj_key, obj_value = v.split(key_value_separator, 1)
-                        key_type_result = dataset.test_for_type(obj_key_type, obj_key)
-                        value_type_result = dataset.test_for_type(obj_value_type, obj_value)
-
-                        # if the expected type and actual type doesn't correspond, then something
-                        # is wrong and we need to report a diagnostic
-                        if key_type_result != obj_key_type:
-                            self.parent.add_diagnostic(
-                                type=DiagnosticType.VALUE_INVALID_OBJECT_KEY_TYPE,
-                                location=value_node.to_range(),
-                                args={"obj_key": obj_key, "key": key, 
-                                    "expected_type": obj_key_type, 
-                                    "actual_type": key_type_result}
-                            )
-                            failed = True
-                        if value_type_result != obj_value_type:
-                            self.parent.add_diagnostic(
-                                type=DiagnosticType.VALUE_INVALID_OBJECT_VALUE_TYPE,
-                                location=value_node.to_range(),
-                                args={"obj_value": obj_value, "key": key, 
-                                    "expected_type": obj_value_type, 
-                                    "actual_type": value_type_result}
-                            )
-                            failed = True
-
-                        # TODO: wtf did I meant to do here ...
-                        # verify by
-
-                    # if at least one failed, then the entire object is considered invalid
-                    if failed:
-                        return False
-
-                # if it's a block type, then it needs to reference another block
-                case BlockParameterType():
-                    passed = self.validate_block_ref(value, param_data, type_data, value_node)
-                    if not passed:
-                        return False
-
-                case FileParameterType():
-                    passed = self.validate_file_ref(value, type_data, value_node)
-                    if not passed:
-                        return False
-
-        # diagnostic possibly wrongly formatted key-value pair
-        if key_value_separator != "=":
+        # if key_value_separator is equal to "=", we need to ignore 
+        # the diagnostic of extra = signs possibly marking a wrongly 
+        # formatted key-value pair
+        # this applies to non-object type values too
+        key_value_separator = None
+        if type(type_data) is ObjectParameterType:
+            object_data = type_data.object
+            key_value_separator = object_data.key_value_separator
+        if key_value_separator is None or key_value_separator != "=":
             if "=" in value:
                 self.parent.add_diagnostic(
                     type=DiagnosticType.VALUE_WRONGLY_FORMATTED_KEY_VALUE_PAIR,
                     location=node.tokens.strip().to_range(),
-                    args={"type": parent_type, "key": key, "value": value}
+                    args={"type": parent_type, 
+                            "key": key, "value": value}
                 )
                 return False
 
@@ -626,19 +565,44 @@ class Value(Element["ValueNode"]):
         return True
 
     # TODO: need to implement this function usage
-    # def validate_type(self, dataset: Dataset, value: str, expected_type: ValueType, node: TokenCollection, block_type_data: BlockType | None = None) -> bool:
-    #     # test for type the value
-    #     value_type = dataset.test_for_type(expected_type, value)
-    #     if value_type != expected_type:
-    #         return False
+    def validate_type(self, dataset: 'Dataset') -> bool:
 
-    #     # if it expects a block reference, then validate that
-    #     if (expected_type == ValueType.BLOCK
-    #         and block_type_data is not None 
-    #         and not self.validate_block_ref(value, block_type_data, node)):
-    #         return False
 
-    #     return True
+        return True
+
+
+
+    def validate_specific_type(self, 
+                               dataset: 'Dataset',
+                               param_data: ParameterDefinition,
+                               type_data: ParameterTypeUnion,
+                               value: str,
+                               values: list[str],
+                               value_node: TokenCollection, ) -> bool: 
+        match type_data:
+            # if it's a translation type, then we need to verify it
+            case TranslationParameterType():
+            # TODO: needs to implement
+                pass
+
+            # if it's an object, then we verify the object composition
+            case ObjectParameterType():
+                result = self.validate_object_ref(dataset, values, type_data, value_node)
+                if not result:
+                    return False
+
+            # if it's a block type, then it needs to reference another block
+            case BlockParameterType():
+                result = self.validate_block_ref(value, param_data, type_data, value_node)
+                if not result:
+                    return False
+
+            case FileParameterType():
+                result = self.validate_file_ref(value, type_data, value_node)
+                if not result:
+                    return False
+        return True
+        
 
     def block_ref_to_fulltype(self, value: str) -> tuple[str | None, str] | None:
         module = None
@@ -655,7 +619,7 @@ class Value(Element["ValueNode"]):
             case _:
                 return None # invalid format
 
-    def validate_block_ref(self, value: str, param_data: ParameterDefinition, type_data: BlockParameterType, node: TokenCollection) -> bool:
+    def validate_block_ref(self, value: str, param_data: ParameterDefinition, type_data: BlockParameterType, value_node: TokenCollection) -> bool:
         block_type_data = type_data.block
         can_be_empty = param_data.can_be_empty or False
 
@@ -664,7 +628,7 @@ class Value(Element["ValueNode"]):
         if fulltype is None:
             self.parent.add_diagnostic(
                 type=DiagnosticType.VALUE_INVALID_BLOCK_REFERENCE,
-                location=node.strip().to_range(),
+                location=value_node.strip().to_range(),
                 args={"value": value}
             )
             return False
@@ -678,7 +642,7 @@ class Value(Element["ValueNode"]):
         if not can_full_type and module is not None:
             self.parent.add_diagnostic(
                 type=DiagnosticType.VALUE_CANNOT_PROVIDE_MODULE,
-                location=node.strip().to_range(),
+                location=value_node.strip().to_range(),
                 args={"value": value, "module": module}
             )
             return False
@@ -689,7 +653,7 @@ class Value(Element["ValueNode"]):
                 return True
             self.parent.add_diagnostic(
                 type=DiagnosticType.VALUE_BLOCK_REF_CANNOT_BE_EMPTY,
-                location=node.strip().to_range(),
+                location=value_node.strip().to_range(),
                 args={"value": value}
             )
             return False
@@ -699,8 +663,6 @@ class Value(Element["ValueNode"]):
         # retrieve imports
         searchable_modules: set[str] = {"Base"}
         if module is not None:
-        #     searchable_modules = set()
-        # else:
             searchable_modules.update(root.get_imports())
 
             # the used module is searched into too
@@ -733,19 +695,78 @@ class Value(Element["ValueNode"]):
         if refs_len == 0:
             self.parent.add_diagnostic(
                 type=DiagnosticType.VALUE_UNMATCHED_BLOCK_REF,
-                location=node.strip().to_range(),
+                location=value_node.strip().to_range(),
                 args={"value": value, "parameter": self.key(), "expected_block": ref_type}
             )
             return False
         if refs_len > 1:
             self.parent.add_diagnostic(
                 type=DiagnosticType.VALUE_MULTIPLE_BLOCK_REFS,
-                location=node.strip().to_range(),
+                location=value_node.strip().to_range(),
                 args={"value": value, "parameter": self.key(), "expected_block": ref_type}
             )
             return False
 
         return True
+
+    def validate_object_ref(self,
+                            dataset: 'Dataset',
+                            values: list[str], 
+                            type_data: ObjectParameterType, 
+                            value_node: TokenCollection):
+        # retrieve the object data
+        object_data = type_data.object
+        assert object_data is not None
+
+        # first make sure that each pairs contain the key-value separator
+        key_value_separator = object_data.key_value_separator
+        for v in values:
+            if key_value_separator not in v:
+                self.parent.add_diagnostic(
+                    type=DiagnosticType.VALUE_INVALID_OBJECT_FORMAT,
+                    location=value_node.to_range(),
+                    args={"type": self.parent.type, 
+                          "key": self.key(), 
+                          "key_value_separator": key_value_separator}
+                )
+                return False
+
+        # then check if the key and values have the right format
+        obj_key_type = object_data.key_type
+        obj_value_type = object_data.value_type
+        failed = False
+        for v in values:
+            # we test each key and value for a type
+            obj_key, obj_value = v.split(key_value_separator, 1)
+            key_type_result = dataset.test_for_type(obj_key_type, obj_key)
+            value_type_result = dataset.test_for_type(obj_value_type, obj_value)
+
+            # if the expected type and actual type doesn't correspond, then something
+            # is wrong and we need to report a diagnostic
+            if key_type_result != obj_key_type:
+                self.parent.add_diagnostic(
+                    type=DiagnosticType.VALUE_INVALID_OBJECT_KEY_TYPE,
+                    location=value_node.to_range(),
+                    args={"obj_key": obj_key, "key": self.key(), 
+                          "expected_type": obj_key_type, 
+                          "actual_type": key_type_result}
+                )
+                failed = True
+            if value_type_result != obj_value_type:
+                self.parent.add_diagnostic(
+                    type=DiagnosticType.VALUE_INVALID_OBJECT_VALUE_TYPE,
+                    location=value_node.to_range(),
+                    args={"obj_value": obj_value, "key": self.key(), 
+                          "expected_type": obj_value_type, 
+                          "actual_type": value_type_result}
+                )
+                failed = True
+
+            # TODO: wtf did I meant to do here ...
+            # verify by
+
+        # if at least one failed, then the entire object is considered invalid
+        return failed
 
     def validate_file_ref(self, value, type_data: FileParameterType, node):
         file_data = type_data.file
