@@ -350,20 +350,40 @@ class Value(Element["ValueNode"]):
 
 ## definition
 
-    def get_definition(self, text_position: TextPosition) -> list[types.LocationLink] | None:
-        if len(self.refs) == 0:
+    def get_definition(self, text_position: TextPosition) -> list[types.LocationLink | types.Location] | None:
+        files_count = len(self.files)
+        refs_count = len(self.refs)
+        if refs_count == 0 and files_count == 0:
             return None
-
-        result: list[types.LocationLink] = []
+        
+        result: list[types.LocationLink | types.Location] = []
         for ref in self.refs:
             ref_id_range = ref.get_ref_id_range().to_lsp()
+            block_range = ref.node.tokens.to_range().to_lsp()
 
             location = types.LocationLink(
                 target_uri=path_to_uri(ref.document.path),
-                target_range=ref_id_range,
+                target_range=block_range,
                 target_selection_range=ref_id_range,
             )
             result.append(location)
+
+        if files_count > 0:
+            default_range = types.Range(
+                start=types.Position(line=0, character=0),
+                end=types.Position(line=0, character=1)
+            )
+            for file in self.files:
+                # location = types.LocationLink(
+                #     target_uri=path_to_uri(file),
+                #     target_range=default_range,
+                #     target_selection_range=default_range,
+                # )
+                location = types.Location(
+                    uri=path_to_uri(file),
+                    range=default_range
+                )
+                result.append(location)
 
         return result
 
