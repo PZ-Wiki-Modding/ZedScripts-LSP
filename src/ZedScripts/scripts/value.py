@@ -293,7 +293,7 @@ class Value(Element["ValueNode"]):
                 txt += "\n\n"
 
             if IS_DEBUG:
-                should_show_debug = (len(self.refs) > 0)
+                should_show_debug = (len(self.refs) > 0 or len(self.files) > 0)
                 if should_show_debug:
                     txt += "(debug)\n\n"
                     if len(self.refs) > 0:
@@ -301,6 +301,11 @@ class Value(Element["ValueNode"]):
                         ref_items = [f"{ref.document.path}:{ref.get_ref_id_range()}" for ref in self.refs]
                         for ref_item in ref_items:
                             txt += f"\n- {ref_item}"
+
+                    if len(self.files) > 0:
+                        txt += f"Files:"
+                        for file in self.files:
+                            txt += f"\n- {file}"
 
             return make_hover_information(txt, value_node.to_range())
 
