@@ -28,8 +28,8 @@ class ParseResult:
 
 
 class Parser:
-    def __init__(self) -> None:
-        self.chunk: Chunk = Chunk()
+    def __init__(self, tokens: TokenCollection) -> None:
+        self.chunk: Chunk = Chunk(tokens)
         """Root of the chunk being parsed."""
         self.block_stack: list[BlockNode] = []
         """Stack of the currently parsing blocks."""
@@ -94,7 +94,7 @@ def parse_type_id(tokens: list[Token]) -> tuple[TokenCollection | None, TokenCol
 
 
 def parse_tokens(tokens: TokenCollection) -> ParseResult:
-    parser = Parser()
+    parser = Parser(tokens)
     unparsed_tokens: list[Token] = []
     result: ParseResult = ParseResult(parser.chunk)
     unassigned_comments: list[Token] = []

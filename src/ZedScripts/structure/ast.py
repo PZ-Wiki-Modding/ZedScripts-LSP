@@ -14,7 +14,7 @@ class BlockBody:
 
 class Node:
     """Base class for Zedscript AST nodes."""
-    def __init__(self, *, comments: Optional[list[Token]] = None) -> None:
+    def __init__(self, tokens: TokenCollection, *, comments: Optional[list[Token]] = None) -> None:
         super().__init__()
         if comments is None:
             comments = []
@@ -25,6 +25,8 @@ class Node:
         For values, all comments in the range of the value are included.
         A TokenCollection is not used because the tokens might not be contiguous.
         """
+        self.tokens: TokenCollection = tokens
+        """Tokens comprising the node."""
 
 
 class BlockNode(Node, BlockBody):
@@ -36,7 +38,16 @@ class BlockNode(Node, BlockBody):
             open_bracket: Token, close_bracket: Token | None,
             *, comments: Optional[list[Token]] = None
     ) -> None:
-        super().__init__(comments=comments)
+        tokens = TokenCollection()
+        if type is not None:
+            tokens.extend(type)
+        if id is not None:
+            tokens.extend(id)
+        tokens.append(open_bracket)
+        if close_bracket is not None:
+            tokens.append(close_bracket)
+
+        super().__init__(tokens=tokens, comments=comments)
         self.type: TokenCollection | None = type
         """
         Tokens representing the type of the block.
@@ -58,18 +69,6 @@ class BlockNode(Node, BlockBody):
         This will never be None in well formed Zedscript.
         """
 
-    @property
-    def tokens(self) -> TokenCollection:
-        result = TokenCollection()
-        if self.type is not None:
-            result.extend(self.type)
-        if self.id is not None:
-            result.extend(self.id)
-        result.append(self.open_bracket)
-        if self.close_bracket is not None:
-            result.append(self.close_bracket)
-        return result
-
     def well_formed(self) -> bool:
         return self.type is not None and self.close_bracket is not None
 
@@ -82,9 +81,7 @@ class ValueNode(Node):
     Zedscript value.
     """
     def __init__(self, tokens: TokenCollection, comma: Token, *, comments: Optional[list[Token]] = None) -> None:
-        super().__init__(comments=comments)
-        self.tokens: TokenCollection = tokens
-        """Tokens comprising the value."""
+        super().__init__(tokens=tokens, comments=comments)
         self.comma: Token = comma
         """
         Comma token following the value.
@@ -136,8 +133,10 @@ class ValueNode(Node):
         return self.tokens.to_range() == text_position
 
 
-class Chunk(BlockBody):
+class Chunk(Node, BlockBody):
     """
     Root of a Zedscript chunk.
     A chunk is essentially a block body, but we use a separate class to avoid ambiguity.
     """
+    def __init__(self, tokens: TokenCollection) -> None:
+        super().__init__(tokens=tokens)

@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Any, Iterable, Iterator
+from typing import TYPE_CHECKING, Any, Iterable, Iterator, TypeVar, Generic
 
 from lsprotocol import types
 
@@ -7,7 +7,7 @@ from .. import SCRIPTSDOCS_LINK
 from ..utils import path_to_uri
 from . import Element
 from ..enums.Diagnostic import DiagnosticType
-from ..structure.ast import BlockNode, Chunk
+from ..structure.ast import Node, BlockNode, Chunk
 from ..structure.lexer import TextRange, TextPosition
 from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifier
 from ..providers.hover import make_hover_information, format_tree
@@ -17,9 +17,12 @@ if TYPE_CHECKING:
     from .dataset import Dataset
     from ..environment.document import Document
 
-class Block:
-    def __init__(self, document: 'Document', type: str):
+NodeT = TypeVar("NodeT", bound=Node)
+
+class Block(Generic[NodeT]):
+    def __init__(self, node: NodeT, document: 'Document', type: str):
         self.document: 'Document' = document
+        self.node: NodeT = node
         self.type: str = type
         """
         Type of the block.
@@ -120,23 +123,30 @@ class Block:
         self.document.diagnostics.add(config, type=type, location=location, args=args)
 
     def add_semantic_token(self, type: SemanticTokenType, location: TextRange, modifiers: list[SemanticTokenModifier] = []) -> None:
+        """
+        Add a semantic token to the document at the specified location with the given type and modifiers.
+
+        Args:
+            type (SemanticTokenType): The type of the semantic token.
+            location (TextRange): The location in the document where the token should be added.
+            modifiers (list[SemanticTokenModifier], optional): A list of modifiers for the semantic token. Defaults to [].
+        """
         self.document.semantic_tokens.add(type=type, location=location, modifiers=modifiers)
 
 
 
-class ScriptBlock(Block, Element["BlockNode"]):
+class ScriptBlock(Block["BlockNode"]):
     def __init__(self, document: 'Document',
                  type: str, id: str | None, 
                  node: BlockNode, parent: Block, 
                  comment: str) -> None:
-        super().__init__(document=document, type=type)
+        super().__init__(node=node, document=document, type=type)
         self.id: str | None = id
         """
         ID of the block.
         Blocks are not required to have an ID: this is represented by None.
         """
 
-        self.node: BlockNode = node
         self.comment: str = comment
 
         self.parent: Block = parent
@@ -472,16 +482,15 @@ class ScriptBlock(Block, Element["BlockNode"]):
             child.validate(dataset)
 
 
-class Root(Block, Element["Chunk"]):
+class Root(Block["Chunk"]):
     def __init__(self, document: 'Document', type: str, node: Chunk, comment: str) -> None:
-        super().__init__(document, type)
-        self.type = type
-        self.node = node
-        self.comment = comment
+        super().__init__(node=node, document=document, type=type)
+        self.type: str = type
+        self.comment: str = comment
 
     def get_root(self) -> 'Root': 
         return self
-
+    
     def validate(self, dataset: 'Dataset') -> bool:
         # validate key-values
         for value in self.values:
