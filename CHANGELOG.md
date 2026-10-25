@@ -3,6 +3,11 @@
 
 ## [Unreleased]
 
+## [1.3.1] - 2026/10/24
+- Fixed solitary files not working ([#19](https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/issues/19))
+- Fixed library loading counter being incorrect and also bump workspaces and libraries loaded after they have been loaded
+- Diagnostic added for block's missing parameter
+
 ## [1.3.0] - 2026/10/24
 - Added description and classifiers to package
 - Added mypy typed support
@@ -68,7 +73,8 @@ Initial base by [@demiurgeQuantified], created by [@SimKDT]. Provided by [@PZ-Wi
 
 
 
-[unreleased]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/compare/v1.3.0...HEAD
+[unreleased]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.3.1
 [1.3.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.3.0
 [1.2.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.2.0
 [1.1.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.1.0
