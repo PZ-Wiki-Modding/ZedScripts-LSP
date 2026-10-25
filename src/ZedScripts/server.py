@@ -203,15 +203,19 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
         count=len(folders)
     )
 
+    init = False
     for i, workspace_folder in enumerate(folders):
         ws = Workspace(uri_to_path(workspace_folder.uri), WorkspaceType.PROJECT)
 
-        notifications.send_notification(
-            ZedNotification.LOADING_DOCUMENTS,
-            uri=path_to_uri(ws.folder),
-            workspace_type=ws.workspace_type,
-            index=i
-        )
+        # this is not needed constantly, only for the first workspace
+        if not init:
+            notifications.send_notification(
+                ZedNotification.LOADING_DOCUMENTS,
+                uri=path_to_uri(ws.folder),
+                workspace_type=ws.workspace_type,
+                index=i
+            )
+            init = True
 
         mod_count, file_count = ws.load()
         if file_count != 0 or mod_count != 0:

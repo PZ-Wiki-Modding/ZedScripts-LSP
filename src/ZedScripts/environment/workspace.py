@@ -136,13 +136,17 @@ class Workspace:
             count=libraries_count
         )
 
+        init = False
         for i, library in enumerate(Workspace.workspace_cache[WorkspaceType.LIBRARY].values()):
-            notifications.send_notification(
-                notifications.ZedNotification.LOADING_DOCUMENTS,
-                uri=str(library.folder),
-                workspace_type=library.workspace_type,
-                index=i
-            )
+            # this is not needed constantly, only for the first lbirary
+            if not init:
+                notifications.send_notification(
+                    notifications.ZedNotification.LOADING_DOCUMENTS,
+                    uri=str(library.folder),
+                    workspace_type=library.workspace_type,
+                    index=i
+                )
+                init = True
 
             library.load()
 
