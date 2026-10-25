@@ -15,7 +15,7 @@ dependencies = [
     "requests-cache",
     "pydantic",
     "deepmerge",
-    "pz-scripts-data >= 1.3.0"
+    "pz-scripts-data >= 1.3.1"
 ]
 classifiers = [
     "Programming Language :: Python :: 3 :: Only",

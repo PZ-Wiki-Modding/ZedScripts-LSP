@@ -282,6 +282,12 @@ class Dataset:
             return self.roots[type.lower()]
         raise ValueError(f"Script block data for type '{type}' not found")
 
+    def get_required_parameters(self, type: str) -> list[ParameterDefinition]:
+        block_data = self.get_script_block_data(type)
+        assert block_data is not None, f"{type} block should be validated before retrieving required parameters"
+        required_parameters = [param for param in block_data.parameters.values() if param.required]
+        return required_parameters
+
     def get_block_variant_tree(self, type: str) -> list[str]:
         """
         Retrieve the variantOf tree of the specified script block type.

@@ -44,11 +44,11 @@ wheels = [
 
 [[package]]
 name = "certifi"
-version = "2026.10.19"
+version = "2026.10.23"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a6/bd/1436c50cc46699de0230fbaacc1d1de7bfec413176099949e9d5112e88f2/certifi-2026.10.19.tar.gz", hash = "sha256:035c1e85572b141bf1c3a3eff0e33a8eb74917522f2559075ff8d2fea780a1ae", size = 137598, upload-time = "2026-10-20T02:24:16.604Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fd/11/b524cbd9bbdaca58608e4cf4053fd463417549e1959fa8d3aa18319f9555/certifi-2026.10.23.tar.gz", hash = "sha256:a9895e6e2758b371e0545e321a3a8fd1fcfd9829ada8824a936dfb16aaaf36cd", size = 136225, upload-time = "2026-10-23T11:36:16.478Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c4/51/29046e48f693c54e5b7412216d447a1d8362c9653148d98c02cdf65fa733/certifi-2026.10.19-py3-none-any.whl", hash = "sha256:42d35340cc5b9ba78e818ddbff0c5b1c2b779de448a340fd1b989f5fa8670e1b", size = 136464, upload-time = "2026-10-20T02:24:15.072Z" },
+    { url = "https://files.pythonhosted.org/packages/32/d1/a3652fe2c19134d0d15922177821d863cbd7e842d53a21bbe7e8e3a1b5ac/certifi-2026.10.23-py3-none-any.whl", hash = "sha256:e9b54de76e530bb6cf0ccd036787103acb58fd42ba930ea8bf948ddbaa2f61d1", size = 135082, upload-time = "2026-10-23T11:36:14.763Z" },
 ]
 
 [[package]]
@@ -588,16 +588,16 @@ wheels = [
 
 [[package]]
 name = "pz-scripts-data"
-version = "1.3.0"
+version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jsonschema" },
     { name = "pydantic" },
     { name = "pyyaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/73/d7/7572b079ab8025e64bf4154caa5d74ecc49b5ec67eff60967d1a4886dcc1/pz_scripts_data-1.3.0.tar.gz", hash = "sha256:1f9fc55a8bd4e27447b6ffd30cf16b59ee6f58c938834c2ae612b6f284e844e8", size = 14713, upload-time = "2026-10-24T01:17:52.056Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4f/b7/efdb9cf8958a868654fb4ae8bfc5a8f15f199f5f2a8121c8745907d29242/pz_scripts_data-1.3.1.tar.gz", hash = "sha256:deb2d1a80bb894cfb2d673cdd95c184d289ac088736314610b0498010e0960a7", size = 14735, upload-time = "2026-10-24T20:23:43.901Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/82/0a/8e3571ecbeae51ab44f5822f1c3c6d3e635ca436a0e41a2e1374e4e2df5d/pz_scripts_data-1.3.0-py3-none-any.whl", hash = "sha256:a93e8fd7a74b33f90f0d06021c89447e7e4920eed66f2faeb3146de5d4706355", size = 15894, upload-time = "2026-10-24T01:17:50.408Z" },
+    { url = "https://files.pythonhosted.org/packages/b2/31/a6879123a73f548da7880e6e01a659d53b7598dd9aa2368258a326a31c6d/pz_scripts_data-1.3.1-py3-none-any.whl", hash = "sha256:a05f64d55819909a3d092f6ca35f42544806f80f3522a7fff5f0576c139965da", size = 15890, upload-time = "2026-10-24T20:23:41.704Z" },
 ]
 
 [[package]]
@@ -842,7 +842,7 @@ requires-dist = [
     { name = "pygments", marker = "extra == 'pygments'" },
     { name = "pyinstaller", marker = "extra == 'build'" },
     { name = "pytest", marker = "extra == 'test'" },
-    { name = "pz-scripts-data", specifier = ">=1.3.0" },
+    { name = "pz-scripts-data", specifier = ">=1.3.1" },
     { name = "requests-cache" },
 ]
 provides-extras = ["build", "debug", "test", "pygments"]

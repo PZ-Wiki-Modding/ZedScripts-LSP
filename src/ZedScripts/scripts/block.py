@@ -58,6 +58,9 @@ class Block(Generic[NodeT]):
         """
         return NotImplemented
 
+    def get_full_range(self) -> TextRange:
+        return self.node.tokens.to_range()
+
     def get_description(self, dataset: 'Dataset') -> str:
         return NotImplemented
 
@@ -87,8 +90,28 @@ class Block(Generic[NodeT]):
         return None
 
     def validate(self, dataset: 'Dataset') -> bool: ...
-    def validate_block(self, dataset: 'Dataset') -> bool: ...
     def validate_children(self, dataset: 'Dataset') -> None: ...
+    def validate_block(self, dataset: 'Dataset') -> bool:
+        # TODO: existance checks should probably 
+        # be handled here but it's not handled here for now ?
+        block_type = self.type
+        if dataset.is_script_block(block_type) or dataset.is_root(block_type):
+            # check if specific key-values are missing
+            required_parameters = dataset.get_required_parameters(block_type)
+            keys = self.get_keys()
+            ok = True
+            for param in required_parameters:
+                if param.name.lower() not in keys:
+                    self.add_diagnostic(
+                        type=DiagnosticType.BLOCK_MISSING_REQUIRED_PARAMETER,
+                        location=self.get_full_range(),
+                        args={"type": block_type, "parameter": param.name}
+                    )
+                    ok = False
+            
+            return ok
+
+        return True
 
     def get_keys(self) -> list[str]:
         """
@@ -329,6 +352,8 @@ class ScriptBlock(Block["BlockNode"]):
         Returns:
             bool: True if the block is valid, False otherwise.
         """
+        super().validate_block(dataset)
+
         type = self.type
         node = self.node
         if node.type is None or type == "":
@@ -492,6 +517,9 @@ class Root(Block["Chunk"]):
         return self
     
     def validate(self, dataset: 'Dataset') -> bool:
+        if not self.validate_block(dataset):
+            return False
+
         # validate key-values
         for value in self.values:
             value.validate(dataset)

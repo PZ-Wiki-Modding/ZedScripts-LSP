@@ -14,6 +14,7 @@
         "BLOCK_ID_CANNOT_CONTAIN_SPACES": "ID '{id}' for block '{type}' cannot contain spaces.",
         "BLOCK_INVALID_ID": "'{type}' block has an invalid ID '{id}'. Valid IDs are: {validIDs}.",
         "BLOCK_FORBIDDEN_ID": "'{type}' block has a forbidden ID '{id}'. Forbidden IDs are: {forbiddenIDs}.",
+        "BLOCK_MISSING_REQUIRED_PARAMETER": "'{type}' block is missing required parameter '{parameter}'.",
 
         "VALUE_UNKNOWN_PARAMETER": "Unknown parameter '{key}' in block '{type}'.",
         "VALUE_DEPRECATED_REPLACEMENT_VERSION": "This parameter is deprecated since version '{version}' and replaced by '{replacement}'. {description}",

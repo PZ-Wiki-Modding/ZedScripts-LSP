@@ -30,6 +30,7 @@ class DiagnosticType(enum.StrEnum):
     BLOCK_ID_CANNOT_CONTAIN_SPACES =         enum.auto()
     BLOCK_INVALID_ID =                       enum.auto()
     BLOCK_FORBIDDEN_ID =                     enum.auto()
+    BLOCK_MISSING_REQUIRED_PARAMETER =       enum.auto()
 
     # parameters diagnostics
     VALUE_UNKNOWN_PARAMETER =                enum.auto()
@@ -95,6 +96,9 @@ DiagnosticDefinition(DiagnosticType.BLOCK_INVALID_ID,
 DiagnosticDefinition(DiagnosticType.BLOCK_FORBIDDEN_ID,
                      DiagnosticSeverity.Error,
                      args={"type": str, "id": str, "forbiddenIDs": list})
+DiagnosticDefinition(DiagnosticType.BLOCK_MISSING_REQUIRED_PARAMETER,
+                     DiagnosticSeverity.Error,
+                     args={"type": str, "parameter": str})
 
 # parameter diagnostics
 DiagnosticDefinition(DiagnosticType.VALUE_UNKNOWN_PARAMETER,
