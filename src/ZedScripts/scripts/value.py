@@ -505,8 +505,9 @@ class Value(Element["ValueNode"]):
         # that is values that are not allowed for this parameter
         accepted_values = param_data.values
         if accepted_values is not None:
+            str_accepted_values = [str(v) for v in accepted_values]
             # forbidden values are the ones not present in the accepted values list
-            forbidden_values = [v for v in values if v not in accepted_values]
+            forbidden_values = [v for v in values if v not in str_accepted_values]
 
             # if the list is not empty, then we have forbidden values for this parameter
             if forbidden_values:
@@ -515,7 +516,7 @@ class Value(Element["ValueNode"]):
                     location=value_node.to_range(),
                     args={"type": parent_type, "key": key, 
                           "forbidden_values": forbidden_values, 
-                          "accepted_values": accepted_values}
+                          "accepted_values": str_accepted_values}
                 )
                 return False
 
