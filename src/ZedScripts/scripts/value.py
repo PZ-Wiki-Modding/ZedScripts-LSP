@@ -786,6 +786,8 @@ class Value(Element["ValueNode"]):
         # due to circular dependency issues
         files = self.parent.document.workspace.search_for_files(
             self.parent.document.version, expected_file)
+        
+        self.files = files # cache result since that is used for other providers
 
         # no file is found, add a diagnostic
         if len(files) == 0:
@@ -795,8 +797,6 @@ class Value(Element["ValueNode"]):
                 args={"value": value, "parameter": self.key(), "expected_file": expected_file}
             )
             return False
-
-        self.files = files # cache result since that is used for other providers
 
         if len(files) > 1:
             self.parent.add_diagnostic(
