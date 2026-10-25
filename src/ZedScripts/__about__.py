@@ -1,4 +1,6 @@
-__version__ = "1.3.1"
+from importlib.metadata import version
+
+__version__ = version("ZedScripts")
 
 def main():
     print(__version__)
