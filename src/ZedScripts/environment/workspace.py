@@ -137,7 +137,15 @@ class Workspace:
         )
 
         for i, library in enumerate(Workspace.workspace_cache[WorkspaceType.LIBRARY].values()):
+            notifications.send_notification(
+                notifications.ZedNotification.LOADING_DOCUMENTS,
+                uri=str(library.folder),
+                workspace_type=library.workspace_type,
+                index=i
+            )
+
             library.load()
+
             notifications.send_notification(
                 notifications.ZedNotification.LOADING_DOCUMENTS,
                 uri=str(library.folder),
