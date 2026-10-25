@@ -137,6 +137,7 @@ class Workspace:
         )
 
         init = False
+        total_file_count = 0
         for i, library in enumerate(Workspace.workspace_cache[WorkspaceType.LIBRARY].values()):
             # this is not needed constantly, only for the first lbirary
             if not init:
@@ -148,13 +149,15 @@ class Workspace:
                 )
                 init = True
 
-            library.load()
+            mod_files, file_count = library.load()
+            total_file_count += file_count
 
             notifications.send_notification(
                 notifications.ZedNotification.LOADING_DOCUMENTS,
                 uri=str(library.folder),
                 workspace_type=library.workspace_type,
-                index=i+1
+                index=i+1,
+                file_count=total_file_count,
             )
         return libraries_count
 

@@ -39,7 +39,7 @@ def send_notification(
 @overload
 def send_notification(
     notification: Literal[ZedNotification.LOADING_DOCUMENTS],
-    *, uri: str, workspace_type: 'WorkspaceType', index: int) -> None: ...
+    *, uri: str, workspace_type: 'WorkspaceType', index: int, file_count: int | None = None) -> None: ...
 @overload
 def send_notification(
     notification: Literal[ZedNotification.LOADING_DOCUMENTS_DONE],
