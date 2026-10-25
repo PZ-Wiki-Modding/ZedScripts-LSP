@@ -140,7 +140,7 @@ class ZedServer(LanguageServer):
             return None
         return document.on_linked_editing_range(position)
 
-    def on_definition(self, path: Path, position: types.Position) -> types.DefinitionResult:
+    def on_definition(self, path: Path, position: types.Position) -> list[types.LocationLink | types.Location] | None:
         document = Document.find(path)
         if document is None: 
             return None

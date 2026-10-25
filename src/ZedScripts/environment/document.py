@@ -361,7 +361,7 @@ class Document:
             return make_linked_editing_ranges(ranges)
         return None
 
-    def on_definition(self, position: types.Position) -> list[types.LocationLink] | None:
+    def on_definition(self, position: types.Position) -> list[types.LocationLink | types.Location] | None:
         if self.body is None:
             return None
         text_position = position_to_texposition(position)
