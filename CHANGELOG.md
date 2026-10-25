@@ -6,7 +6,7 @@
 ## [1.3.1] - 2026/10/24
 - Fixed solitary files not working ([#19](https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/issues/19))
 - Fixed library loading counter being incorrect and also bump workspaces and libraries loaded after they have been loaded
-- Diagnostic added for block's missing parameter
+- Diagnostic added for block's missing parameter ([#24](https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/issues/24))
 
 ## [1.3.0] - 2026/10/24
 - Added description and classifiers to package
