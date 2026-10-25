@@ -40,6 +40,18 @@
                     "default": true,
                     "description": "Provides a configuration for the stable dataset version to use for validation. Ignored if `release` or `latest` is set.",
                     "title": "Stable"
+                },
+                "local": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/LocalDatasetModel"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Provides local dataset file paths for blocks and roots."
                 }
             },
             "title": "DatasetModel",
@@ -63,6 +75,7 @@
                         "BLOCK_ID_CANNOT_CONTAIN_SPACES",
                         "BLOCK_INVALID_ID",
                         "BLOCK_FORBIDDEN_ID",
+                        "BLOCK_MISSING_REQUIRED_PARAMETER",
                         "VALUE_UNKNOWN_PARAMETER",
                         "VALUE_DEPRECATED_REPLACEMENT_VERSION",
                         "VALUE_DEPRECATED_REPLACEMENT",
@@ -81,7 +94,10 @@
                         "VALUE_CANNOT_PROVIDE_MODULE",
                         "VALUE_BLOCK_REF_CANNOT_BE_EMPTY",
                         "VALUE_UNMATCHED_BLOCK_REF",
-                        "VALUE_MULTIPLE_BLOCK_REFS"
+                        "VALUE_MULTIPLE_BLOCK_REFS",
+                        "VALUE_UNMATCHED_FILE_REF",
+                        "VALUE_MULTIPLE_FILE_REFS",
+                        "DEBUG_MISSING_PARAMETER_DESCRIPTION"
                     ],
                     "type": "string"
                 },
@@ -141,6 +157,39 @@
                 "type"
             ],
             "title": "DiagnosticsModel",
+            "type": "object"
+        },
+        "LocalDatasetModel": {
+            "additionalProperties": false,
+            "properties": {
+                "blocks": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Local path to the blocks dataset file.",
+                    "title": "Blocks"
+                },
+                "roots": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Local path to the roots dataset file.",
+                    "title": "Roots"
+                }
+            },
+            "title": "LocalDatasetModel",
             "type": "object"
         },
         "ReleaseModel": {
@@ -209,7 +258,7 @@
                         }
                     ],
                     "default": 20,
-                    "description": "Specifies the logging level for the server."
+                    "description": "Specifies the logging level for the server. This option only works in the global configuration."
                 }
             },
             "title": "ServerModel",
