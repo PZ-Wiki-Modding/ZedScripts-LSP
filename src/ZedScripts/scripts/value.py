@@ -5,7 +5,10 @@ from pathlib import Path
 from lsprotocol import types
 
 from pz_scripts_data.schema import (
-    ParameterDefinition, ParameterTypeUnion,
+    ParameterDefinition, ScalarType, 
+    BlockArrayDefinition, 
+    
+    ParameterTypeUnion,
     ScalarParameterType, ArrayParameterType, ObjectParameterType, TranslationParameterType,
     BlockParameterType, CallbackParameterType, FileParameterType,
     ParameterDeprecation
@@ -386,7 +389,8 @@ class Value(Element["ValueNode"]):
 
 ## semantic tokens
 
-    def add_value_type_semantic_tokens(self, actual_type: ValueType, value_node: 'TokenCollection') -> None:
+    def add_value_type_semantic_tokens(self, values: list[str], actual_type: ValueType, 
+                                       type_data: ParameterTypeUnion | None, value_node: 'TokenCollection') -> None:
         match actual_type:
             case ValueType.FLOAT:
                 self.parent.add_semantic_token(
@@ -403,13 +407,64 @@ class Value(Element["ValueNode"]):
                     type=SemanticTokenType.VARIABLE,
                     location=value_node.to_range()
                 )
-            case ValueType.BLOCK:
+
+        if type_data is None:
+            return
+
+        match type_data:
+            case ArrayParameterType():
+                array_data = type_data.array
+                separator = array_data.separator
+                values_nodes = value_node.split(separator)
+                if len(values_nodes) != len(values):
+                    return
+                for value_node_part, value_part in zip(values_nodes, values):
+                    if type(array_data) is BlockArrayDefinition:
+                        sub_type_data = BlockParameterType(
+                            main=array_data.item_type,
+                            block=array_data.block
+                        )
+                    else:
+                        sub_type_data = None
+
+                    self.add_value_type_semantic_tokens(
+                        values=[value_part],
+                        actual_type=ValueType(array_data.item_type),
+                        type_data=sub_type_data,
+                        value_node=value_node_part
+                    )
+
+            # TODO: needs to finish the implementation
+            # case ObjectParameterType():
+            #     object_data = type_data.object
+            #     pairs_separator = object_data.pairs_separator
+            #     key_value_separator = object_data.key_value_separator
+            #     pairs_nodes = value_node.split(pairs_separator)
+            #     if len(pairs_nodes) != len(values):
+            #         return
+            #     for pair_node, value in zip(pairs_nodes, values):
+            #         parts_node = pair_node.split(key_value_separator)
+            #         parts = value.split(key_value_separator)
+            #         if len(parts_node) != 2 or len(parts) != 2:
+            #             return
+
+            #         key_node, value_node_part = parts_node
+            #         key, value_part = parts
+
+            #         self.add_value_type_semantic_tokens(
+            #             values=[value_part],
+            #             actual_type=,
+            #             type_data=None,
+            #             value_node=value_node_part
+            #         )
+                
+            case BlockParameterType():
                 self.parent.add_semantic_token(
                     type=SemanticTokenType.CLASS,
                     location=value_node.to_range(),
                     modifiers=[SemanticTokenModifier.DEFINITION]
                 )
-            case ValueType.FILE:
+            case FileParameterType():
                 self.parent.add_semantic_token(
                     type=SemanticTokenType.STRING,
                     location=value_node.to_range()
@@ -468,11 +523,14 @@ class Value(Element["ValueNode"]):
                 args={"type": parent_type, "key": key}
             )
 
+        # we retrieve the list of values
+        values = self.get_values(dataset, value, param_data)
+
         # do the type highlight before anything else
         # so we highlight by type even if the value is otherwise invalid
         type_data = param_data.data_type
         value_type = dataset.get_parameter_type(value, param_data)
-        self.add_value_type_semantic_tokens(value_type, value_node)
+        self.add_value_type_semantic_tokens(values, value_type, type_data, value_node)
 
         # check if value has a newline, which is usually not normal
         if "\n" in value:
@@ -518,9 +576,6 @@ class Value(Element["ValueNode"]):
                 args={"type": parent_type, "key": key}
             )
             return False
-
-        # we retrieve the list of values
-        values = self.get_values(dataset, value, param_data)
 
         # check forbidden values
         # that is values that are not allowed for this parameter
