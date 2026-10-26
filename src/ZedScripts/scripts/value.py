@@ -654,7 +654,7 @@ class Value(Element["ValueNode"]):
                                type_data: ParameterTypeUnion,
                                value: str,
                                values: list[str],
-                               value_node: TokenCollection, ) -> bool: 
+                               value_node: TokenCollection, ) -> bool:
         match type_data:
             # if it's a translation type, then we need to verify it
             case TranslationParameterType():
@@ -664,6 +664,11 @@ class Value(Element["ValueNode"]):
             # if it's an object, then we verify the object composition
             case ObjectParameterType():
                 result = self.validate_object_ref(dataset, values, type_data, value_node)
+                if not result:
+                    return False
+
+            case ArrayParameterType():
+                result = self.validate_array_ref(dataset, values, type_data, value_node)
                 if not result:
                     return False
 
@@ -677,6 +682,7 @@ class Value(Element["ValueNode"]):
                 result = self.validate_file_ref(value, type_data, value_node)
                 if not result:
                     return False
+
         return True
         
 
@@ -844,7 +850,55 @@ class Value(Element["ValueNode"]):
         # if at least one failed, then the entire object is considered invalid
         return failed
 
-    def validate_file_ref(self, value, type_data: FileParameterType, node):
+    def validate_array_ref(self, dataset: 'Dataset', values: list[str], type_data: ArrayParameterType, value_node: TokenCollection):
+        array_data = type_data.array
+        item_type = array_data.item_type
+        separator = array_data.separator
+        min_items = array_data.min_items
+        max_items = array_data.max_items
+        soft_override = array_data.soft_override # TODO
+
+        values_nodes = value_node.split(separator)
+        if len(values) != len(values_nodes):
+            logging.warning(f"Number of values ({len(values)}) does not match number of value nodes ({len(values_nodes)}). {values} vs {values_nodes}")
+
+        failed = False
+        for v, v_node in zip(values, values_nodes):
+            item_type_result = dataset.test_for_type(item_type, v)
+            logging.debug(f"Validating array item: {v} with expected type: {item_type} and result type: {item_type_result}")
+            if item_type_result != item_type:
+                self.parent.add_diagnostic(
+                    type=DiagnosticType.VALUE_INVALID_ARRAY_ITEM_TYPE,
+                    location=v_node.to_range(),
+                    args={"value": v, "expected_type": item_type, "actual_type": item_type_result}
+                )
+                failed = True
+
+        # if failed:
+        #     return False
+
+        if min_items is not None and len(values) < min_items:
+            self.parent.add_diagnostic(
+                type=DiagnosticType.VALUE_ARRAY_TOO_FEW_ITEMS,
+                location=value_node.to_range(),
+                args={"expected_min": min_items, "actual": len(values)}
+            )
+            return False
+
+        if max_items is not None and len(values) > max_items:
+            self.parent.add_diagnostic(
+                type=DiagnosticType.VALUE_ARRAY_TOO_MANY_ITEMS,
+                location=value_node.to_range(),
+                args={"expected_max": max_items, "actual": len(values)}
+            )
+            return False
+
+        # TODO: if the item type is supposed to be block then add
+        # validation for it
+
+        return not failed
+
+    def validate_file_ref(self, value: str, type_data: FileParameterType, value_node: TokenCollection):
         file_data = type_data.file
         relative_to = file_data.relative_to
         prefix = file_data.prefix or ''
@@ -864,7 +918,7 @@ class Value(Element["ValueNode"]):
         if len(files) == 0:
             self.parent.add_diagnostic(
                 type=DiagnosticType.VALUE_UNMATCHED_FILE_REF,
-                location=node.strip().to_range(),
+                location=value_node.strip().to_range(),
                 args={"value": value, "parameter": self.key(), "expected_file": expected_file}
             )
             return False
@@ -872,7 +926,7 @@ class Value(Element["ValueNode"]):
         if len(files) > 1:
             self.parent.add_diagnostic(
                 type=DiagnosticType.VALUE_MULTIPLE_FILE_REFS,
-                location=node.strip().to_range(),
+                location=value_node.strip().to_range(),
                 args={"value": value, "parameter": self.key(), "expected_file": expected_file}
             )
             return False

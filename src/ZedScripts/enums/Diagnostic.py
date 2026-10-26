@@ -54,6 +54,9 @@ class DiagnosticType(enum.StrEnum):
     VALUE_MULTIPLE_BLOCK_REFS =              enum.auto()
     VALUE_UNMATCHED_FILE_REF =               enum.auto()
     VALUE_MULTIPLE_FILE_REFS =               enum.auto()
+    VALUE_INVALID_ARRAY_ITEM_TYPE =          enum.auto()
+    VALUE_ARRAY_TOO_FEW_ITEMS =              enum.auto()
+    VALUE_ARRAY_TOO_MANY_ITEMS =             enum.auto()
 
     # debug
     DEBUG_MISSING_PARAMETER_DESCRIPTION =    enum.auto()
@@ -169,6 +172,15 @@ DiagnosticDefinition(DiagnosticType.VALUE_UNMATCHED_FILE_REF,
 DiagnosticDefinition(DiagnosticType.VALUE_MULTIPLE_FILE_REFS,
                      DiagnosticSeverity.Warning,
                      args={"value": str, "parameter": str, "expected_file": str})
+DiagnosticDefinition(DiagnosticType.VALUE_INVALID_ARRAY_ITEM_TYPE,
+                     DiagnosticSeverity.Error,
+                     args={"value": str, "expected_type": str, "actual_type": str})
+DiagnosticDefinition(DiagnosticType.VALUE_ARRAY_TOO_FEW_ITEMS,
+                     DiagnosticSeverity.Error,
+                     args={"expected_min": int, "actual": int})
+DiagnosticDefinition(DiagnosticType.VALUE_ARRAY_TOO_MANY_ITEMS,
+                     DiagnosticSeverity.Error,
+                     args={"expected_max": int, "actual": int})
 
 
 DiagnosticDefinition(DiagnosticType.DEBUG_MISSING_PARAMETER_DESCRIPTION,

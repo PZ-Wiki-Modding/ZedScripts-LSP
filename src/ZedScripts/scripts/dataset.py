@@ -355,6 +355,7 @@ class Dataset:
     def test_for_type(self, expected_type: ParameterMainType, value: str) -> ValueType:
         #   return early types we can't really determine from the value itself
         if cant_self_validate(expected_type):
+            logging.debug(f"Cannot self-validate type: {expected_type} for value: {value}")
             return ValueType(expected_type)
 
         # check if boolean

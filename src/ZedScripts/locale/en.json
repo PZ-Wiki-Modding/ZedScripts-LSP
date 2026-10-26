@@ -37,6 +37,9 @@
         "VALUE_MULTIPLE_BLOCK_REFS": "Multiple block references found for '{value}' for parameter '{parameter}' (expects '{expected_block}' block). Make sure duplicate block references are not present.",
         "VALUE_UNMATCHED_FILE_REF": "Value '{value}' for parameter '{parameter}' does not match any existing file (expects a '{expected_file}' file). Make sure the referenced file exists.",
         "VALUE_MULTIPLE_FILE_REFS": "Multiple file references found for '{value}' for parameter '{parameter}' (expects a '{expected_file}' file). Make sure duplicate file references are not present.",
+        "VALUE_INVALID_ARRAY_ITEM_TYPE": "Array item '{value}' is of invalid type '{actual_type}'. Expected type is '{expected_type}'.",
+        "VALUE_ARRAY_TOO_FEW_ITEMS": "Array has too few items. Expected at least '{expected_min}', but got '{actual}'.",
+        "VALUE_ARRAY_TOO_MANY_ITEMS": "Array has too many items. Expected at most '{expected_max}', but got '{actual}'.",
 
         "DEBUG_MISSING_PARAMETER_DESCRIPTION": "DEBUG: Parameter '{key}' in block '{type}' is missing a description."
     }
