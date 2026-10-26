@@ -1,6 +1,7 @@
 import enum
-from typing import (TYPE_CHECKING,  get_args,
-                    TypedDict, Literal, NotRequired, 
+from types import UnionType
+from typing import (TYPE_CHECKING,  get_args, get_origin,
+                    TypedDict, Literal, NotRequired, Union,
                     TypeVar, Generic)
 
 from pz_scripts_data.schema import (
@@ -100,9 +101,20 @@ _early_return = (
     | FileType
 )
 
+def _accepted_values(t) -> set:
+    """Collects the concrete value types accepted by `t`, which can be a plain value (e.g. "float"), a Literal, or a union of those."""
+    if isinstance(t, str):
+        return {str(t)}
+    if get_origin(t) is Literal:
+        return set(get_args(t))
+    if get_origin(t) in (Union, UnionType):
+        return set().union(*(_accepted_values(arg) for arg in get_args(t)))
+    return set()
+
 def is_valid_type(t, ty):
     """Verifies that the given value type `t` is valid according to the specified type `ty`."""
-    return set(get_args(t)).issubset(get_args(ty))
+    values = _accepted_values(t)
+    return bool(values) and values.issubset(_accepted_values(ty))
 
 def cant_self_validate(value_type: ParameterMainType) -> bool:
     """Verifies whenever the provided value_type cannot be validated by the value itself."""
