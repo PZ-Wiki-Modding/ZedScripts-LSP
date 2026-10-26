@@ -3,6 +3,18 @@
 
 ## [Unreleased]
 
+## [1.4.0] - 2026/10/26
+- Fixed allowed values not comparing as string types which led to an instant validation failure
+- Libraries loading is done if at least one mod is found (instead of expecting at least one script file found) (contributes to [#30](https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/issues/30) but does not fix it)
+- Fix missing notification to indicate workspace and library loading started
+- Added new files loaded notification
+- Added definition access for file types (CTRL+left click in VSCode)
+- Fixed loading datasets not taking into account global configuration
+- Improved semantic tokens highlighting for values of array type
+- Fixed type validation not working properly
+- Added array type diagnostics (not included block references validation for now)
+- DEBUG: list files refs in hover
+
 ## [1.3.1] - 2026/10/24
 - Fixed solitary files not working ([#19](https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/issues/19))
 - Fixed library loading counter being incorrect and also bump workspaces and libraries loaded after they have been loaded
@@ -73,7 +85,8 @@ Initial base by [@demiurgeQuantified], created by [@SimKDT]. Provided by [@PZ-Wi
 
 
 
-[unreleased]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/compare/v1.3.1...HEAD
+[unreleased]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.4.0
 [1.3.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.3.1
 [1.3.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.3.0
 [1.2.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.2.0
