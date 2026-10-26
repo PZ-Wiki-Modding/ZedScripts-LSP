@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 IDENTIFIER = "ZedScripts"
-SOURCE = IDENTIFIER
+DIAGNOSTICS_SOURCE = IDENTIFIER
 
 IS_DEBUG = os.getenv("ZEDSCRIPTS_DEBUG_MODE") == "1"
 

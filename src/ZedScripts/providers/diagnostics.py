@@ -102,7 +102,7 @@ class DiagnosticCollection(list[DiagnosticInfo]):
                     message=zedlocalizer.localize_string(definition.type, definition,
                                                                 args=diagnostic.args),
                     severity=severity,
-                    source=ZedScripts.SOURCE,
+                    source=ZedScripts.DIAGNOSTICS_SOURCE,
                     code=definition.get_name(),
                     tags=tags
                 )
