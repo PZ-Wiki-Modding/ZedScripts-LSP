@@ -300,7 +300,7 @@ class TokenCollection(UserList[Token]):
         return str.join("", [token.text for token in self.data])
 
     def split(self, separator: str = ".") -> list['TokenCollection']:
-        assert separator in PUNCTUATORS, f"Separator '{separator}' is not a recognized punctuator. Only {PUNCTUATORS} are allowed."
+        assert separator in PUNCTUATORS or separator.isspace(), f"Separator '{separator}' is not a recognized punctuator. Only {PUNCTUATORS} are allowed and whitespaces."
         
         result: list['TokenCollection'] = []
 
