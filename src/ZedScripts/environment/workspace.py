@@ -26,7 +26,6 @@ class Workspace:
 
     workspace_cache: dict[WorkspaceType, dict[Path, 'Workspace']] = {}
     global_configuration: ConfigurationModel | None = None
-    global_dataset: 'Dataset' = Dataset()
 
     def __init__(self, folder: Path, workspace_type: WorkspaceType):
         self.folder = folder
@@ -37,7 +36,7 @@ class Workspace:
         self.ignored_patterns: list[re.Pattern] = []
         self.configuration: ConfigurationModel = self.update_configuration()
         self.dataset: Dataset = Dataset()
-        self.dataset.load(self.configuration.dataset)
+        self.dataset.load(self.get_configuration().dataset)
 
         # cache workspace
         Workspace.workspace_cache.setdefault(workspace_type, {})[folder] = self
@@ -381,10 +380,12 @@ class Workspace:
 
     @staticmethod
     def get_global_configuration() -> ConfigurationModel:
-        if Workspace.global_configuration is None:
+        global_config = Workspace.global_configuration
+        if global_config is None:
             Workspace.update_global_configuration()
-        assert Workspace.global_configuration is not None # to make Pylance happy
-        return Workspace.global_configuration
+        global_config = Workspace.global_configuration
+        assert global_config is not None # to make Pylance happy
+        return global_config
 
     def get_configuration(self) -> ConfigurationModel:
         if self.configuration is None:
