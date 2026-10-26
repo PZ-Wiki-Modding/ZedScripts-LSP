@@ -97,6 +97,9 @@
                         "VALUE_MULTIPLE_BLOCK_REFS",
                         "VALUE_UNMATCHED_FILE_REF",
                         "VALUE_MULTIPLE_FILE_REFS",
+                        "VALUE_INVALID_ARRAY_ITEM_TYPE",
+                        "VALUE_ARRAY_TOO_FEW_ITEMS",
+                        "VALUE_ARRAY_TOO_MANY_ITEMS",
                         "DEBUG_MISSING_PARAMETER_DESCRIPTION"
                     ],
                     "type": "string"
