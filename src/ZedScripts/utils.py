@@ -1,3 +1,5 @@
+import logging
+from pprint import pformat
 from pathlib import Path
 from typing import Iterable, TypeVar
 from pydantic import BaseModel
@@ -79,7 +81,11 @@ def merge_pydantic_models(base: T, *models: T) -> T:
     @source: https://github.com/pydantic/pydantic/discussions/3416#discussioncomment-12267413
     """
     base_dict = base.model_dump(exclude_unset=True)
+    logging.debug("Base model dictionary:")
+    logging.debug(pformat(base_dict))
+    logging.debug("Merging subsequent models:")
     for nxt in models:
         nxt_dict = nxt.model_dump(exclude_unset=True)
+        logging.debug(pformat(nxt_dict))
         base_dict = always_merger.merge(base_dict, nxt_dict)
     return base.model_validate(base_dict)
