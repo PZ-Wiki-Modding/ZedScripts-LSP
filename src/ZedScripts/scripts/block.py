@@ -310,7 +310,7 @@ class ScriptBlock(Block["BlockNode"]):
 
         
 
-    def get_definition(self, text_position: 'TextPosition') -> list[types.LocationLink | types.Location] | None:
+    def get_definition(self, text_position: 'TextPosition') -> list[types.LocationLink] | None:
         # check if we're on the ID of the block
         node = self.node
         id_node = node.id

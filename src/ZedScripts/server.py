@@ -140,7 +140,7 @@ class ZedServer(LanguageServer):
             return None
         return document.on_linked_editing_range(position)
 
-    def on_definition(self, path: Path, position: types.Position) -> list[types.LocationLink | types.Location] | None:
+    def on_definition(self, path: Path, position: types.Position) -> list[types.LocationLink] | None:
         document = Document.find(path)
         if document is None: 
             return None
@@ -189,9 +189,6 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
     At this point, the client is ready to receive notifications.
     This is the proper place to load workspaces and send progress notifications.
     """
-    # load the global dataset
-    Workspace.global_dataset.load()
-
     # load workspaces
     logging.debug("Server workspace folders")
     logging.debug(server.workspace.folders)
