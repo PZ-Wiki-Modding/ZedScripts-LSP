@@ -865,7 +865,6 @@ class Value(Element["ValueNode"]):
         failed = False
         for v, v_node in zip(values, values_nodes):
             item_type_result = dataset.test_for_type(item_type, v)
-            logging.debug(f"Validating array item: {v} with expected type: {item_type} and result type: {item_type_result}")
             if item_type_result != item_type:
                 self.parent.add_diagnostic(
                     type=DiagnosticType.VALUE_INVALID_ARRAY_ITEM_TYPE,
