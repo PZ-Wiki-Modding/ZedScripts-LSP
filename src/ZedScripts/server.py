@@ -225,7 +225,7 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
             uri=path_to_uri(ws.folder),
             workspace_type=ws.workspace_type,
             index=i+1,
-            file_count=file_count,
+            file_count=total_file_count,
         )
 
 
