@@ -807,7 +807,7 @@ wheels = [
 
 [[package]]
 name = "zedscripts"
-version = "1.4.0"
+version = "1.4.1"
 source = { editable = "." }
 dependencies = [
     { name = "deepmerge" },

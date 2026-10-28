@@ -1,7 +1,6 @@
 {
     "$defs": {
         "DatasetModel": {
-            "additionalProperties": false,
             "properties": {
                 "release": {
                     "anyOf": [
@@ -58,7 +57,6 @@
             "type": "object"
         },
         "DiagnosticsModel": {
-            "additionalProperties": false,
             "description": "Represents the diagnostics configuration for the workspace environment.",
             "properties": {
                 "type": {
@@ -163,7 +161,6 @@
             "type": "object"
         },
         "LocalDatasetModel": {
-            "additionalProperties": false,
             "properties": {
                 "blocks": {
                     "anyOf": [
@@ -196,7 +193,6 @@
             "type": "object"
         },
         "ReleaseModel": {
-            "additionalProperties": false,
             "properties": {
                 "major": {
                     "description": "Build game version number.",
@@ -240,7 +236,6 @@
             "type": "object"
         },
         "ServerModel": {
-            "additionalProperties": false,
             "description": "Represents the server configuration for the workspace environment.",
             "properties": {
                 "logging_level": {
@@ -268,7 +263,6 @@
             "type": "object"
         }
     },
-    "additionalProperties": false,
     "description": "Represents the content of the configuration files for workspace environments.",
     "properties": {
         "dataset": {

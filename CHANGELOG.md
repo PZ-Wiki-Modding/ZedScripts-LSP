@@ -3,6 +3,12 @@
 
 ## [Unreleased]
 
+## [1.4.1] - 2026/10/28
+- Extra configuration arguments support added
+- Stop the Python extension from triggering logs even when they are not needed (i.e. pygments usage)
+- Remove some logging noise that were performance impacting
+- Fixed workspace total files count being incorrect
+
 ## [1.4.0] - 2026/10/26
 - Fixed allowed values not comparing as string types which led to an instant validation failure
 - Libraries loading is done if at least one mod is found (instead of expecting at least one script file found) (contributes to [#30](https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/issues/30) but does not fix it)
@@ -85,7 +91,8 @@ Initial base by [@demiurgeQuantified], created by [@SimKDT]. Provided by [@PZ-Wi
 
 
 
-[unreleased]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/compare/v1.4.0...HEAD
+[unreleased]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.4.1
 [1.4.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.4.0
 [1.3.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.3.1
 [1.3.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.3.0
