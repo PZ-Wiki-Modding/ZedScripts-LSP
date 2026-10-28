@@ -106,7 +106,7 @@ class DatasetTag(enum.StrEnum):
 class ZedBaseModel(BaseModel):
     """Base model for all ZedScripts configuration models.
     Notably used to set additionalProperties to false for everything."""
-    model_config = ConfigDict(extra='forbid')
+    # model_config = ConfigDict(extra='forbid')
 
 
 class ReleaseModel(ZedBaseModel):
