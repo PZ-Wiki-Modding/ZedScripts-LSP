@@ -1,7 +1,7 @@
 import os
-import logging
-from datetime import datetime, timezone
 from pathlib import Path
+
+from .__about__ import __version__
 
 IDENTIFIER = "ZedScripts"
 DIAGNOSTICS_SOURCE = IDENTIFIER
