@@ -13,6 +13,7 @@ from .mod import Mod, ModCollection
 from .version import Version
 from .config import ConfigurationModel
 from ..providers import notifications
+from ..providers.notifications import ZedNotification
 from ..utils import merge_pydantic_models, path_to_uri
 from ..scripts.dataset import Dataset
 
@@ -75,14 +76,14 @@ class Workspace:
             if progress - last_progress >= step_count:
                 logging.info(f"Loading progress: {progress}/{total_files}")
                 notifications.send_notification(
-                    notifications.ZedNotification.SET_PROGRESS,
+                    ZedNotification.SET_PROGRESS,
                     progress=progress / total_files * 100,
                 )
                 last_progress = progress
 
         # send final progress notification
         notifications.send_notification(
-            notifications.ZedNotification.SET_PROGRESS,
+            ZedNotification.SET_PROGRESS,
             progress=100
         )
         return loaded_file_count
@@ -131,7 +132,7 @@ class Workspace:
             libraries_count += 1
 
         notifications.send_notification(
-            notifications.ZedNotification.SET_LIBRARIES_COUNT,
+            ZedNotification.SET_LIBRARIES_COUNT,
             count=libraries_count
         )
 
@@ -141,7 +142,7 @@ class Workspace:
             # this is not needed constantly, only for the first lbirary
             if not init:
                 notifications.send_notification(
-                    notifications.ZedNotification.LOADING_DOCUMENTS,
+                    ZedNotification.LOADING_DOCUMENTS,
                     uri=str(library.folder),
                     workspace_type=library.workspace_type,
                     index=i
@@ -152,7 +153,7 @@ class Workspace:
             total_file_count += file_count
 
             notifications.send_notification(
-                notifications.ZedNotification.LOADING_DOCUMENTS,
+                ZedNotification.LOADING_DOCUMENTS,
                 uri=str(library.folder),
                 workspace_type=library.workspace_type,
                 index=i+1,
