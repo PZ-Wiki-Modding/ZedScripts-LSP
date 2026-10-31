@@ -278,7 +278,7 @@ token_types, token_modifiers = get_tokens()
             token_modifiers=token_modifiers,
         )
     )
-def semantic_tokens(server: ZedServer, params: types.SemanticTokensParams):
+def semantic_tokens(server: ZedServer, params: types.SemanticTokensParams) -> types.SemanticTokens | None:
     logging.debug(f"Semantic tokens requested: {params.text_document.uri}")
     path = uri_to_path(params.text_document.uri)
     return server.on_semantic_tokens(path)
