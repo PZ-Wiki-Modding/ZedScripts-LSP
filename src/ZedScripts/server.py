@@ -190,44 +190,10 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
     This is the proper place to load workspaces and send progress notifications.
     """
     # load workspaces
-    logging.debug("Server workspace folders")
-    logging.debug(server.workspace.folders)
     should_load_libraries = False
-    folders = server.workspace.folders.values()
-    
-    notifications.send_notification(
-        ZedNotification.SET_WORKSPACE_COUNT,
-        count=len(folders)
-    )
-
-    init = False
-    total_file_count = 0
-    for i, workspace_folder in enumerate(folders):
-        ws = Workspace(uri_to_path(workspace_folder.uri), WorkspaceType.PROJECT)
-
-        # this is not needed constantly, only for the first workspace
-        if not init:
-            notifications.send_notification(
-                ZedNotification.LOADING_DOCUMENTS,
-                uri=path_to_uri(ws.folder),
-                workspace_type=ws.workspace_type,
-                index=i
-            )
-            init = True
-
-        mod_count, file_count = ws.load()
-        if file_count != 0 or mod_count != 0:
-            should_load_libraries = True
-            total_file_count += file_count
-
-        notifications.send_notification(
-            ZedNotification.LOADING_DOCUMENTS,
-            uri=path_to_uri(ws.folder),
-            workspace_type=ws.workspace_type,
-            index=i+1,
-            file_count=total_file_count,
-        )
-
+    folders = [uri_to_path(folder.uri) 
+               for folder in server.workspace.folders.values()]
+    total_file_count, should_load_libraries = Workspace.load_workspaces(folders)
 
     # load libraries if any ZedScripts files were found
     if should_load_libraries:

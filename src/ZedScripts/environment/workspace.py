@@ -110,6 +110,46 @@ class Workspace:
         return mod_count
 
     @staticmethod
+    def load_workspaces(folders: list[Path]) -> tuple[int, bool]:
+        logging.debug("Server workspace folders")
+        should_load_libraries = False
+        
+        notifications.send_notification(
+            ZedNotification.SET_WORKSPACE_COUNT,
+            count=len(folders)
+        )
+
+        init = False
+        total_file_count = 0
+        for i, folder in enumerate(folders):
+            ws = Workspace(folder, WorkspaceType.PROJECT)
+
+            # this is not needed constantly, only for the first workspace
+            if not init:
+                notifications.send_notification(
+                    ZedNotification.LOADING_DOCUMENTS,
+                    uri=path_to_uri(ws.folder),
+                    workspace_type=ws.workspace_type,
+                    index=i
+                )
+                init = True
+
+            mod_count, file_count = ws.load()
+            if file_count != 0 or mod_count != 0:
+                should_load_libraries = True
+                total_file_count += file_count
+
+            notifications.send_notification(
+                ZedNotification.LOADING_DOCUMENTS,
+                uri=path_to_uri(ws.folder),
+                workspace_type=ws.workspace_type,
+                index=i+1,
+                file_count=total_file_count,
+            )
+
+        return total_file_count, should_load_libraries
+
+    @staticmethod
     def load_libraries() -> int:
         logging.info("Loading libraries for all workspaces.")
 
