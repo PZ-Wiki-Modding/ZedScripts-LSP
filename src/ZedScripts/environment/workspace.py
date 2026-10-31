@@ -329,10 +329,8 @@ class Workspace:
         # search in the versioning and common folders for specific 
         # files matching the prefix and relativeTo
         result: set[Path] = set()
-        logging.debug(f"Versioning folders to search: {versioning_folders}")
         for versioning_folder in versioning_folders:
             expected_file_path = versioning_folder / expected_file
-            logging.debug(f"Looking for expected file at: {expected_file_path}")
             if expected_file_path.exists():
                 result.add(expected_file_path)
 

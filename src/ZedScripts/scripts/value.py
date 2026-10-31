@@ -904,7 +904,6 @@ class Value(Element["ValueNode"]):
         extension = file_data.extension
 
         expected_file = f"{relative_to}/{prefix}{value}.{extension}"
-        logging.debug(f"Expected file: {expected_file}")
 
         # FIXME: same as search_for_block_references, this is calling a static function as an instance method
         # due to circular dependency issues
