@@ -182,6 +182,7 @@ def initialize(server: ZedServer, params: types.InitializeParams):
     )
 
 
+@zedserver.thread()
 @zedserver.feature(types.INITIALIZED)
 def initialized(server: ZedServer, params: types.InitializedParams) -> None:
     """
