@@ -232,6 +232,9 @@ class Document:
         ]))
         return hashlib.md5(diagnostics_str.encode()).hexdigest()
 
+    def get_version(self) -> int:
+        return self._validation_version
+
     def get_semantic_tokens_id(self) -> str:
         """
         Generate a result ID based on the hash of the semantic tokens.
@@ -334,6 +337,16 @@ class Document:
             items=self.get_lsp_diagnostics(server),
             result_id=result_id,
         )
+
+    def publish_diagnostics(self, server: 'ZedServer') -> None:
+        server.text_document_publish_diagnostics(
+            types.PublishDiagnosticsParams(
+                uri=self.get_uri(),
+                diagnostics=self.get_lsp_diagnostics(server),
+                version=self.get_version(),
+            )
+        )
+
 
     def on_semantic_tokens(self) -> types.SemanticTokens:
         return types.SemanticTokens(

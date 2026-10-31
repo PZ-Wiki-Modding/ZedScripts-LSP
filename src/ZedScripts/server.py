@@ -8,6 +8,7 @@ from pygls.protocol.language_server import LanguageServerProtocol
 
 from .__about__ import __version__
 from .utils import uri_to_path
+from .environment import WorkspaceType
 from .environment.workspace import Workspace
 from .environment.document import Document
 from .providers.diagnostics import DiagnosticReport
@@ -194,13 +195,60 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
     should_load_libraries = False
     folders = [uri_to_path(folder.uri) 
                for folder in server.workspace.folders.values()]
-    total_file_count, should_load_libraries = Workspace.load_workspaces(folders)
+    loaded_file_count, should_load_libraries = Workspace.load_workspaces(folders)
 
     # load libraries if any ZedScripts files were found
     if should_load_libraries:
         Workspace.load_libraries()
-    
+
     server.is_initialized = True
+
+    # validate all documents in the workspace again
+    total_file_count = 0
+    for i, (ws_type, ws_cache) in enumerate(Workspace.workspace_cache.items()):
+        if ws_type == WorkspaceType.LIBRARY:
+            continue
+        for ws in ws_cache.values():
+            total_file_count += len(ws.documents)
+
+    loaded_file_count = 0
+    last_progress = 0
+    step = 10
+    step_count = step* total_file_count / 100
+    notifications.send_notification(
+        ZedNotification.SET_PROGRESS,
+        progress=0,
+    )
+    for i, (ws_type, ws_cache) in enumerate(Workspace.workspace_cache.items()):
+        if ws_type == WorkspaceType.LIBRARY:
+            continue
+        for ws in ws_cache.values():
+            notifications.send_notification(
+                ZedNotification.RELOADING_DIAGNOSTICS,
+                uri=ws.get_uri(),
+                workspace_type=ws_type,
+                index=i,
+            )
+            for document in ws.documents.values():
+                document.validate()
+                document.publish_diagnostics(server)
+                loaded_file_count += 1
+
+                # update progress
+                if loaded_file_count - last_progress >= step_count:
+                    last_progress = loaded_file_count
+                    notifications.send_notification(
+                        ZedNotification.SET_PROGRESS,
+                        progress=loaded_file_count / total_file_count * 100,
+                    )
+            notifications.send_notification(
+                ZedNotification.RELOADING_DIAGNOSTICS,
+                uri=ws.get_uri(),
+                workspace_type=ws_type,
+                index=i+1,
+                file_count=loaded_file_count,
+            )
+
     notifications.send_notification(ZedNotification.LOADING_DOCUMENTS_DONE)
 
 

@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 
 class Workspace:
     SOLITARY: 'Workspace'
+    """Workspace which holds documents that aren't in any specific workspace."""
 
     workspace_cache: dict[WorkspaceType, dict[Path, 'Workspace']] = {}
     global_configuration: ConfigurationModel | None = None
@@ -44,6 +45,9 @@ class Workspace:
 
     def __repr__(self) -> str:
         return f"Workspace(type={self.workspace_type}, folder={self.folder})"
+
+    def get_uri(self) -> str:
+        return path_to_uri(self.folder)
 
     def load(self) -> tuple[int, int]:
         """
@@ -120,7 +124,7 @@ class Workspace:
         )
 
         init = False
-        total_file_count = 0
+        loaded_file_count = 0
         for i, folder in enumerate(folders):
             ws = Workspace(folder, WorkspaceType.PROJECT)
 
@@ -137,17 +141,17 @@ class Workspace:
             mod_count, file_count = ws.load()
             if file_count != 0 or mod_count != 0:
                 should_load_libraries = True
-                total_file_count += file_count
+                loaded_file_count += file_count
 
             notifications.send_notification(
                 ZedNotification.LOADING_DOCUMENTS,
                 uri=path_to_uri(ws.folder),
                 workspace_type=ws.workspace_type,
                 index=i+1,
-                file_count=total_file_count,
+                file_count=loaded_file_count,
             )
 
-        return total_file_count, should_load_libraries
+        return loaded_file_count, should_load_libraries
 
     @staticmethod
     def load_libraries() -> int:

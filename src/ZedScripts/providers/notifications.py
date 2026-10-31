@@ -15,6 +15,7 @@ class ZedNotification(enum.StrEnum):
     LOADING_DOCUMENTS = "zedscripts/loadingDocuments"
     LOADING_DOCUMENTS_DONE = "zedscripts/loadingDocumentsDone"
 
+    RELOADING_DIAGNOSTICS = "zedscripts/reloadingDiagnostics"
 
 @overload
 def send_notification(
