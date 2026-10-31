@@ -17,10 +17,9 @@ from ..providers.actions import make_linked_editing_ranges
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from .workspace import Workspace
     from .mod import Mod
+    from ..server import ZedServer
     from ..scripts.block import Root
     from ..scripts.dataset import Dataset
 
@@ -104,9 +103,10 @@ class Document:
     def get_uri(self) -> str:
         return path_to_uri(self.path)
     
-    def get_lsp_diagnostics(self) -> list[types.Diagnostic]:
+    def get_lsp_diagnostics(self, server: 'ZedServer') -> list[types.Diagnostic]:
         config = self.workspace.get_configuration()
-        lsp_diagnostics = self.diagnostics.to_lsp(config) + self.syntactic_diagnostics.to_lsp(config)
+        lsp_diagnostics = (self.diagnostics.to_lsp(server, config) 
+                           + self.syntactic_diagnostics.to_lsp(server, config))
         logging.debug(f"LSP Diagnostics for {self.get_uri()}: {len(lsp_diagnostics)}")
         return lsp_diagnostics
 
@@ -303,7 +303,7 @@ class Document:
         logging.debug("Reparsing document: %s", self.get_uri())
         self.parse()
 
-    def on_document_diagnostics(self, previous_result_id: str | None) -> DiagnosticReport:
+    def on_document_diagnostics(self, server: 'ZedServer', previous_result_id: str | None) -> DiagnosticReport:
         # validate the document
         self.validate()
 
@@ -313,10 +313,10 @@ class Document:
             return types.UnchangedDocumentDiagnosticReport(result_id)
 
         return types.FullDocumentDiagnosticReport(
-            items=self.get_lsp_diagnostics(),
+            items=self.get_lsp_diagnostics(server),
             result_id=result_id)
 
-    def on_workspace_diagnostics(self, previous_result_id: str | None) -> WorkspaceDiagnosticReport:
+    def on_workspace_diagnostics(self, server: 'ZedServer', previous_result_id: str | None) -> WorkspaceDiagnosticReport:
         self.validate()
 
         # verify that the diagnostics didn't move
@@ -331,7 +331,7 @@ class Document:
 
         return types.WorkspaceFullDocumentDiagnosticReport(
             uri=self.get_uri(),
-            items=self.get_lsp_diagnostics(),
+            items=self.get_lsp_diagnostics(server),
             result_id=result_id,
         )
 

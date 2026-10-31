@@ -13,6 +13,7 @@ from ..structure.lexer import TextRange
 from ..providers.locale import zedlocalizer
 
 if TYPE_CHECKING:
+    from ..server import ZedServer
     from ..environment.config import ConfigurationModel
     from ..enums.Diagnostic import DiagnosticType
 
@@ -37,11 +38,13 @@ class DiagnosticDefinition:
                  severity: types.DiagnosticSeverity, 
                  args: dict[str, Any] = {},
                  tags: list[types.DiagnosticTag] = [],
+                 needs_init: bool = False,
                 ) -> None:
         self.type: DiagnosticType = type
         self.severity: types.DiagnosticSeverity = severity
         self.args: dict[str, Any] = args
         self.tags: list[types.DiagnosticTag] = tags
+        self.requires_initialization: bool = needs_init
 
         DiagnosticDefinition.by_type[type] = self
 
@@ -60,6 +63,9 @@ class DiagnosticDefinition:
     def get_tags(self) -> list[types.DiagnosticTag]:
         return self.tags
 
+    def needs_initialization(self) -> bool:
+        return self.requires_initialization
+
 
 @dataclass
 class DiagnosticInfo:
@@ -69,7 +75,7 @@ class DiagnosticInfo:
 
 
 class DiagnosticCollection(list[DiagnosticInfo]):
-    def to_lsp(self, config: ConfigurationModel) -> list[types.Diagnostic]:
+    def to_lsp(self, server: 'ZedServer', config: ConfigurationModel) -> list[types.Diagnostic]:
         """
         Converts the different diagnostic information into LSP-compatible diagnostics.
 
@@ -77,8 +83,10 @@ class DiagnosticCollection(list[DiagnosticInfo]):
             list[types.Diagnostic]: A list of LSP-compatible diagnostic objects.
         """
         lsp_diagnostics: list[types.Diagnostic] = []
-        for i, diagnostic in enumerate(reversed(self)):
+        for diagnostic in reversed(self):
             definition = DiagnosticDefinition.get(diagnostic.type)
+            if definition.needs_initialization() and not server.is_initialized:
+                continue
             severity = definition.get_severity()
             tags = definition.get_tags()
 

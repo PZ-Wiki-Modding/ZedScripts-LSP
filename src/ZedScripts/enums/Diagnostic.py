@@ -162,16 +162,20 @@ DiagnosticDefinition(DiagnosticType.VALUE_BLOCK_REF_CANNOT_BE_EMPTY,
                      args={"value": str})
 DiagnosticDefinition(DiagnosticType.VALUE_UNMATCHED_BLOCK_REF,
                      DiagnosticSeverity.Error,
-                     args={"value": str, "parameter": str, "expected_block": str})
+                     args={"value": str, "parameter": str, "expected_block": str},
+                     needs_init=True)
 DiagnosticDefinition(DiagnosticType.VALUE_MULTIPLE_BLOCK_REFS,
                      DiagnosticSeverity.Error,
-                     args={"value": str, "parameter": str, "expected_block": str})
+                     args={"value": str, "parameter": str, "expected_block": str},
+                     needs_init=True)
 DiagnosticDefinition(DiagnosticType.VALUE_UNMATCHED_FILE_REF,
                      DiagnosticSeverity.Warning,
-                     args={"value": str, "parameter": str, "expected_file": str})
+                     args={"value": str, "parameter": str, "expected_file": str},
+                     needs_init=True)
 DiagnosticDefinition(DiagnosticType.VALUE_MULTIPLE_FILE_REFS,
                      DiagnosticSeverity.Warning,
-                     args={"value": str, "parameter": str, "expected_file": str})
+                     args={"value": str, "parameter": str, "expected_file": str},
+                     needs_init=True)
 DiagnosticDefinition(DiagnosticType.VALUE_INVALID_ARRAY_ITEM_TYPE,
                      DiagnosticSeverity.Error,
                      args={"value": str, "expected_type": str, "actual_type": str})

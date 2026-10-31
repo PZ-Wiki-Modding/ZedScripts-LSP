@@ -7,8 +7,7 @@ from pygls.lsp.server import LanguageServer
 from pygls.protocol.language_server import LanguageServerProtocol
 
 from .__about__ import __version__
-from .utils import uri_to_path, path_to_uri
-from .environment import WorkspaceType
+from .utils import uri_to_path
 from .environment.workspace import Workspace
 from .environment.document import Document
 from .providers.diagnostics import DiagnosticReport
@@ -121,7 +120,7 @@ class ZedServer(LanguageServer):
         document = Workspace.find_or_make(path)
         if document is None:
             return None
-        return document.on_document_diagnostics(previous_result_id)
+        return document.on_document_diagnostics(self, previous_result_id)
 
     def on_semantic_tokens(self, path: Path) -> types.SemanticTokens | None:
         document = Document.find(path)
