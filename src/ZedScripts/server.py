@@ -25,6 +25,7 @@ class ZedLanguageProtocole(LanguageServerProtocol): ...
 
 
 class ZedServer(LanguageServer):
+    is_initialized: bool = False
     instance: 'ZedServer | None' = None
     def __init__(self):
         super().__init__(name="zedserver", version=__version__, protocol_cls=ZedLanguageProtocole)
@@ -198,7 +199,8 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
     # load libraries if any ZedScripts files were found
     if should_load_libraries:
         Workspace.load_libraries()
-
+    
+    server.is_initialized = True
     notifications.send_notification(ZedNotification.LOADING_DOCUMENTS_DONE)
 
 
