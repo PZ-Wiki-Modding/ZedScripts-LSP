@@ -46,6 +46,13 @@ def send_notification(
     notification: Literal[ZedNotification.LOADING_DOCUMENTS_DONE],
 ) -> None: ...
 
+@overload
+def send_notification(
+    notification: Literal[ZedNotification.RELOADING_DIAGNOSTICS],
+    *, uri: str, workspace_type: 'WorkspaceType',
+    index: int, file_count: int | None = None
+) -> None: ...
+
 
 def send_notification(notification: ZedNotification, **kargs) -> None:
     """
