@@ -103,7 +103,7 @@ Initial base by [@demiurgeQuantified], created by [@SimKDT]. Provided by [@PZ-Wi
 [0.0.2]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v0.0.2
 [0.0.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v0.0.1
 [pz-scripts-data]: https://github.com/PZ-Wiki-Modding/pz-scripts-data
-[ZedScripts]: https://github.com/PZ-Wiki-Modding/ZedScripts
+[ZedScripts]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP
 [@PZ-Wiki-Modding]: https://github.com/PZ-Wiki-Modding
 [@SimKDT]: https://github.com/SimKDT
 [@demiurgeQuantified]: https://github.com/demiurgeQuantified
