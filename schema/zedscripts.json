@@ -257,6 +257,19 @@
                     ],
                     "default": 20,
                     "description": "Specifies the logging level for the server. This option only works in the global configuration."
+                },
+                "maximum_files_diagnostics": {
+                    "anyOf": [
+                        {
+                            "type": "integer"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": 100,
+                    "description": "If the number of files exceeds this limit, diagnostics will be skipped after initialization. Keep this low for large workspaces (e.g., the game files).",
+                    "title": "Maximum Files Diagnostics"
                 }
             },
             "title": "ServerModel",

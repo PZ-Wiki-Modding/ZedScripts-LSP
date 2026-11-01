@@ -204,50 +204,7 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
     server.is_initialized = True
 
     # validate all documents in the workspace again
-    total_file_count = 0
-    for i, (ws_type, ws_cache) in enumerate(Workspace.workspace_cache.items()):
-        if ws_type == WorkspaceType.LIBRARY:
-            continue
-        for ws in ws_cache.values():
-            total_file_count += len(ws.documents)
-
-    loaded_file_count = 0
-    last_progress = 0
-    step = 10
-    step_count = step* total_file_count / 100
-    notifications.send_notification(
-        ZedNotification.SET_PROGRESS,
-        progress=0,
-    )
-    for i, (ws_type, ws_cache) in enumerate(Workspace.workspace_cache.items()):
-        if ws_type == WorkspaceType.LIBRARY:
-            continue
-        for ws in ws_cache.values():
-            notifications.send_notification(
-                ZedNotification.RELOADING_DIAGNOSTICS,
-                uri=ws.get_uri(),
-                workspace_type=ws_type,
-                index=i,
-            )
-            for document in ws.documents.values():
-                document.validate()
-                document.publish_diagnostics(server)
-                loaded_file_count += 1
-
-                # update progress
-                if loaded_file_count - last_progress >= step_count:
-                    last_progress = loaded_file_count
-                    notifications.send_notification(
-                        ZedNotification.SET_PROGRESS,
-                        progress=loaded_file_count / total_file_count * 100,
-                    )
-            notifications.send_notification(
-                ZedNotification.RELOADING_DIAGNOSTICS,
-                uri=ws.get_uri(),
-                workspace_type=ws_type,
-                index=i+1,
-                file_count=loaded_file_count,
-            )
+    Workspace.reload_diagnostics(server)
 
     notifications.send_notification(ZedNotification.LOADING_DOCUMENTS_DONE)
 

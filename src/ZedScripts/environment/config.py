@@ -192,9 +192,13 @@ class DiagnosticsModel(ZedBaseModel):
 class ServerModel(ZedBaseModel):
     """Represents the server configuration for the workspace environment."""
     logging_level: Optional[LoggerLevelName] = Field(
-        description="Specifies the logging level for the server. This option only works in the global configuration.",
+        description="[GLOBAL ONLY] Specifies the logging level for the server.",
         default=LoggerLevel.INFO,
         exclude=True,
+    )
+    maximum_files_diagnostics: Optional[int] = Field(
+        description="If the number of files exceeds this limit, diagnostics will be skipped after initialization. Keep this low for large workspaces (e.g., the game files).",
+        default=100,
     )
 
 class ConfigurationModel(ZedBaseModel):

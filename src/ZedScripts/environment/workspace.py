@@ -18,6 +18,7 @@ from ..utils import merge_pydantic_models, path_to_uri
 from ..scripts.dataset import Dataset
 
 if TYPE_CHECKING:
+    from ..server import ZedServer
     from ..scripts.block import ScriptBlock
 
 
@@ -204,6 +205,63 @@ class Workspace:
                 file_count=total_file_count,
             )
         return libraries_count
+
+    @staticmethod
+    def reload_diagnostics(server: 'ZedServer'):
+        # validate all documents in the workspace again
+        total_file_count = 0
+        for i, (ws_type, ws_cache) in enumerate(Workspace.workspace_cache.items()):
+            if ws_type == WorkspaceType.LIBRARY:
+                continue
+            for ws in ws_cache.values():
+                total_file_count += len(ws.documents)
+
+        loaded_file_count = 0
+        last_progress = 0
+        step = 10
+        step_count = step* total_file_count / 100
+        notifications.send_notification(
+            ZedNotification.SET_PROGRESS,
+            progress=0,
+        )
+
+        for i, (ws_type, ws_cache) in enumerate(Workspace.workspace_cache.items()):
+            if ws_type == WorkspaceType.LIBRARY:
+                continue
+            for ws in ws_cache.values():
+                notifications.send_notification(
+                    ZedNotification.RELOADING_DIAGNOSTICS,
+                    uri=ws.get_uri(),
+                    workspace_type=ws_type,
+                    index=i,
+                )
+
+                # safety check: skip workspaces with too many documents for diagnostics
+                # too many documents loaded in can crash the IDE
+                config = ws.get_configuration()
+                max_files_diagnostics = config.server.maximum_files_diagnostics
+                if max_files_diagnostics is None or len(ws.documents) > max_files_diagnostics:
+                    continue
+
+                for document in ws.documents.values():
+                    document.validate()
+                    document.publish_diagnostics(server)
+                    loaded_file_count += 1
+
+                    # update progress
+                    if loaded_file_count - last_progress >= step_count:
+                        last_progress = loaded_file_count
+                        notifications.send_notification(
+                            ZedNotification.SET_PROGRESS,
+                            progress=loaded_file_count / total_file_count * 100,
+                        )
+                notifications.send_notification(
+                    ZedNotification.RELOADING_DIAGNOSTICS,
+                    uri=ws.get_uri(),
+                    workspace_type=ws_type,
+                    index=i+1,
+                    file_count=loaded_file_count,
+                )
 
     def should_ignore(self, path: Path) -> bool:
         for pattern in self.ignored_patterns:
