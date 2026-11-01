@@ -67,4 +67,4 @@ def send_notification(notification: ZedNotification, **kargs) -> None:
     server = ZedServer.instance
     if server is None:
         return
-    server.send_notification(notification, kargs)
+    server.protocol.notify(notification, kargs)
