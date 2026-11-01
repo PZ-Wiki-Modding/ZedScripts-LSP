@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from lsprotocol import types
 
-import enum
 from typing import TYPE_CHECKING, ClassVar, Any
 from dataclasses import dataclass
 
@@ -75,7 +74,9 @@ class DiagnosticInfo:
 
 
 class DiagnosticCollection(list[DiagnosticInfo]):
-    def to_lsp(self, server: 'ZedServer', config: ConfigurationModel) -> list[types.Diagnostic]:
+    def to_lsp(self, server: 'ZedServer', config: ConfigurationModel, 
+               remove_pre_init: bool = False,
+               ignore_none: bool = False) -> list[types.Diagnostic]:
         """
         Converts the different diagnostic information into LSP-compatible diagnostics.
 
@@ -85,8 +86,14 @@ class DiagnosticCollection(list[DiagnosticInfo]):
         lsp_diagnostics: list[types.Diagnostic] = []
         for diagnostic in reversed(self):
             definition = DiagnosticDefinition.get(diagnostic.type)
-            if definition.needs_initialization() and not server.is_initialized:
-                continue
+
+            if not ignore_none:
+                if definition.needs_initialization():
+                    if not remove_pre_init and not server.is_initialized:
+                        continue
+                elif remove_pre_init:
+                    continue
+
             severity = definition.get_severity()
             tags = definition.get_tags()
 
