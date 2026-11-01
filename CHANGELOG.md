@@ -3,6 +3,9 @@
 
 ## [Unreleased]
 
+## [1.5.1] - 2026/11/01
+- Fix duplicate diagnostics
+
 ## [1.5.0] - 2026/11/01
 - Library loading is now performed in its own thread independently of the main server operations
   - Greatly reduces loading time for other functionalities (hovering, semantic tokens...)
@@ -99,8 +102,9 @@ Initial base by [@demiurgeQuantified], created by [@SimKDT]. Provided by [@PZ-Wi
 
 
 
-[unreleased]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/compare/v1.5.0...HEAD
-[1.4.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.5.0
+[unreleased]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/compare/v1.5.1...HEAD
+[1.5.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.5.1
+[1.5.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.5.0
 [1.4.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.4.1
 [1.4.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.4.0
 [1.3.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.3.1
