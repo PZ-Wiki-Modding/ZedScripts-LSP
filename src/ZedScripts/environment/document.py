@@ -134,12 +134,10 @@ class Document:
         rootType = dataset.test_for_root(path)
         if rootType is None:
             return None
-        logging.debug(f"Tested {path} for root, got: {rootType}")
 
         # find the version and skip if pre 42
         # since we don't validate that
         version = Version.find_or_make_version(path)
-        logging.debug(f"Tested {path} for version, got: {version}")
         if version.type == VersionType.PRE_42:
             return None
 
