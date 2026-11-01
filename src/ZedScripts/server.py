@@ -93,7 +93,7 @@ class ZedServer(LanguageServer):
             logging.debug(f"Document changed called but not a ZedScripts file: {path}")
             return
         
-        logging.debug("Document changed: %s\n%s", path, text)
+        logging.debug("Document changed: %s", path)
 
         # update it
         document.on_document_changed(text)
