@@ -211,6 +211,34 @@ autocmd User LspSetup call LspAddServer(lspServers)
 > [!NOTE]
 > You can see [this video](https://www.youtube.com/watch?v=-5lb_jLQmKc) which explains how to set up VIM, and notably setup a LSP server.
 
+### Neovim
+
+You can set up the ZedScripts LSP server in Neovim using the built-in LSP client as follows:
+
+```lua
+-- configure the zedscripts LSP server
+vim.lsp.config('zedscripts', {
+  workspace_required = true,
+  cmd = { 'path/to/ZedScripts' }, -- executable
+  filetypes = { 'zedscripts' },
+  root_markers = {
+    { '.zedscripts.json' },
+  },
+})
+
+-- enable the LSP
+vim.lsp.enable('zedscripts')
+
+-- add the zedscripts filetype
+vim.filetype.add {
+  extension = {
+    txt = 'zedscripts'
+  },
+}
+```
+
+See the official documentation of Neovim's built-in LSP client [here](https://neovim.io/doc/user/lsp/).
+
 ## Pygments
 
 The ZedScripts LSP provides a Pygments lexer for syntax highlighting of ZedScripts code. It is available in the `ZedScripts.structure.pygments_lexer` module. You can notably use the command-line wrapper to highlight any file's content as ZedScripts:
