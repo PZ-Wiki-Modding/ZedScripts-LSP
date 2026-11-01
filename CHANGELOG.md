@@ -3,6 +3,14 @@
 
 ## [Unreleased]
 
+## [1.5.0] - 2026/11/01
+- Library loading is now performed in its own thread independently of the main server operations
+  - Greatly reduces loading time for other functionalities (hovering, semantic tokens...)
+  - The majority of diagnostics are achieved in the main thread, but some diagnostics require the loading of the library, as such those specific diagnostics are loaded later once the libraries have been loaded
+  - A new configuration entry `server.maximum_files_diagnostics` to set the threadhold which disables diagnostics for every files when exceeding this limit
+- Reduced the logging verbosity
+- Fixed unexpected punctuation stopping the server completely (`/` from vanilla files)
+
 ## [1.4.1] - 2026/10/28
 - Extra configuration arguments support added
 - Stop the Python extension from triggering logs even when they are not needed (i.e. pygments usage)
@@ -91,7 +99,8 @@ Initial base by [@demiurgeQuantified], created by [@SimKDT]. Provided by [@PZ-Wi
 
 
 
-[unreleased]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/compare/v1.4.1...HEAD
+[unreleased]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/compare/v1.5.0...HEAD
+[1.4.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.5.0
 [1.4.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.4.1
 [1.4.0]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.4.0
 [1.3.1]: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP/releases/tag/v1.3.1
