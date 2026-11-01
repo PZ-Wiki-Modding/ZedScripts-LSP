@@ -256,7 +256,7 @@
                         }
                     ],
                     "default": 20,
-                    "description": "Specifies the logging level for the server. This option only works in the global configuration."
+                    "description": "[GLOBAL ONLY] Specifies the logging level for the server."
                 },
                 "maximum_files_diagnostics": {
                     "anyOf": [
