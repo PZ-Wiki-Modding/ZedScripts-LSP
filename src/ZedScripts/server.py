@@ -44,7 +44,7 @@ class ZedServer(LanguageServer):
     # def send_request(self, method: str, )
 
 
-    def wait_for_debug_client(self) -> None:
+    def wait_for_debug_client(self, debug_port) -> None:
         import time
         from .providers.debug import wait_for_port_available, force_close_port
         try:
@@ -53,7 +53,6 @@ class ZedServer(LanguageServer):
             logging.error("debugpy is not installed. Debugging will not be available. Install the `debug` group dependencies (`pip install ZedScripts[debug]`).")
             return
 
-        debug_port = 5678
         debug_host = "localhost"
         
         # ensure the debug port is available
@@ -72,12 +71,12 @@ class ZedServer(LanguageServer):
         logging.debug("Debug client attached.")
 
 
-    def startup(self) -> None:
+    def startup(self, debug_port: int = 5678) -> None:
         logging.info(f"ZedServer {__version__} starting up.")
 
         logging.debug("ZEDSCRIPTS_DEBUG_WAIT=%s", os.environ.get("ZEDSCRIPTS_DEBUG_WAIT"))
         if os.environ.get("ZEDSCRIPTS_DEBUG_WAIT") == "1":
-            self.wait_for_debug_client()
+            self.wait_for_debug_client(debug_port)
 
         self.start_io()
 
