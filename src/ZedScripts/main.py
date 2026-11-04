@@ -39,7 +39,25 @@ def main() -> None:
         prog="ZedScripts",
         description="""==========================
 ZedScripts Language Server
-==========================""",
+==========================
+
+You can learn how to setup the ZedScripts LSP for your IDE in the extension's README: https://github.com/PZ-Wiki-Modding/ZedScripts-LSP.
+        
+LSP
+---
+You cannot use the LSP directly from the command line. You need to link it through your IDE which will handle the client-server communication.
+
+    ZedScripts start
+
+See the help menu for the details.
+                
+Pygments
+--------
+You can highlight script files directly from the command line using the 'pygments' subcommand.
+
+    ZedScripts pygments <file>
+
+See the help menu for the details.""",
         formatter_class=argparse.RawDescriptionHelpFormatter
     ).bind(
         runner,
