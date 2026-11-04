@@ -13,12 +13,11 @@ def get_parser_help() -> str:
     return "Highlight ZedScripts code using Pygments."
 
 @overload
-def get_pygments_args_parser(sub: None = None) -> tap.Parser: ...
+def get_pygments_args_parser(*, sub: None = None, help: str = "__") -> tap.Parser: ...
 @overload
 def get_pygments_args_parser(*, sub: str) -> tap.SubParser: ...
 
-def get_pygments_args_parser(sub: str | None = None) -> tap.Parser | tap.SubParser:
-    help = "highlight ZedScripts code using Pygments"
+def get_pygments_args_parser(sub: str | None = None, help: str = "highlight ZedScripts code using Pygments") -> tap.Parser | tap.SubParser:
     if sub is not None:
         return tap.SubParser(
             sub,
@@ -47,7 +46,7 @@ def runner_pygments(args: PygmentsArgs) -> None:
         print(highlight_zedscripts(code, formatter))
 
 def main():
-    get_pygments_args_parser().bind(
+    get_pygments_args_parser(help="[DEPRECATED] Use 'ZedScripts pygments' instead. Highlight ZedScripts code using Pygments.").bind(
         runner_pygments
     ).run()
 

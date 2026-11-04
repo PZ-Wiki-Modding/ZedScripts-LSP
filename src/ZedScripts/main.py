@@ -8,11 +8,11 @@ from ZedScripts.logger import initialize_logger
 from ZedScripts.pygments.main import get_pygments_args_parser, runner_pygments
 
 
-class Args(tap.TypedArgs):
+class MainArgs(tap.TypedArgs):
     debug_port: int = tap.arg(default=5678, 
                               help="Port to run the server on")
 
-def runner(args: Args) -> None:
+def runner(args: MainArgs) -> None:
     initialize_logger()
 
     debug_port = args.debug_port
@@ -24,14 +24,14 @@ def main() -> None:
     args = sys.argv[1:]
     if len(args) == 0:
         print("DEPRECATED: use 'ZedScripts start' instead to launch the server")
-        runner(Args())
+        runner(MainArgs())
         return
 
     tap.Parser(
         tap.SubParserGroup(
             tap.SubParser(
                 "start",
-                Args,
+                MainArgs,
                 help="start the ZedScripts language server"
             ),
             get_pygments_args_parser(sub="pygments"),
