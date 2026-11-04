@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 
-def initialize_logger():
+def initialize_logger() -> None:
     from . import IS_DEBUG, ZEDSCRIPT_CACHE_DIR
 
     # setup the logger

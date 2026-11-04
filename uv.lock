@@ -764,6 +764,18 @@ wheels = [
 ]
 
 [[package]]
+name = "typed-argparse"
+version = "0.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/18/74/2608ef98de41cd82743be47185048db93b4ff1bc59714666145de4376a1a/typed-argparse-0.3.1.tar.gz", hash = "sha256:3aac61caa50206e080d09a00c3fe552bc4e642739beaef89f5f8c1131b5d5afe", size = 18394, upload-time = "2023-09-25T20:40:20.337Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/53/86/2217b32ee0f421ebf57df7ff898638eedfe2288aa6710dba2bca0607b689/typed_argparse-0.3.1-py3-none-any.whl", hash = "sha256:1fbbc3c6adde19aa04edafebd8a7efccab4ddd403d03ec68172cc20b237bbaa7", size = 19686, upload-time = "2023-09-25T20:40:18.691Z" },
+]
+
+[[package]]
 name = "typing-extensions"
 version = "4.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -816,6 +828,7 @@ dependencies = [
     { name = "pygls" },
     { name = "pz-scripts-data" },
     { name = "requests-cache" },
+    { name = "typed-argparse" },
 ]
 
 [package.optional-dependencies]
@@ -844,5 +857,6 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'test'" },
     { name = "pz-scripts-data", specifier = ">=1.3.1" },
     { name = "requests-cache" },
+    { name = "typed-argparse" },
 ]
 provides-extras = ["build", "debug", "test", "pygments"]
