@@ -249,8 +249,7 @@ def test_lexer(*args):
 
 def test_pygments(args: argparse.Namespace | None = None):
     try:
-        from ZedScripts.structure.pygments_lexer import highlight_zedscripts
-        from pygments import highlight
+        from ZedScripts.pygments.lexer import highlight_zedscripts
         from pygments.formatters import TerminalFormatter, Terminal256Formatter
 
     # if pygments is not installed, then don't run this test
@@ -268,7 +267,7 @@ def test_pygments(args: argparse.Namespace | None = None):
 
 def test_pygments_comments(*args):
     try:
-        from ZedScripts.structure.pygments_lexer import ZedScriptsLexer
+        from ZedScripts.pygments.lexer import ZedScriptsLexer
         from pygments.token import Comment, Error, Name
     except ImportError:
         print("Pygments is not installed, skipping the test.")
