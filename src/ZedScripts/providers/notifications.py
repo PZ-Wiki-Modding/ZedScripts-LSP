@@ -1,6 +1,9 @@
 import enum
+from typing import Literal, overload
+import attrs
+from pydantic import BaseModel
 
-from typing import TYPE_CHECKING, Literal, overload, Any
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..environment import WorkspaceType
 
@@ -16,6 +19,20 @@ class ZedNotification(enum.StrEnum):
     LOADING_DOCUMENTS_DONE = "zedscripts/loadingDocumentsDone"
 
     RELOADING_DIAGNOSTICS = "zedscripts/reloadingDiagnostics"
+
+    REQUEST_STRUCTURES = "zedscripts/requestStructures"
+
+class ZedNotificationParams:
+    class RequestStructures(BaseModel):
+        uri: str
+
+
+class ZedNotificationResponse:
+    class RequestStructures(BaseModel):
+        success: bool
+
+
+
 
 @overload
 def send_notification(

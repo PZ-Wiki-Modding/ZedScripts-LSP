@@ -15,7 +15,7 @@ from .providers.diagnostics import DiagnosticReport
 from .providers.semantic_tokens import get_tokens
 from .providers.locale import zedlocalizer
 from .providers import capabilities, notifications
-from .providers.notifications import ZedNotification
+from .providers.notifications import ZedNotification, ZedNotificationParams
 
 
 
@@ -314,3 +314,9 @@ def definition(server: ZedServer, params: types.DefinitionParams) -> types.Defin
 def did_change_watched_files(server: ZedServer, params: types.DidChangeWatchedFilesParams) -> None:
     logging.debug("Watched files changed.")
     return server.on_did_change_watched_files(params)
+
+
+## CUSTOM NOTIFICATION HANDLER
+# @zedserver.feature(ZedNotification.REQUEST_STRUCTURES)
+# def request_structures(server: ZedServer, params_raw: dict):
+#     params = ZedNotificationParams.RequestStructures.model_validate(params_raw)
