@@ -8,7 +8,7 @@ datas = copy_metadata("pygls") + copy_metadata("lsprotocol") + [
 ]
 
 a = Analysis(
-    ["src/ZedScripts/main.py"],
+    ["src/ZedScripts/__main__.py"],
     pathex=["src"],
     binaries=[],
     datas=datas,
