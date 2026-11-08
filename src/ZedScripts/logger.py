@@ -6,18 +6,24 @@ from pathlib import Path
 
 
 def initialize_logger() -> None:
-    from . import IS_DEBUG, ZEDSCRIPT_CACHE_DIR
+    import ZedScripts
 
     # setup the logger
-    log_dir = ZEDSCRIPT_CACHE_DIR / "logs"
+    log_dir = ZedScripts.ZEDSCRIPT_CACHE_DIR / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
 
     # define logger
     logger = logging.getLogger()
+    logger.handlers.clear()
 
     # set early level, this is changed later by the user configuration
     # in the server initialization
-    logger.setLevel(logging.DEBUG if IS_DEBUG else logging.INFO)
+    logger.setLevel(logging.DEBUG if ZedScripts.IS_DEBUG else logging.INFO)
+
+    # stream handler for console output
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(logging.Formatter("%(levelname)s %(message)s"))
+    logger.addHandler(stream_handler)
 
     formater = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 
@@ -32,7 +38,7 @@ def initialize_logger() -> None:
 
     # setup the debug log handler which stays in the same file to make it easier to view logs
     # when restarting the server for example
-    if IS_DEBUG:
+    if ZedScripts.IS_DEBUG:
         global_log_file = log_dir / f"server-debug.log"
         global_handler = logging.FileHandler(
             global_log_file, encoding="utf-8", mode="w"
@@ -53,4 +59,4 @@ def initialize_logger() -> None:
         except OSError:
             logger.exception("Failed to delete old log file: %s", old_file)
 
-    logging.info("ZedScripts logger initialized. Debug mode: %s", IS_DEBUG)
+    logging.info("ZedScripts logger initialized. Debug mode: %s", ZedScripts.IS_DEBUG)
