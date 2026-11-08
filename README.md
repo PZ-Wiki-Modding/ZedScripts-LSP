@@ -201,7 +201,7 @@ let lspServers = [
       \   name: 'zedscripts',
       \   filetype: ['text', 'zedscripts'],
       \   path: 'path/to/ZedScripts',
-      \   args: []
+      \   args: ['start']
       \ }
       \ ]
 
@@ -213,13 +213,14 @@ autocmd User LspSetup call LspAddServer(lspServers)
 
 ### Neovim
 
-You can set up the ZedScripts LSP server in Neovim using the built-in LSP client as follows:
+You can set up the ZedScripts LSP server in Neovim using the built-in LSP client. To do so, add the following configuration to your Neovim setup (`~/.config/nvim/init.lua`):
 
 ```lua
 -- configure the zedscripts LSP server
 vim.lsp.config('zedscripts', {
   workspace_required = true,
   cmd = { 'path/to/ZedScripts' }, -- executable
+  args = { 'start' },
   filetypes = { 'zedscripts' },
   root_markers = {
     { '.zedscripts.json' },
