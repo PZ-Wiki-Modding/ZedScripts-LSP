@@ -25,11 +25,13 @@ def runner(args: MainArgs) -> None:
 def main() -> None:
     # deprecation support of launching without args
     args = sys.argv[1:]
-    logging.log(logging.INFO, "Starting ZedScripts with args: %s", args)
+    logging.debug("Starting ZedScripts with args: %s", args)
 
     # if there are no args, or the first arg contains '-' '--', it
     # means there's no commands provided, so we default to running the server
     if len(args) == 0 or "--" in args[0] or "-" in args[0]:
+        initialize_logger()
+
         logging.warning("deprecated launch method: use 'ZedScripts start' command instead to launch the server. Extra arguments will be ignored.")
         runner(MainArgs())
         return

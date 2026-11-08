@@ -3,9 +3,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-
+_WAS_INITIALIZED = False
 
 def initialize_logger() -> None:
+    global _WAS_INITIALIZED
+    if _WAS_INITIALIZED:
+        return
+    _WAS_INITIALIZED = True
     import ZedScripts
 
     # setup the logger
