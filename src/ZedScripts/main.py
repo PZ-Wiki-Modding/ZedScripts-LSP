@@ -16,7 +16,7 @@ class MainArgs(tap.TypedArgs):
                           help="Use standard input/output for communication")
 
 def runner(args: MainArgs) -> None:
-    # initialize_logger()
+    initialize_logger()
 
     debug_port = args.debug_port
 
