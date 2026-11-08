@@ -38,12 +38,14 @@ class DiagnosticDefinition:
                  args: dict[str, Any] = {},
                  tags: list[types.DiagnosticTag] = [],
                  needs_init: bool = False,
+                 is_debug: bool = False,
                 ) -> None:
         self.type: DiagnosticType = type
         self.severity: types.DiagnosticSeverity = severity
         self.args: dict[str, Any] = args
         self.tags: list[types.DiagnosticTag] = tags
         self.requires_initialization: bool = needs_init
+        self.is_debug: bool = is_debug
 
         DiagnosticDefinition.by_type[type] = self
 
@@ -86,6 +88,9 @@ class DiagnosticCollection(list[DiagnosticInfo]):
         lsp_diagnostics: list[types.Diagnostic] = []
         for diagnostic in reversed(self):
             definition = DiagnosticDefinition.get(diagnostic.type)
+
+            if definition.is_debug and not ZedScripts.IS_DEBUG:
+                continue
 
             if not ignore_none:
                 if definition.needs_initialization():

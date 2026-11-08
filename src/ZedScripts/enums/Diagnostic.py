@@ -189,7 +189,8 @@ DiagnosticDefinition(DiagnosticType.VALUE_ARRAY_TOO_MANY_ITEMS,
 
 DiagnosticDefinition(DiagnosticType.DEBUG_MISSING_PARAMETER_DESCRIPTION,
                      DiagnosticSeverity.Information,
-                     args={"type": str, "key": str})
+                     args={"type": str, "key": str},
+                     is_debug=True)
 
 
 # ensure that all diagnostic types have a corresponding definition

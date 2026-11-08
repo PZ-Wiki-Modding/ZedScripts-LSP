@@ -14,7 +14,7 @@ from pz_scripts_data.schema import (
     ParameterDeprecation
 )
 
-from .. import IS_DEBUG
+import ZedScripts
 from ..utils import path_to_uri
 from . import Element
 from ..enums.Diagnostic import DiagnosticType
@@ -295,7 +295,7 @@ class Value(Element["ValueNode"]):
 
                 txt += "\n\n"
 
-            if IS_DEBUG:
+            if ZedScripts.IS_DEBUG:
                 should_show_debug = (len(self.refs) > 0 or len(self.files) > 0)
                 if should_show_debug:
                     txt += "(debug)\n\n"
@@ -516,7 +516,7 @@ class Value(Element["ValueNode"]):
 
         # DEBUG: add information diagnostic if there is not description for the parameter
         description = param_data.description
-        if description is None:
+        if ZedScripts.IS_DEBUG and description is None:
             self.parent.add_diagnostic(
                 type=DiagnosticType.DEBUG_MISSING_PARAMETER_DESCRIPTION,
                 location=key_node.to_range(),
