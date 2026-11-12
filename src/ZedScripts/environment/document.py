@@ -150,7 +150,6 @@ class Document:
         # if it is a valid ZedScripts document, create a new Document instance
         document = Document(path, rootType, workspace, version)
         document.make_zedscripts()
-        Document.documents.append(document)
 
         return document
 
