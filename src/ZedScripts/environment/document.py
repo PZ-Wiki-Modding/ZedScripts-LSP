@@ -167,6 +167,9 @@ class Document:
         document = cls.find(path)
         if document is not None:
             cls.documents.remove(document)
+            cls.documents_by_version[document.version].remove(document)
+            if len(cls.documents_by_version[document.version]) == 0:
+                del cls.documents_by_version[document.version]
 
             # TODO: there might be some diagnostics cleanup needed here
             # aka remove any diagnostics by the LSP associated with this
