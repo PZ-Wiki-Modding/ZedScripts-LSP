@@ -117,23 +117,23 @@ class Document:
 
 # document management
 
-    @staticmethod
-    def list_by_workspace() -> dict['Document', 'Workspace']:
-        return {document: document.workspace for document in Document.documents}
+    @classmethod
+    def list_by_workspace(cls) -> dict['Document', 'Workspace']:
+        return {document: document.workspace for document in cls.documents}
 
-    @staticmethod
-    def get_documents() -> list['Document']:
-        return Document.documents
+    @classmethod
+    def get_documents(cls) -> set['Document']:
+        return cls.documents
 
-    @staticmethod
-    def find(path: Path) -> 'Document | None':
-        for document in Document.documents:
+    @classmethod
+    def find(cls, path: Path) -> 'Document | None':
+        for document in cls.documents:
             if document.path == path:
                 return document
         return None
 
-    @staticmethod
-    def make(dataset: 'Dataset', path: Path, workspace: 'Workspace') -> 'Document | None':
+    @classmethod
+    def make(cls, dataset: 'Dataset', path: Path, workspace: 'Workspace') -> 'Document | None':
         # find the rootType of the document
         rootType = dataset.test_for_root(path)
         if rootType is None:
@@ -148,23 +148,23 @@ class Document:
         logging.debug(f"Creating document for path: {path}, rootType: {rootType}, version: {version}")
 
         # if it is a valid ZedScripts document, create a new Document instance
-        document = Document(path, rootType, workspace, version)
+        document = cls(path, rootType, workspace, version)
         document.make_zedscripts()
 
         return document
 
-    @staticmethod
-    def find_or_make(dataset: 'Dataset', path: Path, workspace: 'Workspace') -> 'Document | None':
+    @classmethod
+    def find_or_make(cls, dataset: 'Dataset', path: Path, workspace: 'Workspace') -> 'Document | None':
         # if we find one, we don't have to verify it is a ZedScripts file
         # bcs it means the document didn't move
-        document = Document.find(path)
+        document = cls.find(path)
         if document is None:
-            document = Document.make(dataset, path, workspace)
+            document = cls.make(dataset, path, workspace)
         return document
 
-    @staticmethod
-    def delete(path: Path) -> None:
-        document = Document.find(path)
+    @classmethod
+    def delete(cls, path: Path) -> None:
+        document = cls.find(path)
         if document is not None:
             cls.documents.remove(document)
 
@@ -172,17 +172,17 @@ class Document:
             # aka remove any diagnostics by the LSP associated with this
             # document
 
-    @staticmethod
-    def rename(old_path: Path, new_path: Path) -> None:
+    @classmethod
+    def rename(cls, old_path: Path, new_path: Path) -> None:
         # no previous document exists for the old path
-        document = Document.find(old_path)
+        document = cls.find(old_path)
         if document is None:
             return
 
         # first make sure that the new path is a valid root in the dataset
         rootType = document.workspace.dataset.test_for_root(new_path)
         if rootType is None:
-            Document.delete(old_path)
+            cls.delete(old_path)
             return
 
         # update the document information with new path and new root type
