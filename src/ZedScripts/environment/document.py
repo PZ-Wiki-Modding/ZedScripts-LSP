@@ -71,8 +71,9 @@ class Document:
         semantic tokens are up-to-date."""
 
         # cache document instance
-        Document.documents.add(self)
-        Document.documents_by_version.setdefault(self.version, []).append(self)
+        cls = type(self)
+        cls.documents.add(self)
+        cls.documents_by_version.setdefault(self.version, []).append(self)
 
         self.parse()
 
