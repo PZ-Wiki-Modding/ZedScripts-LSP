@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from ..scripts.dataset import Dataset
 
 class Document:
-    documents: list['Document'] = []
+    documents: set['Document'] = set()
     documents_by_version: dict['Version', list['Document']] = {}
     def __init__(self, path: Path, rootType: str, workspace: 'Workspace', version: 'Version') -> None:
         self.rootType: str = rootType
@@ -71,7 +71,7 @@ class Document:
         semantic tokens are up-to-date."""
 
         # cache document instance
-        Document.documents.append(self)
+        Document.documents.add(self)
         Document.documents_by_version.setdefault(self.version, []).append(self)
 
         self.parse()
@@ -166,7 +166,7 @@ class Document:
     def delete(path: Path) -> None:
         document = Document.find(path)
         if document is not None:
-            Document.documents.remove(document)
+            cls.documents.remove(document)
 
             # TODO: there might be some diagnostics cleanup needed here
             # aka remove any diagnostics by the LSP associated with this
