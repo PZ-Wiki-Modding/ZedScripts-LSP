@@ -208,7 +208,7 @@ class Workspace:
 
     @staticmethod
     def reload_diagnostics(server: 'ZedServer', already_treated: set[Path], 
-                           remove_pre_init: bool = False) -> None:
+                           filter_pre_init: bool = False) -> None:
         # validate all documents in the workspace again
         total_file_count = 0
         for i, (ws_type, ws_cache) in enumerate(Workspace.workspace_cache.items()):
@@ -246,7 +246,7 @@ class Workspace:
 
                 for document in ws.documents.values():
                     document.validate()
-                    document.publish_diagnostics(server, remove_pre_init=remove_pre_init, already_treated=already_treated)
+                    document.publish_diagnostics(server, remove_pre_init=filter_pre_init, already_treated=already_treated)
                     loaded_file_count += 1
 
                     # update progress

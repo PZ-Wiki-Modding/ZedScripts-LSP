@@ -207,7 +207,7 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
     # validate all documents in the workspace again
     Workspace.reload_diagnostics(server, 
                                  already_treated=server.already_fully_diagnosed_files, 
-                                 remove_pre_init=True)
+                                 filter_pre_init=True)
 
     notifications.send_notification(ZedNotification.LOADING_DOCUMENTS_DONE)
 
