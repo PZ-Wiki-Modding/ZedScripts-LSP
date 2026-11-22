@@ -1,5 +1,6 @@
 import os
 import logging
+import time
 from pathlib import Path
 
 from lsprotocol import types
@@ -8,7 +9,6 @@ from pygls.protocol.language_server import LanguageServerProtocol
 
 from .__about__ import __version__
 from .utils import uri_to_path
-from .environment import WorkspaceType
 from .environment.workspace import Workspace
 from .environment.document import Document
 from .providers.diagnostics import DiagnosticReport
@@ -192,6 +192,8 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
     At this point, the client is ready to receive notifications.
     This is the proper place to load workspaces and send progress notifications.
     """
+    start_time = time.perf_counter()
+
     # load workspaces
     should_load_libraries = False
     folders = [uri_to_path(folder.uri) 
@@ -201,6 +203,9 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
     # load libraries if any ZedScripts files were found
     if should_load_libraries:
         Workspace.load_libraries()
+
+    end_time = time.perf_counter()
+    logging.debug("Workspace initialization took %.2f seconds", end_time - start_time)
 
     server.is_initialized = True
 

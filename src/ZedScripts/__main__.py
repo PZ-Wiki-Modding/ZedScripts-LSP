@@ -29,7 +29,9 @@ def main() -> None:
 
     # if there are no args, or the first arg contains '-' '--', it
     # means there's no commands provided, so we default to running the server
-    if len(args) == 0 or "--" in args[0] or "-" in args[0]:
+    if (len(args) == 0 
+        or ("--" in args[0] or "-" in args[0])
+        and args[0] not in ['-h', '--help']):
         initialize_logger()
 
         logging.warning("deprecated launch method: use 'ZedScripts start' command instead to launch the server. Extra arguments will be ignored.")
