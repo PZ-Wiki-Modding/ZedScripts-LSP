@@ -3,6 +3,7 @@ import re
 import json
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
+from functools import cache
 from pprint import pformat
 
 from pz_scripts_data.formatBlocks import ScriptsBlock
@@ -213,6 +214,7 @@ class Dataset:
         self.blocks = lowered_blocks
         self.roots = lowered_roots
 
+    @cache
     def test_for_root(self, path: Path) -> str | None:
         """
         Determine the root type for the given file path based on the dataset's root patterns.
@@ -237,6 +239,7 @@ class Dataset:
                     return rootFile.name
         return None
 
+    @cache
     def is_script_block(self, type: str) -> bool:
         """
         Determine if the given type corresponds to a script block in the dataset.
@@ -249,6 +252,7 @@ class Dataset:
         """
         return type.lower() in self.blocks.keys()
 
+    @cache
     def is_root(self, type: str) -> bool:
         """
         Determine if the given type corresponds to a root in the dataset.
@@ -310,18 +314,19 @@ class Dataset:
 
         return variant_tree            
 
+    @cache
     def can_block_have_parameter(self, type: str, parameter: str) -> bool:
         block_data = self.get_script_block_data(type)
         assert block_data is not None, f"{type} block should be validated before validating parameters"
         parameters = block_data.parameters
         return parameter.lower() in parameters.keys()
 
+    @cache
     def get_parameter_data(self, type: str, parameter: str) -> ParameterDefinition:
         block_data = self.get_script_block_data(type)
         assert block_data is not None, f"{type} block should be validated before retrieving parameter data"
         parameters = block_data.parameters
         return parameters[parameter.lower()]
-
 
     def get_parameter_type(self, value: str, parameter_data: ParameterDefinition) -> ValueType:
         """
@@ -352,6 +357,7 @@ class Dataset:
 
         return self.test_for_type(expected_type, value)
 
+    @cache
     def test_for_type(self, expected_type: ParameterMainType, value: str) -> ValueType:
         #   return early types we can't really determine from the value itself
         if cant_self_validate(expected_type):
