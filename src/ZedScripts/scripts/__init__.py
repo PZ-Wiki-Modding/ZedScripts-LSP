@@ -1,7 +1,7 @@
 import enum
 from types import UnionType
 from typing import (get_args, get_origin,
-                    TypedDict, Literal, NotRequired, Union,
+                    Any, Literal, Union,
                     TypeVar, Generic)
 
 from pz_scripts_data.schema import (
@@ -13,6 +13,8 @@ from pz_scripts_data.schema import (
     ObjectType,
     ArrayType,
 )
+
+from ..enums.Diagnostic import DiagnosticType
 
 
 ## key-value types
@@ -69,3 +71,11 @@ class Element(Generic[NodeT]):
         super().__init__()
         self.node: NodeT
         """AST node of the element."""
+
+## need validation
+
+
+class NeedErrorResult:
+    def __init__(self, diagnostic_type: DiagnosticType, args: dict[str, Any]={}):
+        self.diagnostic_type: DiagnosticType = diagnostic_type
+        self.args: dict[str, Any] = args

@@ -258,9 +258,9 @@ class Value(Element["ValueNode"]):
             # show link to ScriptsDocs
             key = self.key()
             parent_type = self.parent.type
-            if dataset.is_script_block(parent_type) \
-                and dataset.can_block_have_parameter(parent_type, key):
-                variant_tree = dataset.get_block_variant_tree(parent_type)
+            if (dataset.is_script_block(parent_type)
+                and dataset.can_block_have_parameter(parent_type, key)):
+                variant_tree = dataset.get_block_variant_tree(parent_type).to_source()
                 url = self.get_scriptsdocs_url(variant_tree)
                 tree += f"\n[Documentation]({url})"
 
@@ -637,6 +637,20 @@ class Value(Element["ValueNode"]):
                 return False
 
         # TODO: need to validate dependent parameters (needs)
+        needs = param_data.needs
+        if needs is not None:
+            for need in needs:
+                ok, error = self.parent.validate_need(need)
+                if not ok:
+                    assert error is not None, "Need validation error must have an error result instance."
+                    args = error.args
+                    args['parameter'] = self.key()
+                    diagnostic_type = error.diagnostic_type
+                    self.parent.add_diagnostic(
+                        type=diagnostic_type,
+                        location=node.key().strip().to_range(),
+                        args=args
+                    )
 
         return True
 

@@ -41,6 +41,9 @@
         "VALUE_ARRAY_TOO_FEW_ITEMS": "Array has too few items. Expected at least '{expected_min}', but got '{actual}'.",
         "VALUE_ARRAY_TOO_MANY_ITEMS": "Array has too many items. Expected at most '{expected_max}', but got '{actual}'.",
 
+        "VALUE_NEED_MISSING_PARAMETER": "Parameter {parameter} requires another parameter ('{expected_parameter}') to be present.",
+        "VALUE_NEED_MISSING_VALUES": "Parameter {parameter} requires another parameter ('{expected_parameter}') to have specific values: {values}. Currently found: {values_found}.",
+
         "DEBUG_MISSING_PARAMETER_DESCRIPTION": "DEBUG: Parameter '{key}' in block '{type}' is missing a description."
     }
 }

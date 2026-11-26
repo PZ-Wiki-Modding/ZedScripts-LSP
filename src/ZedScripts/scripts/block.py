@@ -1,11 +1,12 @@
-import logging
-from typing import TYPE_CHECKING, Any, Iterable, Iterator, TypeVar, Generic
+from typing import TYPE_CHECKING, Iterable, Iterator, TypeVar, Generic
 
 from lsprotocol import types
 
+from pz_scripts_data.schema import Need
+
+from . import NeedErrorResult
 from .. import SCRIPTSDOCS_LINK
 from ..utils import path_to_uri
-from . import Element
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.ast import Node, BlockNode, Chunk
 from ..structure.lexer import TextRange, TextPosition
@@ -114,6 +115,51 @@ class Block(Generic[NodeT]):
 
         return True
 
+    def validate_need(self, need: Need) -> tuple[bool, NeedErrorResult | None]:
+        # confirm that the parameter exists in the block's key-value pairs
+        parameter_name = need.parameter
+        if parameter_name is not None:
+            # find the parameter in the block's key-value pairs
+            parameter = self.get_key_values(parameter_name)
+            if parameter is None: 
+                # if parameter is forbidden, then it passes
+                # else it fails validation
+                forbidden = need.forbidden_parameter
+                if forbidden is not None and forbidden:
+                    return True, None
+                return False, NeedErrorResult(
+                    diagnostic_type=DiagnosticType.VALUE_NEED_MISSING_PARAMETER
+                )
+
+            values = {v.value() for v in parameter}
+            values_lowered = {v.lower() for v in values}
+            required_values = need.values
+            if required_values is not None:
+                ok = False
+                for value in required_values:
+                    match value:
+                        case bool():
+                            if str(value).lower() in values_lowered:
+                                ok = True
+                        case str():
+                            if str(value).lower() in values_lowered:
+                                ok = True
+                        case _:
+                            if str(value).lower() in values_lowered:
+                                ok = True
+                if not ok:
+                    return False, NeedErrorResult(
+                        diagnostic_type=DiagnosticType.VALUE_NEED_MISSING_VALUES,
+                        args={
+                            "expected_parameter": parameter_name,
+                            "values": required_values,
+                            "values_found": list(values),
+                        }
+                    )
+
+        return True, None
+
+
     def get_keys(self) -> list[str]:
         """
         Get all the keys from the block's key-value pairs.
@@ -126,6 +172,20 @@ class Block(Generic[NodeT]):
             if value.is_key_value():
                 keys.append(value.key().lower())
         return keys
+
+    def get_key_values(self, parameter: str) -> list['Value'] | None:
+        """
+        Get the parameters from the block's key-value pairs.
+
+        :return: A list of Value objects representing the parameters if they exist, otherwise None.
+        """
+        values = []
+        for value in self.values:
+            if value.is_key_value() and value.key().lower() == parameter.lower():
+                values.append(value)
+        if len(values) == 0:
+            return None
+        return values
 
     def check_for_duplicates(self, key: str) -> bool:
         """
@@ -142,7 +202,7 @@ class Block(Generic[NodeT]):
         duplicate_count = len([k for k in keys if k == key.lower()])
         return duplicate_count > 1 # > 1 bcs there's itself in the list
 
-    def add_diagnostic(self, type: DiagnosticType, location: TextRange, args: dict[str, ArgType]' = {}) -> None:
+    def add_diagnostic(self, type: DiagnosticType, location: TextRange, args: dict[str, ArgType] = {}) -> None:
         config = self.document.workspace.configuration
         self.document.diagnostics.add(config, type=type, location=location, args=args)
 
@@ -226,7 +286,7 @@ class ScriptBlock(Block["BlockNode"]):
 
             # show link to ScriptsDocs
             if dataset.is_script_block(self.type):
-                variant_tree = dataset.get_block_variant_tree(self.type)
+                variant_tree = dataset.get_block_variant_tree(self.type).to_source()
                 url = self.get_scriptsdocs_url(variant_tree)
                 tree += f"\n[Documentation]({url})"
 
