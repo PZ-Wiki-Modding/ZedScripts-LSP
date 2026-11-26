@@ -178,6 +178,8 @@ class Dataset:
         # load datasets (possibly from cache, or from local dataset)
         logging.info(f"Retrieving datasets...")
 
+        # if we need to load from local datasets provided by the users, load them
+        # TODO: send a server notification instead of warnings
         blocks = None
         roots = None
         if local is not None and local.blocks:
@@ -185,12 +187,15 @@ class Dataset:
             if blocks_path.exists():
                 logging.info(f"Blocks (local): {local.blocks}")
                 blocks = json.load(blocks_path.open())
-
+            else:
+                logging.warning(f"Blocks (local) path does not exist: {local.blocks}")
         if local is not None and local.roots:
             roots_path = Path(local.roots)
             if roots_path.exists():
                 logging.info(f"Roots (local): {local.roots}")
                 roots = json.load(roots_path.open())
+            else:
+                logging.warning(f"Roots (local) path does not exist: {local.roots}")
 
 
         if blocks is None:
