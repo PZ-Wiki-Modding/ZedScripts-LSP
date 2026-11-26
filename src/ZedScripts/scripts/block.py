@@ -11,6 +11,7 @@ from ..structure.ast import Node, BlockNode, Chunk
 from ..structure.lexer import TextRange, TextPosition
 from ..providers.semantic_tokens import SemanticTokenType, SemanticTokenModifier
 from ..providers.hover import make_hover_information, format_tree
+from ..providers.diagnostics import ArgType
 
 if TYPE_CHECKING:
     from .value import Value
@@ -141,7 +142,7 @@ class Block(Generic[NodeT]):
         duplicate_count = len([k for k in keys if k == key.lower()])
         return duplicate_count > 1 # > 1 bcs there's itself in the list
 
-    def add_diagnostic(self, type: DiagnosticType, location: TextRange, args: dict[str, Any] = {}) -> None:
+    def add_diagnostic(self, type: DiagnosticType, location: TextRange, args: dict[str, ArgType]' = {}) -> None:
         config = self.document.workspace.configuration
         self.document.diagnostics.add(config, type=type, location=location, args=args)
 

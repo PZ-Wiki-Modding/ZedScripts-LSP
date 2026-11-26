@@ -67,12 +67,13 @@ class DiagnosticDefinition:
     def needs_initialization(self) -> bool:
         return self.requires_initialization
 
+ArgType = str | list | int | float
 
 @dataclass
 class DiagnosticInfo:
     type: DiagnosticType
     location: TextRange
-    args: dict[str, Any]
+    args: dict[str, ArgType]
 
 
 class DiagnosticCollection(list[DiagnosticInfo]):
@@ -128,7 +129,7 @@ class DiagnosticCollection(list[DiagnosticInfo]):
             )
         return lsp_diagnostics
 
-    def add(self, config: ConfigurationModel, type: DiagnosticType, location: TextRange, args: dict[str, Any] = {}) -> None:
+    def add(self, config: ConfigurationModel, type: DiagnosticType, location: TextRange, args: dict[str, ArgType] = {}) -> None:
         """
         Adds a new diagnostic to the collection.
 
