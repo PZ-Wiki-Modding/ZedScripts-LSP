@@ -76,9 +76,18 @@ class DiagnosticInfo:
 
 
 class DiagnosticCollection(list[DiagnosticInfo]):
-    def to_lsp(self, server: 'ZedServer', config: ConfigurationModel, 
-               remove_pre_init: bool = False,
-               ignore_none: bool = False) -> list[types.Diagnostic]:
+    def to_filtered(self, server: 'ZedServer') -> 'DiagnosticCollection':
+        filtered = DiagnosticCollection()
+        for diagnostic in self:
+            definition = DiagnosticDefinition.get(diagnostic.type)
+            if definition.is_debug and not ZedScripts.IS_DEBUG:
+                continue
+            if definition.needs_initialization() and not server.is_initialized:
+                continue
+            filtered.append(diagnostic)
+        return filtered
+
+    def to_lsp(self, server: 'ZedServer', config: ConfigurationModel) -> list[types.Diagnostic]:
         """
         Converts the different diagnostic information into LSP-compatible diagnostics.
 
@@ -86,18 +95,8 @@ class DiagnosticCollection(list[DiagnosticInfo]):
             list[types.Diagnostic]: A list of LSP-compatible diagnostic objects.
         """
         lsp_diagnostics: list[types.Diagnostic] = []
-        for diagnostic in reversed(self):
+        for diagnostic in reversed(self.to_filtered(server)):
             definition = DiagnosticDefinition.get(diagnostic.type)
-
-            if definition.is_debug and not ZedScripts.IS_DEBUG:
-                continue
-
-            if not ignore_none:
-                if definition.needs_initialization():
-                    if not remove_pre_init and not server.is_initialized:
-                        continue
-                elif remove_pre_init:
-                    continue
 
             severity = definition.get_severity()
             tags = definition.get_tags()

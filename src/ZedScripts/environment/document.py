@@ -104,14 +104,10 @@ class Document:
     def get_uri(self) -> str:
         return path_to_uri(self.path)
     
-    def get_lsp_diagnostics(self, server: 'ZedServer', remove_pre_init: bool = False, already_treated: set[Path] | None = None) -> list[types.Diagnostic]:
+    def get_lsp_diagnostics(self, server: 'ZedServer') -> list[types.Diagnostic]:
         config = self.workspace.get_configuration()
-        ignore_none = already_treated is not None and self.path not in already_treated
-        logging.debug(f"Ignore none: {ignore_none} for path: {self.path} ({already_treated})")
-        lsp_diagnostics = (self.diagnostics.to_lsp(server, config, remove_pre_init=remove_pre_init, 
-                                                   ignore_none=ignore_none) 
-                           + self.syntactic_diagnostics.to_lsp(server, config, remove_pre_init=remove_pre_init, 
-                                                               ignore_none=ignore_none))
+        lsp_diagnostics = (self.diagnostics.to_lsp(server, config) 
+                           + self.syntactic_diagnostics.to_lsp(server, config))
         logging.debug(f"LSP Diagnostics for {self.get_uri()}: {len(lsp_diagnostics)}")
         return lsp_diagnostics
 
@@ -342,16 +338,6 @@ class Document:
             items=self.get_lsp_diagnostics(server),
             result_id=result_id,
         )
-
-    def publish_diagnostics(self, server: 'ZedServer', remove_pre_init: bool = False, already_treated: set[Path] | None = None) -> None:
-        server.text_document_publish_diagnostics(
-            types.PublishDiagnosticsParams(
-                uri=self.get_uri(),
-                diagnostics=self.get_lsp_diagnostics(server, remove_pre_init=remove_pre_init, already_treated=already_treated),
-                version=self.get_version(),
-            )
-        )
-
 
     def on_semantic_tokens(self) -> types.SemanticTokens:
         return types.SemanticTokens(

@@ -30,19 +30,8 @@ class ZedServer(LanguageServer):
         super().__init__(name="zedserver", version=__version__, protocol_cls=ZedLanguageProtocole)
         self.documents: dict[Path, Document] = {}
         self.is_initialized: bool = False
-        self.already_fully_diagnosed_files: set[Path] = set()
         zedlocalizer.load_locale_files()
         ZedServer.instance = self
-
-    def send_notification(self, method: ZedNotification, params: dict = {}) -> None:
-        logging.debug("Sending notification: %s with params: %s", method, params)
-        self.protocol.notify(
-            method,
-            params
-        )
-
-    # def send_request(self, method: str, )
-
 
     def wait_for_debug_client(self, debug_port) -> None:
         import time
@@ -121,7 +110,6 @@ class ZedServer(LanguageServer):
         document = Workspace.find_or_make(path)
         if document is None:
             return None
-        self.already_fully_diagnosed_files.add(path)
         return document.on_document_diagnostics(self, previous_result_id)
 
     def on_semantic_tokens(self, path: Path) -> types.SemanticTokens | None:
@@ -210,9 +198,7 @@ def initialized(server: ZedServer, params: types.InitializedParams) -> None:
     server.is_initialized = True
 
     # validate all documents in the workspace again
-    Workspace.reload_diagnostics(server, 
-                                 already_treated=server.already_fully_diagnosed_files, 
-                                 filter_pre_init=True)
+    Workspace.reload_diagnostics(server)
 
     notifications.send_notification(ZedNotification.LOADING_DOCUMENTS_DONE)
 

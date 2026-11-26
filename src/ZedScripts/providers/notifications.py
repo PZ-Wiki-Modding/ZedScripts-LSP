@@ -54,8 +54,12 @@ def send_notification(
     index: int, file_count: int | None = None
 ) -> None: ...
 
+@overload
+def send_notification(
+    notification: str
+) -> None: ...
 
-def send_notification(notification: ZedNotification, **kargs) -> None:
+def send_notification(notification: ZedNotification | str, **kargs) -> None:
     """
     Sends a notification to the Zed server.
 

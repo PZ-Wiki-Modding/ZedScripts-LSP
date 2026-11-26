@@ -207,8 +207,7 @@ class Workspace:
         return libraries_count
 
     @staticmethod
-    def reload_diagnostics(server: 'ZedServer', already_treated: set[Path], 
-                           filter_pre_init: bool = False) -> None:
+    def reload_diagnostics(server: 'ZedServer') -> None:
         # validate all documents in the workspace again
         total_file_count = 0
         for i, (ws_type, ws_cache) in enumerate(Workspace.workspace_cache.items()):
@@ -246,7 +245,6 @@ class Workspace:
 
                 for document in ws.documents.values():
                     document.validate()
-                    document.publish_diagnostics(server, remove_pre_init=filter_pre_init, already_treated=already_treated)
                     loaded_file_count += 1
 
                     # update progress
@@ -263,6 +261,9 @@ class Workspace:
                     index=i+1,
                     file_count=loaded_file_count,
                 )
+
+        # send a call to the client to refresh the required documents
+        server.workspace_diagnostic_refresh(None)
 
     def should_ignore(self, path: Path) -> bool:
         for pattern in self.ignored_patterns:
