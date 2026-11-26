@@ -212,8 +212,12 @@ class Dataset:
         logging.debug(roots)
 
         # convert to proper type and store it
-        lowered_blocks: dict[str, ScriptsBlock] = {k.lower(): ScriptsBlock.model_validate(v) for k, v in blocks.items()}
-        lowered_roots: dict[str, ScriptsBlock] = {k.lower(): ScriptsBlock.model_validate(v) for k, v in roots.items()}
+        lowered_blocks: dict[str, ScriptsBlock] = {
+            k.lower(): ScriptsBlock.model_validate(v) for k, v in blocks.items()
+        }
+        lowered_roots: dict[str, ScriptsBlock] = {
+            k.lower(): ScriptsBlock.model_validate(v) for k, v in roots.items()
+        }
 
         self.blocks = lowered_blocks
         self.roots = lowered_roots
@@ -272,19 +276,15 @@ class Dataset:
         You first need to verify that the type corresponds to a script block 
         or root in the dataset or the function will raise a ValueError.
 
-        Args:
-            type (str): The type of the script block or root to retrieve.
-
-        Raises:
-            ValueError: If the type does not correspond to a script block or root in the dataset.
-
-        Returns:
-            ScriptBlockData: The data associated with the specified script block or root type.
+        :param type: The type of the script block or root to retrieve.
+        :raises ValueError: If the type does not correspond to a script block or root in the dataset.
+        :return: The data associated with the specified script block or root type.
         """
-        if self.is_script_block(type):
-            return self.blocks[type.lower()]
-        if self.is_root(type):
-            return self.roots[type.lower()]
+        key = type.lower()
+        if self.is_script_block(key):
+            return self.blocks[key]
+        if self.is_root(key):
+            return self.roots[key]
         raise ValueError(f"Script block data for type '{type}' not found")
 
     def get_required_parameters(self, type: str) -> list[ParameterDefinition]:
