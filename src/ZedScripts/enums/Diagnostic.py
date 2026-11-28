@@ -58,8 +58,11 @@ class DiagnosticType(enum.StrEnum):
     VALUE_ARRAY_TOO_FEW_ITEMS =              enum.auto()
     VALUE_ARRAY_TOO_MANY_ITEMS =             enum.auto()
 
+    VALUE_VARIANT_HAS_PARAMETER =            enum.auto()
+
     VALUE_NEED_MISSING_PARAMETER =           enum.auto()
     VALUE_NEED_MISSING_VALUES =              enum.auto()
+    VALUE_NEED_INVALID_ID =                  enum.auto()
 
     # debug
     DEBUG_MISSING_PARAMETER_DESCRIPTION =    enum.auto()
@@ -189,14 +192,21 @@ DiagnosticDefinition(DiagnosticType.VALUE_ARRAY_TOO_MANY_ITEMS,
                      DiagnosticSeverity.Error,
                      args={"expected_max": int, "actual": int})
 
+DiagnosticDefinition(DiagnosticType.VALUE_VARIANT_HAS_PARAMETER,
+                     DiagnosticSeverity.Information,
+                     args={"block": str, "value": str, "parameter": str, "variant": str},
+                     tags=[DiagnosticTag.Unnecessary])
+
 DiagnosticDefinition(DiagnosticType.VALUE_NEED_MISSING_PARAMETER,
                      DiagnosticSeverity.Error,
-                     args={"parameter": str, "expected_parameter": str},
-                     needs_init=True)
+                     args={"parameter": str, "expected_parameter": str})
 DiagnosticDefinition(DiagnosticType.VALUE_NEED_MISSING_VALUES,
                      DiagnosticSeverity.Error,
-                     args={"parameter": str, "expected_parameter": str, "values": list, "values_found": list},
-                     needs_init=True)
+                     args={"parameter": str, "expected_parameter": str, "values": list, "values_found": list})
+DiagnosticDefinition(DiagnosticType.VALUE_NEED_INVALID_ID,
+                     DiagnosticSeverity.Error,
+                     args={"parameter": str, "expected_parameter": str, "ids": list})
+
 
 DiagnosticDefinition(DiagnosticType.DEBUG_MISSING_PARAMETER_DESCRIPTION,
                      DiagnosticSeverity.Information,

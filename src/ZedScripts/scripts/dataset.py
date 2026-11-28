@@ -11,7 +11,10 @@ from pz_scripts_data.schema import (
 )
 
 from .. import SCRIPTS_BLOCKS_DATA_LINK, ROOTS_DATA_LINK
-from . import ValueType, is_valid_type, cant_self_validate
+from . import (
+    ValueType, UnknownScriptBlockError,
+    is_valid_type, cant_self_validate
+)
 from .version import GameVersion, DataVersion
 from .. import SCRIPTS_DATA_MANIFEST
 from ..providers.http import load_json
@@ -255,7 +258,7 @@ class Dataset:
             for pattern in patterns:
                 regex = re.compile(pattern)
                 if regex.search(resolved_path) is not None:
-                    return rootFile.name
+                    return rootFile.def_id
         return None
 
     def is_script_block(self, type: str) -> bool:
@@ -297,7 +300,10 @@ class Dataset:
             return self.blocks[key]
         if self.is_root(key):
             return self.roots[key]
-        raise ValueError(f"Script block data for type '{type}' not found")
+        # print stacktrace
+        import traceback
+        logging.debug("Stacktrace for missing script block data:\n" + "".join(traceback.format_stack()))
+        raise UnknownScriptBlockError(f"Script block data for type '{type}' not found")
 
     def get_required_parameters(self, type: str) -> list[ParameterDefinition]:
         block_data = self.get_script_block_data(type)
@@ -327,15 +333,11 @@ class Dataset:
 
         return variant_tree            
 
-    def can_block_have_parameter(self, type: str, parameter: str) -> bool:
-        block_data = self.get_script_block_data(type)
-        assert block_data is not None, f"{type} block should be validated before validating parameters"
+    def can_block_have_parameter(self, block_data: ScriptsBlock, parameter: str) -> bool:
         parameters = block_data.parameters
         return parameter.lower() in parameters.keys()
 
-    def get_parameter_data(self, type: str, parameter: str) -> ParameterDefinition:
-        block_data = self.get_script_block_data(type)
-        assert block_data is not None, f"{type} block should be validated before retrieving parameter data"
+    def get_parameter_data(self, block_data: ScriptsBlock, parameter: str) -> ParameterDefinition:
         parameters = block_data.parameters
         return parameters[parameter.lower()]
 

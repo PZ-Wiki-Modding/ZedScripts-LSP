@@ -72,6 +72,12 @@ class Element(Generic[NodeT]):
         self.node: NodeT
         """AST node of the element."""
 
+
+class UnknownScriptBlockError(Exception):
+    """Exception raised when trying to access block data that
+    doesn't exist."""
+    pass
+
 ## need validation
 
 
