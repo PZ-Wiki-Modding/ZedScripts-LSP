@@ -1,11 +1,14 @@
 import logging
-from typing import TYPE_CHECKING, Any, Iterable, Iterator, TypeVar, Generic
+from typing import TYPE_CHECKING, Iterable, Iterator, TypeVar, Generic
 
 from lsprotocol import types
 
+from pz_scripts_data.schema import Need, ScriptsBlock
+
+import ZedScripts
+from . import NeedErrorResult, UnknownScriptBlockError
 from .. import SCRIPTSDOCS_LINK
 from ..utils import path_to_uri
-from . import Element
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.ast import Node, BlockNode, Chunk
 from ..structure.lexer import TextRange, TextPosition
@@ -25,6 +28,7 @@ class Block(Generic[NodeT]):
         self.document: 'Document' = document
         self.node: NodeT = node
         self.type: str = type
+        self.id: str | None = None
         """
         Type of the block.
         All blocks must have an explicit type, except the root block of a file, which is given an empty string.
@@ -33,20 +37,36 @@ class Block(Generic[NodeT]):
         self.children: list['ScriptBlock'] = []
         self.values: list['Value'] = []
 
+        self._variant_block_data: ScriptsBlock | None = None
+
     def __repr__(self) -> str:
         return f"Block(type={self.type}, children={len(self.children)}, values={len(self.values)})"
 
     def __iter__(self) -> Iterator['ScriptBlock']:
         return iter(self.children)
 
-    def get_tree(self) -> str:
-        type = self.type
+    def get_name(self, dataset: 'Dataset') -> str:
+        try:
+            if self._variant_block_data:
+                data = self.get_block_data(dataset)
+                assert data is not None
+                variant = data.variant
+                if variant:
+                    return variant.name
+            return self.get_block_data(dataset).name
+        except UnknownScriptBlockError:
+            return self.type
 
-        parents: list[str] = [type]
+    def get_tree(self, dataset: 'Dataset') -> str:
+        name = self.get_name(dataset)
+
+        parents: list[str] = [name]
         current = self
         while isinstance(current, ScriptBlock) and current.parent is not None:
-            parents.insert(0, current.parent.type)
-            current = current.parent
+            parent = current.parent
+            name = parent.get_name(dataset)
+            parents.insert(0, name)
+            current = parent
 
         return " → ".join(parents)
 
@@ -61,6 +81,12 @@ class Block(Generic[NodeT]):
 
     def get_full_range(self) -> TextRange:
         return self.node.tokens.to_range()
+
+    def get_block_data(self, dataset: 'Dataset') -> ScriptsBlock:
+        if self._variant_block_data is not None:
+            logging.debug("Using cached variant block data for type: %s", self._variant_block_data.def_id)
+            return self._variant_block_data
+        return dataset.get_script_block_data(self.type)
 
     def get_description(self, dataset: 'Dataset') -> str:
         return NotImplemented
@@ -91,6 +117,7 @@ class Block(Generic[NodeT]):
         return None
 
     def validate(self, dataset: 'Dataset') -> bool: ...
+    def check_is_variant(self, dataset: 'Dataset') -> bool: ...
     def validate_children(self, dataset: 'Dataset') -> None: ...
     def validate_block(self, dataset: 'Dataset') -> bool:
         # TODO: existance checks should probably 
@@ -114,6 +141,78 @@ class Block(Generic[NodeT]):
 
         return True
 
+    def validate_need(self, need: Need) -> tuple[bool, NeedErrorResult | None]:
+        # confirm that the parameter exists in the block's key-value pairs
+        parameter_name = need.parameter
+        if parameter_name is not None:
+            # find the parameter in the block's key-value pairs
+            parameter = self.get_key_values(parameter_name)
+            if parameter is None: 
+                # if parameter is forbidden, then it passes
+                # else it fails validation
+                forbidden = need.forbidden_parameter
+                if forbidden is not None and forbidden:
+                    return True, None
+                return False, NeedErrorResult(
+                    diagnostic_type=DiagnosticType.VALUE_NEED_MISSING_PARAMETER
+                )
+
+            values = {v.value() for v in parameter}
+            values_lowered = {v.lower() for v in values}
+            required_values = need.values
+            if required_values is not None:
+                ok = False
+                for value in required_values:
+                    match value:
+                        case bool():
+                            if str(value).lower() in values_lowered:
+                                ok = True
+                        case str():
+                            if str(value).lower() in values_lowered:
+                                ok = True
+                        case _:
+                            if str(value).lower() in values_lowered:
+                                ok = True
+                if not ok:
+                    return False, NeedErrorResult(
+                        diagnostic_type=DiagnosticType.VALUE_NEED_MISSING_VALUES,
+                        args={
+                            "expected_parameter": parameter_name,
+                            "values": required_values,
+                            "values_found": list(values),
+                        }
+                    )
+
+        # validate id needs
+        ids = need.id
+        if ids is not None:
+            block_id = self.id
+            if block_id not in ids:
+                return False, NeedErrorResult(
+                    diagnostic_type=DiagnosticType.VALUE_NEED_INVALID_ID,
+                    args={
+                        "parameter": "id",
+                        "expected_parameter": "id",
+                        "ids": ids,
+                    }
+                )
+
+        return True, None
+
+    def validate_needs(self, needs: list[Need]) -> bool:
+        """
+        Validate a list of needs for the block.
+
+        :param needs: A list of Need objects to validate against the block.
+        :return: True if all needs are satisfied, False otherwise.
+        """
+        for need in needs:
+            ok, _ = self.validate_need(need)
+            if not ok:
+                return False
+        return True
+
+
     def get_keys(self) -> list[str]:
         """
         Get all the keys from the block's key-value pairs.
@@ -126,6 +225,20 @@ class Block(Generic[NodeT]):
             if value.is_key_value():
                 keys.append(value.key().lower())
         return keys
+
+    def get_key_values(self, parameter: str) -> list['Value'] | None:
+        """
+        Get the parameters from the block's key-value pairs.
+
+        :return: A list of Value objects representing the parameters if they exist, otherwise None.
+        """
+        values = []
+        for value in self.values:
+            if value.is_key_value() and value.key().lower() == parameter.lower():
+                values.append(value)
+        if len(values) == 0:
+            return None
+        return values
 
     def check_for_duplicates(self, key: str) -> bool:
         """
@@ -142,7 +255,7 @@ class Block(Generic[NodeT]):
         duplicate_count = len([k for k in keys if k == key.lower()])
         return duplicate_count > 1 # > 1 bcs there's itself in the list
 
-    def add_diagnostic(self, type: DiagnosticType, location: TextRange, args: dict[str, ArgType]' = {}) -> None:
+    def add_diagnostic(self, type: DiagnosticType, location: TextRange, args: dict[str, ArgType] = {}) -> None:
         config = self.document.workspace.configuration
         self.document.diagnostics.add(config, type=type, location=location, args=args)
 
@@ -213,7 +326,7 @@ class ScriptBlock(Block["BlockNode"]):
     def get_description(self, dataset: 'Dataset') -> str:
         if not dataset.is_script_block(self.type):
             return ''
-        block_data = dataset.get_script_block_data(self.type)
+        block_data = self.get_block_data(dataset)
         return block_data.description or ""
 
     def get_hover_information(self, dataset: 'Dataset', text_position: TextPosition) -> types.Hover | None:
@@ -221,12 +334,12 @@ class ScriptBlock(Block["BlockNode"]):
         type_node = node.type
         if type_node is not None and type_node.to_range() == text_position:
             # show a tree hierarchy of the parameter
-            tree = format_tree(self.get_tree())
+            tree = format_tree(self.get_tree(dataset))
             desc = self.get_description(dataset)
 
             # show link to ScriptsDocs
             if dataset.is_script_block(self.type):
-                variant_tree = dataset.get_block_variant_tree(self.type)
+                variant_tree = dataset.get_block_variant_tree(self.type).to_source()
                 url = self.get_scriptsdocs_url(variant_tree)
                 tree += f"\n[Documentation]({url})"
 
@@ -236,8 +349,16 @@ class ScriptBlock(Block["BlockNode"]):
             else:
                 txt = f"{tree}\n\n---\n\n{desc}"
 
+            if ZedScripts.IS_DEBUG:
+                script_data = self.get_block_data(dataset)
+                txt += "\n\n(debug)\n\n"
+                variant = script_data.variant
+                txt += f"- def_id: {script_data.def_id}\n"
+                if variant is not None:
+                    txt += f"- source: {variant.source}\n"
+
             return make_hover_information(
-                txt,
+                txt.strip(),
                 range=self.node.type.to_range() if self.node.type is not None else None,
             )
         # TODO: check ID hover info
@@ -324,6 +445,8 @@ class ScriptBlock(Block["BlockNode"]):
 ## validation
 
     def validate(self, dataset: 'Dataset') -> bool:
+        self.check_is_variant(dataset)
+
         # validate self
         if not self.validate_block(dataset):
             # don't validate the rest since they are dependent
@@ -338,6 +461,53 @@ class ScriptBlock(Block["BlockNode"]):
         self.validate_children(dataset)
         
         return True
+
+    def check_is_variant(self, dataset: 'Dataset') -> bool:
+        """
+        Check if the block is a variant based on the dataset and its needs.
+
+        :return: True if the block is a variant, False otherwise.
+        """
+        # not a valid block, can't consider variants
+        block_type = self.type
+        if not dataset.is_script_block(block_type):
+            return True
+
+        # check if it might have any variants
+        block_data = self.get_block_data(dataset)
+        variants = block_data.variants
+        if variants is None or len(variants) == 0:
+            return True
+
+        for variant in variants:
+            try:
+                variant_data = dataset.get_script_block_data(variant)
+            except UnknownScriptBlockError:
+                logging.warning(f"Unknown variant '{variant}' for block type '{block_type}'. (Malformed dataset)")
+                continue
+
+            # retrieve the variant definition
+            variant = variant_data.variant
+            if variant is None:
+                logging.warning(f"Variant '{variant}' for block type '{block_type}' has no variant definition. (Malformed dataset)")
+                continue
+
+            logging.debug(f"Checking variant '{variant}' for block type '{block_type}'")
+
+            needs = variant.needs
+            if needs is None or len(needs) == 0:
+                continue
+
+            # verify we pass every needs
+            if not self.validate_needs(needs):
+                logging.debug(f"Block type '{block_type}' does not satisfy needs for variant '{variant}'")
+                continue
+
+            # we pass, so this is the variant we are looking for
+            logging.info(f"Block type '{block_type}' matches variant '{variant}'")
+            self._variant_block_data = variant_data
+        
+        return False
 
     def validate_block(self, dataset: 'Dataset') -> bool:
         """
@@ -387,7 +557,7 @@ class ScriptBlock(Block["BlockNode"]):
             return False
 
         # get ID data
-        block_data = dataset.get_script_block_data(self.type)
+        block_data = self.get_block_data(dataset)
         ID_data = block_data.block_id
 
         # retrieve ID info
@@ -476,14 +646,6 @@ class ScriptBlock(Block["BlockNode"]):
                         {"type": type, "id": id, "validIDs": valid_IDs}
                     )
                     return False
-
-                # TODO: this needs to be modified to support a wider range of condition for variants
-                # for example specific parameters or parents defining variants
-
-                # whenever we need to consider it as its own type based on the provided ID
-                if ID_data.as_type == True:
-                    self.type = self.type + " " + id
-                    self.id = None # set the ID to None since it is now part of the type
 
             # forbidden IDs
             forbidden_IDs = ID_data.forbidden

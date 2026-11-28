@@ -6,7 +6,7 @@ from lsprotocol import types
 
 from pz_scripts_data.schema import (
     ParameterDefinition, ScalarType, 
-    BlockArrayDefinition, 
+    BlockArrayDefinition, ScriptsBlock,
     
     ParameterTypeUnion,
     ScalarParameterType, ArrayParameterType, ObjectParameterType, TranslationParameterType,
@@ -16,7 +16,7 @@ from pz_scripts_data.schema import (
 
 import ZedScripts
 from ..utils import path_to_uri
-from . import Element
+from . import Element, UnknownScriptBlockError
 from ..enums.Diagnostic import DiagnosticType
 from ..structure.ast import ValueNode
 from ..structure.lexer import TextPosition, TokenCollection
@@ -105,8 +105,30 @@ class Value(Element["ValueNode"]):
             return self.string.split("=", 1)[1].strip()
         return self.string.strip()
 
+    def can_block_have_parameter(self, dataset: 'Dataset') -> bool:
+        block_data = self.parent.get_block_data(dataset)
+        return dataset.can_block_have_parameter(block_data, self.key())
+
+    def get_variant_with_parameter(self, dataset: 'Dataset') -> ScriptsBlock | None:
+        key = self.key()
+        block_data = self.parent.get_block_data(dataset)
+        variants = block_data.variants
+        if variants is None:
+            return None
+        for variant in variants:
+            try:
+                variant_data = dataset.get_script_block_data(variant)
+            except UnknownScriptBlockError:
+                continue
+            if dataset.can_block_have_parameter(variant_data, key):
+                return variant_data
+        return None
+
+    def get_parameter_data(self, dataset: 'Dataset') -> ParameterDefinition:
+        block_data = self.parent.get_block_data(dataset)
+        return dataset.get_parameter_data(block_data, self.key())
+
     def get_values(self, dataset: 'Dataset', value: str, param_data: ParameterDefinition) -> list[str]:
-        value_type = dataset.get_parameter_type(value, param_data)
         type_data = param_data.data_type
 
         # handle array case
@@ -139,11 +161,9 @@ class Value(Element["ValueNode"]):
 
     def get_type_info(self, dataset: 'Dataset') -> str:
         # retrieve parameter information
-        parent_type = self.parent.type
-        key = self.key()
-        if not dataset.can_block_have_parameter(parent_type, key):
+        if not self.can_block_have_parameter(dataset):
             return ""
-        parameter_data = dataset.get_parameter_data(parent_type, key)
+        parameter_data = self.get_parameter_data(dataset)
 
         out: str = ""
 
@@ -220,13 +240,13 @@ class Value(Element["ValueNode"]):
         return out.strip()
 
     def get_tree(self, dataset: 'Dataset') -> str:
-        block_tree = self.parent.get_tree()
+        block_tree = self.parent.get_tree(dataset)
         type_info = self.get_type_info(dataset)
 
         txt = f"{block_tree} # {self.key()} {type_info}"
 
-        if dataset.can_block_have_parameter(self.parent.type, self.key()):
-            param_data = dataset.get_parameter_data(self.parent.type, self.key())
+        if self.can_block_have_parameter(dataset):
+            param_data = self.get_parameter_data(dataset)
             deprecated = param_data.deprecated
             if deprecated is not None:
                 txt = f"(deprecated)\n{txt}"
@@ -234,11 +254,9 @@ class Value(Element["ValueNode"]):
         return txt
 
     def get_description(self, dataset: 'Dataset') -> str:
-        parent_type = self.parent.type
-        key = self.key()
-        if not dataset.can_block_have_parameter(parent_type, key):
+        if not self.can_block_have_parameter(dataset):
             return ''
-        param_data = dataset.get_parameter_data(parent_type, key)
+        param_data = self.get_parameter_data(dataset)
         return param_data.description or ''
 
     def get_scriptsdocs_url(self, tree: list[str]) -> str | None:
@@ -258,9 +276,9 @@ class Value(Element["ValueNode"]):
             # show link to ScriptsDocs
             key = self.key()
             parent_type = self.parent.type
-            if dataset.is_script_block(parent_type) \
-                and dataset.can_block_have_parameter(parent_type, key):
-                variant_tree = dataset.get_block_variant_tree(parent_type)
+            if (dataset.is_script_block(parent_type)
+                and self.can_block_have_parameter(dataset)):
+                variant_tree = dataset.get_block_variant_tree(parent_type).to_source()
                 url = self.get_scriptsdocs_url(variant_tree)
                 tree += f"\n[Documentation]({url})"
 
@@ -499,7 +517,24 @@ class Value(Element["ValueNode"]):
             location=key_node.to_range()
         )
 
-        if not dataset.can_block_have_parameter(parent_type, key):
+        # TODO: improve clarity when the parameter is available in a variant
+        # block
+        if not self.can_block_have_parameter(dataset):
+            # check if a variant block has the parameter
+            variant_block = self.get_variant_with_parameter(dataset)
+            if variant_block is not None:
+                variant = variant_block.variant
+                if variant is not None:
+                    self.parent.add_diagnostic(
+                        type=DiagnosticType.VALUE_VARIANT_HAS_PARAMETER,
+                        location=key_node.to_range(),
+                        args={
+                            "block": self.parent.get_name(dataset), "value": value,
+                            "parameter": key, "variant": variant.name
+                        }
+                    )
+                    return False
+
             # add a diagnostic for the invalid parameter
             self.parent.add_diagnostic(
                 type=DiagnosticType.VALUE_UNKNOWN_PARAMETER,
@@ -512,7 +547,7 @@ class Value(Element["ValueNode"]):
             # there's nothing else to validate for this parameter
             return False
 
-        param_data = dataset.get_parameter_data(parent_type, key)
+        param_data = self.get_parameter_data(dataset)
 
         # DEBUG: add information diagnostic if there is not description for the parameter
         description = param_data.description
@@ -637,6 +672,20 @@ class Value(Element["ValueNode"]):
                 return False
 
         # TODO: need to validate dependent parameters (needs)
+        needs = param_data.needs
+        if needs is not None:
+            for need in needs:
+                ok, error = self.parent.validate_need(need)
+                if not ok:
+                    assert error is not None, "Need validation error must have an error result instance."
+                    args = error.args
+                    args['parameter'] = self.key()
+                    diagnostic_type = error.diagnostic_type
+                    self.parent.add_diagnostic(
+                        type=diagnostic_type,
+                        location=node.key().strip().to_range(),
+                        args=args
+                    )
 
         return True
 

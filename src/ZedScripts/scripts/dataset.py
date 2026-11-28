@@ -5,11 +5,16 @@ from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 from pprint import pformat
 
-from pz_scripts_data.formatBlocks import ScriptsBlock
-from pz_scripts_data.schema import ParameterDefinition, FloatType, ParameterMainType
+from pz_scripts_data.schema import (
+    ParameterDefinition, ScriptsBlock, VariantDefinition,
+    FloatType, ParameterMainType
+)
 
 from .. import SCRIPTS_BLOCKS_DATA_LINK, ROOTS_DATA_LINK
-from . import ValueType, is_valid_type, cant_self_validate
+from . import (
+    ValueType, UnknownScriptBlockError,
+    is_valid_type, cant_self_validate
+)
 from .version import GameVersion, DataVersion
 from .. import SCRIPTS_DATA_MANIFEST
 from ..providers.http import load_json
@@ -156,7 +161,17 @@ class Manifest:
 
 
 
+class VariantHierarchy(list[VariantDefinition]):
+    """Represents a parent hierarchy of script blocks variants."""
+    def __init__(self, source: str, *args: VariantDefinition) -> None:
+        super().__init__(args)
+        self.source = source
 
+    def to_source(self) -> list[str]:
+        source_list = [self.source]
+        for variant in self:
+            source_list.append(variant.source)
+        return source_list
 
 
 class Dataset:
@@ -243,7 +258,7 @@ class Dataset:
             for pattern in patterns:
                 regex = re.compile(pattern)
                 if regex.search(resolved_path) is not None:
-                    return rootFile.name
+                    return rootFile.def_id
         return None
 
     def is_script_block(self, type: str) -> bool:
@@ -285,7 +300,10 @@ class Dataset:
             return self.blocks[key]
         if self.is_root(key):
             return self.roots[key]
-        raise ValueError(f"Script block data for type '{type}' not found")
+        # print stacktrace
+        import traceback
+        logging.debug("Stacktrace for missing script block data:\n" + "".join(traceback.format_stack()))
+        raise UnknownScriptBlockError(f"Script block data for type '{type}' not found")
 
     def get_required_parameters(self, type: str) -> list[ParameterDefinition]:
         block_data = self.get_script_block_data(type)
@@ -293,37 +311,33 @@ class Dataset:
         required_parameters = [param for param in block_data.parameters.values() if param.required]
         return required_parameters
 
-    def get_block_variant_tree(self, type: str) -> list[str]:
+    def get_block_variant_tree(self, type: str) -> VariantHierarchy:
         """
-        Retrieve the variantOf tree of the specified script block type.
+        Retrieve the script blocks variant tree of the specified script block type.
+        First element in the tree will be the specified script block type itself,
+        followed by its variant hierarchy if applicable.
 
-        Args:
-            type (str): The type of the script block to retrieve the tree for.
-
-        Returns:
-            list[str]: A list representing the hierarchical tree of the script block type.
+        :param type: The type of the script block to retrieve the tree for.
+        :return: The hierarchical tree of the script block type as a VariantHierarchy.
         """
         block_data = self.get_script_block_data(type)
         assert block_data is not None, f"{type} block should be validated before retrieving its tree"
 
         # if it's a variant of another block then include that 
         # block's tree before the current block's type in the tree
-        variant_of = block_data.variant_of
-        variant_tree = [type]
-        if variant_of is not None:
-            variant_tree = self.get_block_variant_tree(variant_of) + variant_tree
+        variant = block_data.variant
+        variant_tree: VariantHierarchy = VariantHierarchy(type)
+        if variant is not None:
+            new_list = self.get_block_variant_tree(variant.source)
+            variant_tree.extend(new_list)
 
         return variant_tree            
 
-    def can_block_have_parameter(self, type: str, parameter: str) -> bool:
-        block_data = self.get_script_block_data(type)
-        assert block_data is not None, f"{type} block should be validated before validating parameters"
+    def can_block_have_parameter(self, block_data: ScriptsBlock, parameter: str) -> bool:
         parameters = block_data.parameters
         return parameter.lower() in parameters.keys()
 
-    def get_parameter_data(self, type: str, parameter: str) -> ParameterDefinition:
-        block_data = self.get_script_block_data(type)
-        assert block_data is not None, f"{type} block should be validated before retrieving parameter data"
+    def get_parameter_data(self, block_data: ScriptsBlock, parameter: str) -> ParameterDefinition:
         parameters = block_data.parameters
         return parameters[parameter.lower()]
 
